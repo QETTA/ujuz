@@ -1,0 +1,10 @@
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - ujuz-mongo-data:/data/db
+
+volumes:
+  ujuz-mongo-data:
