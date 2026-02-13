@@ -13,10 +13,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.43",
+    "@ai-sdk/react": "^3.0.87",
     "@anthropic-ai/sdk": "^0.74.0",
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
     "@tailwindcss/postcss": "^4.1.18",
+    "ai": "^6.0.85",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "jose": "^6.1.3",

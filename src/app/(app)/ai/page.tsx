@@ -6,16 +6,31 @@ import { TabBar } from '@/components/nav/tab-bar';
 import { ChatThread } from '@/components/ai/chat-thread';
 import { ChatInput } from '@/components/ai/chat-input';
 import { AIDisclaimer } from '@/components/ai/ai-disclaimer';
-import { useChatStore } from '@/lib/store';
+import { useChat } from '@/lib/client/hooks/useChat';
+import type { BotMessage } from '@/lib/types';
 
 const tabs = [
   { key: 'chat', label: 'AI 상담' },
   { key: 'score', label: '입학점수' },
 ];
 
+/** Convert AI SDK UIMessage to BotMessage for legacy components */
+function toBotMessages(messages: ReturnType<typeof useChat>['messages']): BotMessage[] {
+  return messages.map((msg) => ({
+    id: msg.id,
+    role: msg.role as 'user' | 'assistant',
+    content: msg.parts
+      .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+      .map((p) => p.text)
+      .join(''),
+    created_at: new Date().toISOString(),
+  }));
+}
+
 export default function AIPage() {
   const [activeTab, setActiveTab] = useState('chat');
-  const { messages, loading, suggestions, sendMessage } = useChatStore();
+  const { messages: rawMessages, isLoading: loading, suggestions, send: sendMessage } = useChat();
+  const messages = toBotMessages(rawMessages);
 
   return (
     <div className="flex h-dvh flex-col">

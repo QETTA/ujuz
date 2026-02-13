@@ -13,7 +13,7 @@ import type { ChatMessage, ResponseContext, BotDataBlock } from './botTypes';
 
 // ── Constants ─────────────────────────────────────────────
 const MAX_HISTORY_MESSAGES = 10;
-const MAX_TOKENS = 1024;
+export const MAX_TOKENS = 1024;
 const TASK_TYPE = 'chat' as const;
 
 // ── Claude API Client (lazy init) ───────────────────────
@@ -54,6 +54,33 @@ const SYSTEM_PROMPT = `당신은 "우쥬봇"입니다. 대한민국 어린이집
 - 확실하지 않은 정보는 확인이 필요하다고 안내하세요
 - 어린이집/보육 관련 질문이 아닌 경우 정중히 안내 범위를 설명하세요
 - 개인정보(주민번호, 카드번호 등)는 절대 요청하지 마세요`;
+
+/**
+ * Prepare Claude API parameters without calling the API.
+ * Returns null when admission V2 engine handles the intent (caller should use non-streaming fallback).
+ */
+export async function prepareClaudeParams(
+  intent: string,
+  message: string,
+  dataBlocks: BotDataBlock[],
+  context?: ResponseContext,
+  conversationHistory?: ChatMessage[],
+  userId?: string,
+): Promise<{ systemPrompt: string; messages: ChatMessage[]; model: string } | null> {
+  // V2 Admission Engine handles this intent directly — no streaming needed
+  if (intent === 'ADMISSION_INQUIRY' && context?.facility_id && context?.child_age_band) {
+    return null;
+  }
+
+  const systemPrompt = await composeSystemPrompt(intent, dataBlocks, context, userId);
+  const messages = buildClaudeMessages(message, conversationHistory);
+
+  const costManager = getCostManager(env.COST_DAILY_BUDGET_USD, env.COST_MONTHLY_BUDGET_USD);
+  await ensureCostLoaded();
+  const model = costManager.selectModelWithBudget(TASK_TYPE);
+
+  return { systemPrompt, messages, model };
+}
 
 export async function generateResponse(
   intent: string,
@@ -99,14 +126,15 @@ async function callClaude(
   conversationHistory?: ChatMessage[],
   userId?: string,
 ): Promise<string> {
-  const systemPrompt = await composeSystemPrompt(intent, dataBlocks, context, userId);
-  const messages = buildClaudeMessages(message, conversationHistory);
+  const params = await prepareClaudeParams(intent, message, dataBlocks, context, conversationHistory, userId);
+  if (!params) {
+    return generateFallback(intent, dataBlocks);
+  }
+
+  const { systemPrompt, messages, model } = params;
+  const response = await requestClaudeResponse(client, model, systemPrompt, messages);
 
   const costManager = getCostManager(env.COST_DAILY_BUDGET_USD, env.COST_MONTHLY_BUDGET_USD);
-  await ensureCostLoaded();
-  const model = costManager.selectModelWithBudget(TASK_TYPE);
-
-  const response = await requestClaudeResponse(client, model, systemPrompt, messages);
   await syncClaudeCost(costManager, model, TASK_TYPE, response.usage.input_tokens, response.usage.output_tokens);
 
   const textBlock = response.content.find((block) => block.type === 'text');
@@ -175,7 +203,7 @@ async function requestClaudeResponse(
   });
 }
 
-async function syncClaudeCost(
+export async function syncClaudeCost(
   costManager: ReturnType<typeof getCostManager>,
   model: string,
   taskType: 'chat',
@@ -198,7 +226,7 @@ async function syncClaudeCost(
   }
 }
 
-function generateFallback(
+export function generateFallback(
   intent: string,
   dataBlocks: BotDataBlock[],
 ): string {

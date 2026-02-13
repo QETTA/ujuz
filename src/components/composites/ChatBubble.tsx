@@ -1,14 +1,36 @@
 import { cn } from '@/lib/utils';
 import { formatRelativeTime } from '@/lib/utils';
-import type { BotMessage } from '@/lib/types';
+import type { UIMessage } from 'ai';
+
+interface DataBlock {
+  type: string;
+  title: string;
+  content: string;
+  confidence: number;
+  source?: string;
+}
 
 interface ChatBubbleProps {
-  message: BotMessage;
+  message: UIMessage & {
+    data_blocks?: DataBlock[];
+    created_at?: string;
+  };
   className?: string;
+}
+
+/**
+ * Extract plain text from a UIMessage's parts array.
+ */
+function getTextContent(msg: UIMessage): string {
+  return msg.parts
+    .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+    .map((p) => p.text)
+    .join('');
 }
 
 export function ChatBubble({ message, className }: ChatBubbleProps) {
   const isUser = message.role === 'user';
+  const textContent = getTextContent(message);
 
   return (
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start', className)}>
@@ -21,7 +43,7 @@ export function ChatBubble({ message, className }: ChatBubbleProps) {
         )}
       >
         {/* Main content */}
-        <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+        <p className="text-sm whitespace-pre-wrap leading-relaxed">{textContent}</p>
 
         {/* Data blocks */}
         {message.data_blocks && message.data_blocks.length > 0 && (
@@ -45,14 +67,16 @@ export function ChatBubble({ message, className }: ChatBubbleProps) {
         )}
 
         {/* Timestamp */}
-        <p
-          className={cn(
-            'mt-1 text-[10px]',
-            isUser ? 'text-text-inverse/60' : 'text-text-tertiary',
-          )}
-        >
-          {formatRelativeTime(message.created_at)}
-        </p>
+        {message.created_at && (
+          <p
+            className={cn(
+              'mt-1 text-[10px]',
+              isUser ? 'text-text-inverse/60' : 'text-text-tertiary',
+            )}
+          >
+            {formatRelativeTime(message.created_at)}
+          </p>
+        )}
       </div>
     </div>
   );

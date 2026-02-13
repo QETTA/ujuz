@@ -11,7 +11,7 @@ import type {
   RouteId, SheetState, RecommendationResponse, StrategyFacility, RecommendationInput,
   ChildProfile,
 } from './types';
-import { apiFetch, generateUUID } from './api';
+import { apiFetch } from './api';
 import { getLocalStorage, getSessionStorage } from './platform/storage';
 
 // ── Admission Store ─────────────────────────────────────
@@ -47,79 +47,23 @@ export const useAdmissionStore = create<AdmissionStore>()(
   ),
 );
 
-// ── Chat Store ──────────────────────────────────────────
+// ── Chat Store (CRUD only — AI SDK manages messages/loading/suggestions) ──
 
 interface ChatStore {
   messages: BotMessage[];
   conversationId: string | null;
   conversations: ConversationSummary[];
-  loading: boolean;
-  suggestions: string[];
   error: string | null;
-  sendMessage: (text: string, context?: Record<string, unknown>) => Promise<void>;
   loadConversations: () => Promise<void>;
   loadConversation: (id: string) => Promise<void>;
   deleteConversation: (id: string) => Promise<void>;
-  clear: () => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
   messages: [],
   conversationId: null,
   conversations: [],
-  loading: false,
-  suggestions: [],
   error: null,
-
-  sendMessage: async (text, context) => {
-    const userMsg: BotMessage = {
-      id: generateUUID(),
-      role: 'user',
-      content: text,
-      created_at: new Date().toISOString(),
-    };
-    set((s) => ({ messages: [...s.messages, userMsg], loading: true, error: null }));
-
-    try {
-      const res = await apiFetch<{
-        conversation_id: string;
-        message: BotMessage;
-        suggestions: string[];
-      }>('/api/bot/chat', {
-        method: 'POST',
-        json: {
-          message: text,
-          conversation_id: get().conversationId,
-          context,
-        },
-      });
-
-      const wasNewConversation = !get().conversationId;
-      set((s) => ({
-        messages: [...s.messages, res.message],
-        conversationId: res.conversation_id,
-        suggestions: res.suggestions,
-        loading: false,
-      }));
-
-      // Only refresh conversation list when a new conversation was created
-      if (wasNewConversation) {
-        get().loadConversations();
-      }
-    } catch (err) {
-      const fallback: BotMessage = {
-        id: generateUUID(),
-        role: 'assistant',
-        content: '죄송합니다. 일시적으로 응답을 가져올 수 없습니다. 잠시 후 다시 시도해 주세요.',
-        created_at: new Date().toISOString(),
-      };
-      set((s) => ({
-        messages: [...s.messages, fallback],
-        loading: false,
-        error: err instanceof Error ? err.message : 'Unknown error',
-      }));
-    }
-  },
 
   loadConversations: async () => {
     try {
@@ -139,7 +83,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       set({
         conversationId: data.id,
         messages: data.messages,
-        suggestions: [],
       });
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Failed to load conversation' });
@@ -152,15 +95,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       set((s) => ({
         conversations: s.conversations.filter((c) => c.id !== id),
         ...(s.conversationId === id
-          ? { conversationId: null, messages: [], suggestions: [] }
+          ? { conversationId: null, messages: [] }
           : {}),
       }));
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Failed to delete conversation' });
     }
   },
-
-  clear: () => set({ messages: [], conversationId: null, loading: false, suggestions: [], error: null }),
 }));
 
 // ── TO Alert Store ──────────────────────────────────────

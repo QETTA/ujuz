@@ -14,7 +14,7 @@ export default function ChatPage() {
   const {
     messages,
     conversations,
-    loading,
+    isLoading,
     suggestions,
     send,
     clear,
@@ -30,7 +30,7 @@ export default function ChatPage() {
     loadConversations();
   }, [loadConversations]);
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll to bottom on new messages or streaming updates
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -94,7 +94,7 @@ export default function ChatPage() {
                 {messages.map((msg) => (
                   <ChatBubble key={msg.id} message={msg} />
                 ))}
-                {loading && (
+                {isLoading && (
                   <div className="flex justify-start">
                     <div className="rounded-2xl rounded-bl-sm bg-surface-elevated px-4 py-3">
                       <Spinner size="sm" />
@@ -108,7 +108,7 @@ export default function ChatPage() {
           {/* Input */}
           <ChatInput
             onSend={send}
-            disabled={loading}
+            disabled={isLoading}
             suggestions={suggestions}
           />
         </div>

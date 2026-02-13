@@ -27,7 +27,7 @@ export function generateUUID(): string {
   );
 }
 
-function getDeviceId(): string {
+export function getDeviceId(): string {
   const storage = getLocalStorage();
   const key = 'ujuz-device-id';
   let id = storage.getItem(key);
