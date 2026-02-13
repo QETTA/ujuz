@@ -11,6 +11,7 @@ import { Spinner } from '@/components/primitives/Spinner';
 import { Button } from '@/components/ui/button';
 import { useApiFetch } from '@/lib/client/hooks/useApiFetch';
 import { useInfiniteScroll } from '@/lib/client/hooks/useInfiniteScroll';
+import { cn } from '@/lib/utils';
 import { PencilSquareIcon, UsersIcon } from '@heroicons/react/24/outline';
 
 interface PostData {
@@ -90,38 +91,64 @@ export default function CommunityPage() {
 
           {['review', 'to_report', 'question'].map((type) => (
             <TabsContent key={type} value={type}>
-              {loading ? (
-                <div className="space-y-3">
+              <div className="relative">
+                <div
+                  className={cn(
+                    'space-y-3 transition-opacity duration-200',
+                    loading
+                      ? 'relative opacity-100'
+                      : 'pointer-events-none absolute inset-0 opacity-0',
+                  )}
+                >
                   {Array.from({ length: 4 }).map((_, i) => (
                     <Skeleton key={i} variant="card" className="h-32" />
                   ))}
                 </div>
-              ) : posts.length === 0 ? (
-                <EmptyState
-                  icon={<UsersIcon className="h-8 w-8" />}
-                  title="아직 게시글이 없어요"
-                  description="첫 번째 글을 작성해보세요!"
-                />
-              ) : (
-                <div className="space-y-3">
-                  {posts.map((post) => (
-                    <PostCard
-                      key={post._id}
-                      id={post._id}
-                      type={post.type}
-                      content={post.content}
-                      authorNickname={post.author_nickname}
-                      createdAt={post.created_at}
-                      likes={post.likes}
-                      commentCount={post.comment_count}
-                      structuredFields={post.structured_fields}
+
+                <div
+                  className={cn(
+                    'transition-opacity duration-200',
+                    loading
+                      ? 'pointer-events-none absolute inset-0 opacity-0'
+                      : 'relative opacity-100',
+                  )}
+                >
+                  {posts.length === 0 ? (
+                    <EmptyState
+                      icon={<UsersIcon className="h-8 w-8" />}
+                      title="아직 게시글이 없어요"
+                      description="첫 번째 글을 작성해보세요!"
                     />
-                  ))}
-                  <div ref={sentinelRef} className="flex justify-center py-4">
-                    {loading && <Spinner size="sm" />}
-                  </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {posts.map((post, index) => (
+                        <div
+                          key={post._id}
+                          className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300"
+                          style={{
+                            animationDelay: `${Math.min(index, 8) * 45}ms`,
+                            animationFillMode: 'both',
+                          }}
+                        >
+                          <PostCard
+                            id={post._id}
+                            type={post.type}
+                            content={post.content}
+                            authorNickname={post.author_nickname}
+                            createdAt={post.created_at}
+                            likes={post.likes}
+                            commentCount={post.comment_count}
+                            structuredFields={post.structured_fields}
+                          />
+                        </div>
+                      ))}
+                      <div ref={sentinelRef} className="flex justify-center py-4">
+                        {loading && <Spinner size="sm" />}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </TabsContent>
           ))}
         </Tabs>
