@@ -33,7 +33,7 @@ export function FacilityCard({
     <Link
       href={ROUTES.FACILITY_DETAIL(id)}
       className={cn(
-        'block rounded-xl border border-border bg-surface p-4 transition-all hover:shadow-sm hover:border-brand-200',
+        'block min-h-[44px] cursor-pointer rounded-xl border border-border bg-surface p-4 transition-all duration-200 hover:shadow-md hover:border-brand-300 active:scale-[0.98]',
         className,
       )}
     >
@@ -42,7 +42,7 @@ export function FacilityCard({
           <h3 className="text-sm font-semibold text-text-primary truncate">{name}</h3>
           <p className="text-xs text-text-secondary mt-0.5">{type}</p>
         </div>
-        {grade && <Badge variant="grade" grade={grade}>{grade}</Badge>}
+        {grade && <Badge variant="grade" grade={grade} className="flex-shrink-0">{grade}</Badge>}
       </div>
 
       {address && (
