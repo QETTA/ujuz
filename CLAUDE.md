@@ -47,16 +47,24 @@
 - Codex는 래퍼 패턴보다 직접 구현을 선호함 — 래퍼 vs 직접 구현 충돌 시 사전에 방침 결정
 - `approval_policy="full-auto"`는 미지원, `--sandbox workspace-write` 필수
 
-### Codex 병렬 실행 (토큰 여유 시)
-- 대형 태스크는 `CODEX-TASKS-A.md`, `CODEX-TASKS-B.md`로 분할
-- Git worktree로 작업 디렉토리 격리 후 병렬 실행:
+### Codex 병렬 실행 (검증된 패턴)
+- **최대 8개 동시 실행** 검증 완료 (Round 3: 8 worktree 병렬, 충돌 0)
+- 각 태스크는 **파일 겹침 없이** 독립적으로 설계
+- Git worktree로 작업 디렉토리 격리:
   ```bash
-  git worktree add ../ujuz-codex-a -b codex-batch-a
-  git worktree add ../ujuz-codex-b -b codex-batch-b
-  cd ../ujuz-codex-a && codex exec --sandbox workspace-write "$(cat CODEX-TASKS-A.md)" &
-  cd ../ujuz-codex-b && codex exec --sandbox workspace-write "$(cat CODEX-TASKS-B.md)" &
+  # N개 worktree 생성
+  for i in $(seq 1 N); do git worktree add ../ujuz-p$i -b codex-batch-$i; done
+  # 각 worktree에서 codex exec 병렬 실행
+  for i in $(seq 1 N); do
+    cd ../ujuz-p$i && codex exec --sandbox workspace-write "태스크 프롬프트" &
+  done
+  # 완료 후: 각 worktree 커밋 → 순차 머지 → typecheck → push
+  for i in $(seq 1 N); do git merge codex-batch-$i --no-edit; done
+  # 정리
+  for i in $(seq 1 N); do git worktree remove ../ujuz-p$i; git branch -d codex-batch-$i; done
   ```
-- 완료 후 메인 브랜치에 순차 머지
+- **주의**: worktree에 node_modules 없음 → Codex가 pnpm install 시도 시 DNS 부하 발생 가능
+- **해결**: typecheck는 메인 디렉토리에서 머지 후 1회 실행
 
 ## Claude Code 협업 세팅
 
