@@ -122,13 +122,15 @@ export function TabsTrigger({
       type="button"
       role="tab"
       aria-selected={isActive}
+      data-state={isActive ? 'active' : 'inactive'}
       tabIndex={isActive ? 0 : -1}
       onClick={() => setActiveTab(value)}
       className={cn(
-        'flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-all',
+        'flex-1 rounded-md border-b-2 border-transparent px-3 py-1.5 text-sm font-medium transition-all duration-200 ease-out active:scale-95',
+        'data-[state=active]:border-brand-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1',
         isActive
           ? 'bg-surface text-text-primary shadow-sm'
-          : 'text-text-tertiary hover:text-text-secondary',
+          : 'text-text-tertiary hover:bg-muted/50 hover:text-text-secondary',
         className,
       )}
     >
@@ -150,7 +152,7 @@ export function TabsContent({
   if (activeTab !== value) return null;
 
   return (
-    <div role="tabpanel" tabIndex={0} className={cn('mt-3', className)}>
+    <div role="tabpanel" tabIndex={0} className={cn('mt-3 animate-in fade-in-0 duration-200', className)}>
       {children}
     </div>
   );
