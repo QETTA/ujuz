@@ -14,20 +14,30 @@ export interface ChildFormData {
 export interface ChildFormProps {
   onSubmit: (data: ChildFormData) => void;
   initial?: Partial<ChildFormData>;
+  loading?: boolean;
+  error?: string;
 }
 
-export function ChildForm({ onSubmit, initial }: ChildFormProps) {
+export function ChildForm({
+  onSubmit,
+  initial,
+  loading = false,
+  error,
+}: ChildFormProps) {
   const [nickname, setNickname] = useState(initial?.nickname ?? '');
   const [birthMonth, setBirthMonth] = useState(initial?.birthMonth ?? '');
   const [priorityType, setPriorityType] = useState(initial?.priorityType ?? '일반');
-  const [error, setError] = useState('');
+  const [validationError, setValidationError] = useState('');
 
   const handleSubmit = () => {
-    if (!nickname.trim()) { setError('이름을 입력해 주세요'); return; }
-    if (!birthMonth.match(/^\d{4}-\d{2}$/)) { setError('생년월을 YYYY-MM 형식으로 입력해 주세요'); return; }
-    setError('');
+    if (loading) return;
+    if (!nickname.trim()) { setValidationError('이름을 입력해 주세요'); return; }
+    if (!birthMonth.match(/^\d{4}-\d{2}$/)) { setValidationError('생년월을 YYYY-MM 형식으로 입력해 주세요'); return; }
+    setValidationError('');
     onSubmit({ nickname: nickname.trim(), birthMonth, priorityType });
   };
+
+  const displayError = error || validationError;
 
   return (
     <div className="space-y-4">
@@ -36,7 +46,7 @@ export function ChildForm({ onSubmit, initial }: ChildFormProps) {
         placeholder="예: 첫째"
         value={nickname}
         onChange={(e) => setNickname(e.target.value)}
-        error={error && !nickname.trim() ? error : undefined}
+        error={validationError && !nickname.trim() ? validationError : undefined}
       />
       <Input
         label="생년월"
@@ -64,8 +74,19 @@ export function ChildForm({ onSubmit, initial }: ChildFormProps) {
           ))}
         </div>
       </div>
-      {error && <p className="text-xs text-danger">{error}</p>}
-      <Button onClick={handleSubmit} className="w-full">다음</Button>
+      {displayError && (
+        <p className="animate-in fade-in-0 duration-200 text-sm text-danger" role="alert">
+          {displayError}
+        </p>
+      )}
+      <Button
+        onClick={handleSubmit}
+        className="w-full"
+        disabled={loading}
+        aria-busy={loading}
+      >
+        {loading ? '저장 중...' : '다음'}
+      </Button>
     </div>
   );
 }
