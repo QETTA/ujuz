@@ -6,6 +6,7 @@ import { DashboardWidget } from '@/components/composites/DashboardWidget';
 import { RecommendationForm } from '@/components/composites/RecommendationForm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/primitives/EmptyState';
+import { ChatError } from '@/components/ai/chat-error';
 import { useStrategyStore, useHomeStore } from '@/lib/store';
 import { useUnreadAlerts } from '@/lib/client/hooks/useUnreadAlerts';
 import { SparklesIcon } from '@heroicons/react/24/outline';
@@ -15,6 +16,7 @@ export default function DashboardPage() {
   const activeRoute = useStrategyStore((s) => s.activeRoute);
   const setActiveRoute = useStrategyStore((s) => s.setActiveRoute);
   const loading = useStrategyStore((s) => s.loading);
+  const error = useStrategyStore((s) => s.error);
   const homeStore = useHomeStore();
 
   // Start polling unread alerts
@@ -35,6 +37,11 @@ export default function DashboardPage() {
             <Skeleton variant="rectangular" />
             <Skeleton variant="rectangular" />
           </div>
+        ) : error ? (
+          <ChatError
+            message={error}
+            onRetry={() => homeStore.load()}
+          />
         ) : recommendation ? (
           <DashboardWidget
             widget={recommendation.widget}

@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/layouts/PageHeader';
 import { ChecklistPanel } from '@/components/composites/ChecklistPanel';
 import { EmptyState } from '@/components/primitives/EmptyState';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ChatError } from '@/components/ai/chat-error';
 import { useApiFetch } from '@/lib/client/hooks/useApiFetch';
 import { clientApiFetch } from '@/lib/client/api';
 import { useStrategyStore } from '@/lib/store';
@@ -19,7 +20,7 @@ export default function ChecklistPage() {
   const recommendation = useStrategyStore((s) => s.recommendation);
   const recId = recommendation?.recommendation_id;
 
-  const { data, loading, refetch } = useApiFetch<ChecklistResponse>(
+  const { data, loading, error, refetch } = useApiFetch<ChecklistResponse>(
     recId ? `/api/v1/checklist?recommendation_id=${recId}` : null,
   );
 
@@ -47,6 +48,8 @@ export default function ChecklistPage() {
               <Skeleton key={i} variant="rectangular" className="h-16" />
             ))}
           </div>
+        ) : error ? (
+          <ChatError message={error} onRetry={refetch} />
         ) : !data || data.items.length === 0 ? (
           <EmptyState
             icon={<ClipboardDocumentCheckIcon className="h-8 w-8" />}

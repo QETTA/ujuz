@@ -6,6 +6,7 @@ import { AlertCard } from '@/components/composites/AlertCard';
 import { AlertSubscriptionCard } from '@/components/composites/AlertSubscriptionCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/primitives/EmptyState';
+import { ChatError } from '@/components/ai/chat-error';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useToAlertStore } from '@/lib/store';
 import { BellIcon } from '@heroicons/react/24/outline';
@@ -14,6 +15,7 @@ export default function AlertsPage() {
   const subscriptions = useToAlertStore((s) => s.subscriptions);
   const history = useToAlertStore((s) => s.history);
   const loading = useToAlertStore((s) => s.loading);
+  const error = useToAlertStore((s) => s.error);
   const load = useToAlertStore((s) => s.load);
   const loadHistory = useToAlertStore((s) => s.loadHistory);
   const unsubscribe = useToAlertStore((s) => s.unsubscribe);
@@ -29,6 +31,9 @@ export default function AlertsPage() {
       <PageHeader title="TO 알림" />
 
       <div className="p-4">
+        {error && (
+          <ChatError message={error} onRetry={() => { load(); loadHistory(); }} className="mb-4" />
+        )}
         <Tabs defaultValue="history">
           <TabsList>
             <TabsTrigger value="history">알림 내역</TabsTrigger>
