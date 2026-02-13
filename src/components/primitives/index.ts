@@ -10,6 +10,6 @@ export { Skeleton, type SkeletonProps, type SkeletonVariant } from '../ui/skelet
 export { Card, CardHeader, CardTitle, CardContent, type CardProps, type CardVariant } from '../ui/card';
 
 // Custom primitives
-export { Spinner, type SpinnerSize } from './Spinner';
+export { Spinner, type SpinnerProps, type SpinnerSize, type SpinnerColor } from './Spinner';
 export { Chip, type ChipProps, type ChipVariant } from './Chip';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
