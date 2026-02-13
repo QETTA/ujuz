@@ -15,7 +15,7 @@ export function AlertCard({ alert, onMarkRead, className }: AlertCardProps) {
   return (
     <div
       className={cn(
-        'flex items-start gap-3 rounded-xl border p-4 transition-colors',
+        'flex items-start gap-3 rounded-xl border p-4 transition-colors focus-within:ring-2 focus-within:ring-brand-200',
         alert.is_read
           ? 'border-border bg-surface'
           : 'border-brand-200 bg-brand-50',
@@ -36,8 +36,9 @@ export function AlertCard({ alert, onMarkRead, className }: AlertCardProps) {
           {!alert.is_read && onMarkRead && (
             <button
               type="button"
+              aria-label="알림 읽음 처리"
               onClick={onMarkRead}
-              className="shrink-0 text-xs text-brand-600 hover:underline"
+              className="shrink-0 text-xs text-brand-600 transition-transform duration-150 hover:underline focus:outline-2 focus:outline-offset-2 focus:outline-brand-500 active:scale-95"
             >
               읽음
             </button>
