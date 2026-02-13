@@ -327,7 +327,7 @@ async function analyzeWorkplaceRoute(
   scoreCache: ScoreCache,
   stats: ScoringStats,
 ): Promise<RouteAnalysis> {
-  let facilities: FacilityListItem[] = [];
+  let facilities: FacilityListItem[];
 
   if (ctx.employer) {
     // Search by employer name

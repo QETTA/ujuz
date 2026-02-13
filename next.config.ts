@@ -29,6 +29,9 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   outputFileTracingRoot: dirname(fileURLToPath(import.meta.url)),
   devIndicators: false,
+  eslint: {
+    dirs: ['src/app', 'src/lib', 'src/components'],
+  },
   async headers() {
     return [
       {
