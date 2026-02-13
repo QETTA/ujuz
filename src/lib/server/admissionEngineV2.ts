@@ -7,6 +7,7 @@
 
 import { jStat } from 'jstat';
 import { z } from 'zod';
+import { LRUCache } from './lruCache';
 import { getDbOrThrow } from './db';
 import { env } from './env';
 import { AppError } from './errors';
@@ -47,6 +48,12 @@ import {
   ENGINE_VERSION,
 } from './admissionMath';
 import { readAdmissionBlocks } from './admissionData';
+
+/** In-memory LRU cache for admission scores (5-min TTL, max 1000 entries) */
+const admissionLRU = new LRUCache<AdmissionScoreResultV2>({
+  maxSize: 1000,
+  ttlMs: 5 * 60 * 1000, // 5 minutes
+});
 
 type DbClient = Awaited<ReturnType<typeof getDbOrThrow>>;
 type PrebuiltBlocks = Awaited<ReturnType<typeof readAdmissionBlocks>>;
@@ -238,6 +245,10 @@ async function getCachedAdmissionResult(
   input: AdmissionScoreInputV2,
   cacheKey: string,
 ): Promise<AdmissionScoreResultV2 | null> {
+  // Check in-memory LRU cache first (5-min TTL, avoids MongoDB round-trip)
+  const lruResult = admissionLRU.get(cacheKey);
+  if (lruResult) return lruResult;
+
   try {
     const cached = await db.collection<AdmissionCacheDoc>(U.ADMISSION_CACHE).findOne({
       cacheKey,
@@ -252,6 +263,9 @@ async function getCachedAdmissionResult(
 
     const parsed = admissionScoreResultSchema.safeParse(cached.result);
     if (!parsed.success) return null;
+
+    // Populate LRU from MongoDB hit
+    admissionLRU.set(cacheKey, parsed.data);
     return parsed.data;
   } catch (err) {
     logger.debug('Cache miss or error', { cacheKey, error: err instanceof Error ? err.message : String(err) });
@@ -612,6 +626,8 @@ async function saveAdmissionCache(
       },
       { upsert: true },
     );
+    // Also save to in-memory LRU
+    admissionLRU.set(cacheKey, result);
   } catch (err) {
     logger.warn('Cache write failed', { facilityId: input.facility_id, error: err instanceof Error ? err.message : String(err) });
   }

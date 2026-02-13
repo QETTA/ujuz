@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { env } from '@/lib/server/env';
 import { getUserId, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { getCostManager, ensureCostLoaded } from '@/lib/server/costManager';
 import { checkLimit, incrementFeatureUsage } from '@/lib/server/subscriptionService';
 import { logger } from '@/lib/server/logger';
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
     userId = await getUserId(req);
   } catch {
     logRequest(req, 401, start, traceId);
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return errors.unauthorized('Unauthorized');
   }
 
   // Check tier limit
@@ -54,13 +55,13 @@ export async function POST(req: NextRequest) {
     body = await req.json();
   } catch {
     logRequest(req, 400, start, traceId);
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return errors.badRequest('Invalid JSON', 'invalid_json');
   }
 
   const { result, facilityName } = body;
   if (!result) {
     logRequest(req, 400, start, traceId);
-    return NextResponse.json({ error: 'result is required' }, { status: 400 });
+    return errors.badRequest('result is required', 'validation_error');
   }
 
   const probabilityPct = Math.round((Number(result.probability) || 0) * 100);

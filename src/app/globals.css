@@ -86,7 +86,7 @@
   --shadow-glass: 0 4px 30px oklch(0.15 0.02 260 / 0.06);
 
   /* Font */
-  --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont,
+  --font-sans: -apple-system, BlinkMacSystemFont,
     system-ui, 'Helvetica Neue', 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
 

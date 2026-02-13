@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
 import { errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { facilityNearbySchema, parseBody } from '@/lib/server/validation';
 import { findNearbyFacilities } from '@/lib/server/facility/facilityService';
 
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
     const parsed = parseBody(facilityNearbySchema, params);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const db = await getDbOrThrow();

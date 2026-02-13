@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrCreateAnonSession } from '@/lib/server/anonSession';
 import { errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { anonSessionSchema, parseBody } from '@/lib/server/validation';
 import { SignJWT } from 'jose';
 import { env } from '@/lib/server/env';
@@ -19,13 +20,13 @@ export async function POST(req: NextRequest) {
       body = await req.json();
     } catch {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+      return errors.badRequest('Invalid JSON', 'invalid_json');
     }
 
     const parsed = parseBody(anonSessionSchema, body);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const { device_fingerprint } = parsed.data;

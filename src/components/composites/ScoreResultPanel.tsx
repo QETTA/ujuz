@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils';
 import type { AdmissionScoreResultV2 } from '@/lib/types';
 import { ScoreGauge } from './ScoreGauge';
 import { EvidenceCard } from './EvidenceCard';
+import EvidenceLabel from '@/components/data/EvidenceLabel';
+import DisclaimerBanner from '@/components/data/DisclaimerBanner';
 
 interface ScoreResultPanelProps {
   result: AdmissionScoreResultV2;
@@ -47,6 +49,11 @@ export function ScoreResultPanel({ result, className }: ScoreResultPanelProps) {
       {result.evidenceCards.length > 0 && (
         <div>
           <h3 className="mb-3 text-sm font-semibold text-text-primary">분석 근거</h3>
+          <EvidenceLabel
+            dataSource="공공데이터 (data.go.kr)"
+            lastUpdated={result.updatedAt}
+            className="mb-2"
+          />
           <div className="space-y-2">
             {result.evidenceCards.map((card, i) => (
               <EvidenceCard key={`${card.type}-${i}`} evidence={card} />
@@ -61,6 +68,9 @@ export function ScoreResultPanel({ result, className }: ScoreResultPanelProps) {
           이 결과는 제한된 데이터를 기반으로 한 추정치입니다. 실제 결과와 다를 수 있습니다.
         </p>
       )}
+
+      {/* Disclaimer */}
+      <DisclaimerBanner variant="prominent" />
     </div>
   );
 }

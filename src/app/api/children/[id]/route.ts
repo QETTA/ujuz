@@ -7,6 +7,7 @@ export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserId, getTraceId, parseJson, logRequest, errorResponse } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { getDbOrThrow } from '@/lib/server/db';
 import { U } from '@/lib/server/collections';
 import { ObjectId } from 'mongodb';
@@ -49,19 +50,13 @@ async function updateChild(req: NextRequest, ctx: RouteContext) {
     const { id } = await ctx.params;
     const parsedId = childIdSchema.safeParse(id);
     if (!parsedId.success) {
-      return NextResponse.json(
-        { error: 'VALIDATION_ERROR', message: parsedId.error.message },
-        { status: 400 },
-      );
+      return errors.badRequest(parsedId.error.message, 'validation_error');
     }
 
     const body = await parseJson(req);
     const parsed = childPatchBodySchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'VALIDATION_ERROR', message: parsed.error.message },
-        { status: 400 },
-      );
+      return errors.badRequest(parsed.error.message, 'validation_error');
     }
 
     const db = await getDbOrThrow();

@@ -7,6 +7,7 @@ export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserId, getTraceId, parseJson, logRequest, errorResponse } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { getDbOrThrow } from '@/lib/server/db';
 import { U } from '@/lib/server/collections';
 import { parseBody, settingsSchema } from '@/lib/server/validation';
@@ -52,7 +53,7 @@ export async function PATCH(req: NextRequest) {
     const body = await parseJson(req);
     const parsed = parseBody(settingsSchema, body);
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const db = await getDbOrThrow();

@@ -16,6 +16,9 @@ const MAX_HISTORY_MESSAGES = 10;
 export const MAX_TOKENS = 1024;
 const TASK_TYPE = 'chat' as const;
 
+/** Disclaimer appended to all bot responses */
+export const AI_DISCLAIMER = '\n\n---\n*본 정보는 통계적 추정 및 AI 생성 정보로, 실제 입소 결과와 다를 수 있습니다. 정확한 정보는 해당 시설 또는 관할 지자체에 문의하세요.*';
+
 // ── Claude API Client (lazy init) ───────────────────────
 let anthropicClient: Anthropic | null = null;
 let apiKeyWarned = false;
@@ -53,7 +56,10 @@ const SYSTEM_PROMPT = `당신은 "우쥬봇"입니다. 대한민국 어린이집
 - 친절하고 간결하게 답변하세요 (300자 이내 권장)
 - 확실하지 않은 정보는 확인이 필요하다고 안내하세요
 - 어린이집/보육 관련 질문이 아닌 경우 정중히 안내 범위를 설명하세요
-- 개인정보(주민번호, 카드번호 등)는 절대 요청하지 마세요`;
+- 개인정보(주민번호, 카드번호 등)는 절대 요청하지 마세요
+- 모든 답변의 마지막에 반드시 다음 면책 문구를 추가하세요:
+---
+*본 정보는 통계적 추정 및 AI 생성 정보로, 실제 입소 결과와 다를 수 있습니다. 정확한 정보는 해당 시설 또는 관할 지자체에 문의하세요.*`;
 
 /**
  * Prepare Claude API parameters without calling the API.
@@ -99,7 +105,7 @@ export async function generateResponse(
         waiting_position: context.waiting_position,
         priority_type: context.priority_type ?? 'general',
       });
-      return formatBotResponseV2(result);
+      return formatBotResponseV2(result) + AI_DISCLAIMER;
     } catch (err) {
       logger.warn('Admission engine failed, falling back', { error: err instanceof Error ? err.message : String(err) });
     }
@@ -138,7 +144,9 @@ async function callClaude(
   await syncClaudeCost(costManager, model, TASK_TYPE, response.usage.input_tokens, response.usage.output_tokens);
 
   const textBlock = response.content.find((block) => block.type === 'text');
-  return textBlock?.text ?? generateFallback(intent, dataBlocks);
+  const text = textBlock?.text ?? generateFallback(intent, dataBlocks);
+  // Append disclaimer if not already present (Claude may include it from system prompt)
+  return text.includes('본 정보는 통계적 추정') ? text : text + AI_DISCLAIMER;
 }
 
 async function composeSystemPrompt(
@@ -246,5 +254,5 @@ export function generateFallback(
     GENERAL: `안녕하세요! 우쥬봇이에요. 어린이집 관련 궁금한 점이 있으시면 무엇이든 물어보세요.${blockSummary}`,
   };
 
-  return responses[intent] ?? responses.GENERAL;
+  return (responses[intent] ?? responses.GENERAL) + AI_DISCLAIMER;
 }

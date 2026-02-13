@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAlertHistory } from '@/lib/server/toAlertService';
 import { getUserId, errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { objectIdSchema } from '@/lib/server/validation';
 
 export const runtime = 'nodejs';
@@ -18,9 +19,9 @@ export async function GET(req: NextRequest) {
       const cursorResult = objectIdSchema.safeParse(cursorParam);
       if (!cursorResult.success) {
         logRequest(req, 400, start, traceId);
-        return NextResponse.json(
-          { error: cursorResult.error.issues[0]?.message ?? '유효하지 않은 ID입니다' },
-          { status: 400 },
+        return errors.badRequest(
+          cursorResult.error.issues[0]?.message ?? '유효하지 않은 ID입니다',
+          'invalid_cursor',
         );
       }
     }
@@ -30,9 +31,9 @@ export async function GET(req: NextRequest) {
       const parsedLimit = Number(limitParam);
       if (!Number.isInteger(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) {
         logRequest(req, 400, start, traceId);
-        return NextResponse.json(
-          { error: 'limit must be an integer between 1 and 100' },
-          { status: 400 },
+        return errors.badRequest(
+          'limit must be an integer between 1 and 100',
+          'invalid_limit',
         );
       }
       limit = parsedLimit;

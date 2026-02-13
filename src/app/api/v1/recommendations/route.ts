@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserId, parseJson, errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { recommendationInputSchema, parseBody } from '@/lib/server/validation';
 import { checkRateLimit } from '@/lib/server/rateLimit';
 import { analyzeRoutes } from '@/lib/server/strategyEngine';
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
     const parsed = parseBody(recommendationInputSchema, body);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const result = await analyzeRoutes(parsed.data, userId);

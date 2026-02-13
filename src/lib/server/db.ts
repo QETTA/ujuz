@@ -14,3 +14,5 @@ export async function getDbOrThrow() {
   if (existing) return existing;
   return connectMongo(env.MONGODB_URI, env.MONGODB_DB_NAME);
 }
+
+export const connectDb = getDbOrThrow;

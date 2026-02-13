@@ -6,6 +6,7 @@ export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserId, getTraceId, parseJson, logRequest, errorResponse } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { parseBody, recommendationInputSchema } from '@/lib/server/validation';
 import { analyzeRoutes } from '@/lib/server/strategyEngine';
 
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
     const body = await parseJson(req);
     const parsed = parseBody(recommendationInputSchema, body);
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const result = await analyzeRoutes(parsed.data, userId);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDisplayPlans, getUserSubscription, createSubscription, cancelSubscription } from '@/lib/server/subscriptionService';
 import { getUserId, errorResponse, parseJson, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { subscriptionCreateSchema, parseBody } from '@/lib/server/validation';
 
 export const runtime = 'nodejs';
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
     const parsed = parseBody(subscriptionCreateSchema, body);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
     const data = parsed.data;
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
 import { errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { facilityOverrideSchema, objectIdSchema, parseBody } from '@/lib/server/validation';
 import { requireAdmin } from '@/lib/server/facility/adminAuth';
 import { applyOverride } from '@/lib/server/facility/facilityService';
@@ -31,22 +32,22 @@ export async function POST(
       body = await req.json();
     } catch {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+      return errors.badRequest('Invalid JSON', 'invalid_json');
     }
 
     const parsed = parseBody(facilityOverrideSchema, body);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const { facilityId } = await params;
     const facilityIdResult = objectIdSchema.safeParse(facilityId);
     if (!facilityIdResult.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json(
-        { error: facilityIdResult.error.issues[0]?.message ?? '유효하지 않은 ID입니다' },
-        { status: 400 },
+      return errors.badRequest(
+        facilityIdResult.error.issues[0]?.message ?? '유효하지 않은 ID입니다',
+        'invalid_facility_id',
       );
     }
     const { field_path, new_value, reason } = parsed.data;

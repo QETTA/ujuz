@@ -38,3 +38,20 @@ next-env.d.ts
 # review artifacts
 GPT-REVIEW-PACKAGE.md
 review-*.diff
+
+# Claude Code MCP config (개인 세팅)
+.mcp.json
+
+# Playwright
+.playwright/
+.playwright-cli/
+
+# Serena cache
+.serena/cache/
+
+# Mobile (Expo)
+mobile/node_modules/
+mobile/.expo/
+mobile/ios/
+mobile/android/
+mobile/dist/

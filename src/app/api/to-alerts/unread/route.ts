@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
 import { getUserId, errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { U } from '@/lib/server/collections';
 import { toAlertUnreadQuerySchema, parseQuery } from '@/lib/server/validation';
 import type { TOAlertDoc } from '@/lib/server/dbTypes';
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
     const parsed = parseQuery(toAlertUnreadQuerySchema, searchParams);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const { since, limit } = parsed.data;

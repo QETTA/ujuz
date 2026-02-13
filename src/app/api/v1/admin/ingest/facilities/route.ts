@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
 import { errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { facilityIngestSchema, parseBody } from '@/lib/server/validation';
 import { requireAdmin } from '@/lib/server/facility/adminAuth';
 import { fetchFacilityPage } from '@/lib/server/facility/connector';
@@ -29,13 +30,13 @@ export async function POST(req: NextRequest) {
       body = await req.json();
     } catch {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+      return errors.badRequest('Invalid JSON', 'invalid_json');
     }
 
     const parsed = parseBody(facilityIngestSchema, body);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const { page, page_size } = parsed.data;

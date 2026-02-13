@@ -1,0 +1,36 @@
+{
+  "name": "ujuz-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "start:lan": "expo start --host lan --port 8081",
+    "start:tunnel": "expo start --host tunnel --port 8081",
+    "android": "expo start --android",
+    "android:lan": "expo start --host lan --android --port 8081",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "web:lan": "expo start --host localhost --web",
+    "lint": "expo lint"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^1.23.1",
+    "expo": "^52.0.0",
+    "expo-constants": "~17.0.0",
+    "expo-linking": "~7.0.0",
+    "expo-router": "~4.0.0",
+    "expo-status-bar": "~2.0.0",
+    "nativewind": "^4.0.0",
+    "react": "18.3.1",
+    "react-native": "0.76.9",
+    "react-native-maps": "^1.18.0",
+    "react-native-safe-area-context": "^4.12.0",
+    "react-native-screens": "^4.4.0",
+    "tailwindcss": "^3.4.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "typescript": "^5.6.0"
+  }
+}

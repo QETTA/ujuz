@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSubscription, getUserSubscriptions, deleteSubscription } from '@/lib/server/toAlertService';
 import { getUserId, errorResponse, parseJson, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { checkRateLimit } from '@/lib/server/rateLimit';
 import { toAlertSubscribeSchema, toAlertDeleteQuerySchema, toAlertPatchSchema, parseBody, parseQuery } from '@/lib/server/validation';
 import { checkLimit } from '@/lib/server/subscriptionService';
@@ -34,14 +35,14 @@ export async function POST(req: NextRequest) {
     const { allowed } = await checkRateLimit(`to-alerts:${userId}`, 10, 60_000);
     if (!allowed) {
       logRequest(req, 429, start, traceId);
-      return NextResponse.json({ error: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' }, { status: 429 });
+      return errors.tooMany('요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.');
     }
 
     const body = await parseJson(req);
     const parsed = parseBody(toAlertSubscribeSchema, body);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
     const data = parsed.data;
 
@@ -84,7 +85,7 @@ export async function DELETE(req: NextRequest) {
     const parsed = parseQuery(toAlertDeleteQuerySchema, searchParams);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     await deleteSubscription(userId, parsed.data.facility_id);
@@ -107,7 +108,7 @@ export async function PATCH(req: NextRequest) {
     const parsed = parseBody(toAlertPatchSchema, body);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const { facility_id, active } = parsed.data;
@@ -120,7 +121,7 @@ export async function PATCH(req: NextRequest) {
 
     if (result.matchedCount === 0) {
       logRequest(req, 404, start, traceId);
-      return NextResponse.json({ error: '해당 구독을 찾을 수 없습니다' }, { status: 404 });
+      return errors.notFound('해당 구독을 찾을 수 없습니다', 'subscription_not_found');
     }
 
     logRequest(req, 200, start, traceId);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDbOrThrow } from '@/lib/server/db';
 import { getUserId, parseJson, errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { U } from '@/lib/server/collections';
 import { parseBody, markAlertsReadSchema } from '@/lib/server/validation';
 import type { TOAlertDoc } from '@/lib/server/dbTypes';
@@ -23,7 +24,7 @@ export async function PATCH(req: NextRequest) {
     const parsed = parseBody(markAlertsReadSchema, body);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const { alert_ids } = parsed.data;
@@ -33,7 +34,7 @@ export async function PATCH(req: NextRequest) {
 
     if (objectIds.length === 0) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: 'No valid alert IDs provided' }, { status: 400 });
+      return errors.badRequest('No valid alert IDs provided', 'invalid_alert_ids');
     }
 
     const db = await getDbOrThrow();

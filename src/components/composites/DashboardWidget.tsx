@@ -5,6 +5,8 @@ import type { WidgetPayload, RouteId } from '@/lib/types';
 import { WidgetSummaryBar } from './WidgetSummaryBar';
 import { WeeklyActionCard } from './WeeklyActionCard';
 import { RouteCardWidget } from './RouteCardWidget';
+import EvidenceLabel from '@/components/data/EvidenceLabel';
+import DisclaimerBanner from '@/components/data/DisclaimerBanner';
 
 interface DashboardWidgetProps {
   widget: WidgetPayload;
@@ -18,6 +20,10 @@ export function DashboardWidget({ widget, activeRoute, onRouteSelect, className 
     <div className={cn('space-y-6', className)}>
       {/* Summary */}
       <WidgetSummaryBar summary={widget.summary} />
+      <EvidenceLabel
+        dataSource="공공데이터 (data.go.kr)"
+        lastUpdated={widget.summary.updated_at}
+      />
 
       {/* Weekly actions */}
       <section>
@@ -45,7 +51,7 @@ export function DashboardWidget({ widget, activeRoute, onRouteSelect, className 
       </section>
 
       {/* Disclaimer */}
-      <p className="text-[10px] text-text-tertiary leading-relaxed">{widget.disclaimer}</p>
+      <DisclaimerBanner variant="subtle" />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import type { Grade } from '@/lib/types';
 import { MapPinIcon, PhoneIcon } from '@heroicons/react/24/outline';
+import EvidenceLabel from '@/components/data/EvidenceLabel';
 
 interface FacilityDetailHeaderProps {
   name: string;
@@ -10,6 +11,7 @@ interface FacilityDetailHeaderProps {
   phone?: string;
   grade?: Grade;
   score?: number;
+  lastUpdated?: string;
   className?: string;
 }
 
@@ -20,6 +22,7 @@ export function FacilityDetailHeader({
   phone,
   grade,
   score,
+  lastUpdated,
   className,
 }: FacilityDetailHeaderProps) {
   return (
@@ -38,6 +41,13 @@ export function FacilityDetailHeader({
           </div>
         )}
       </div>
+
+      {(grade || score != null) && (
+        <EvidenceLabel
+          dataSource="공공데이터 (data.go.kr)"
+          lastUpdated={lastUpdated ?? new Date().toISOString()}
+        />
+      )}
 
       {address && (
         <div className="flex items-center gap-2 text-sm text-text-secondary">

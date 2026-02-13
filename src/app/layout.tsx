@@ -40,13 +40,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* FOUC prevention: set data-theme before paint */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        {/* Pretendard Variable via CDN */}
-        <link
-          rel="stylesheet"
-          as="style"
-          crossOrigin="anonymous"
-          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
-        />
       </head>
       <body className="bg-surface text-text-primary antialiased">
         {/* Skip to content — accessibility */}

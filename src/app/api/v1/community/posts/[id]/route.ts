@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
 import { U } from '@/lib/server/collections';
 import { errorResponse, parseJson, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { apiError, errors } from '@/lib/server/apiError';
 import { FEATURE_FLAGS } from '@/lib/server/featureFlags';
 import { communityPostUpdateSchema, objectIdSchema, anonIdSchema, parseBody } from '@/lib/server/validation';
 import type { PostDoc } from '@/lib/server/dbTypes';
@@ -30,7 +31,7 @@ export async function PUT(
     const idResult = objectIdSchema.safeParse(id);
     if (!idResult.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: '유효하지 않은 게시글 ID입니다' }, { status: 400 });
+      return errors.badRequest('유효하지 않은 게시글 ID입니다', 'invalid_post_id');
     }
 
     const anonId = anonIdSchema.parse(req.headers.get('x-anon-id') ?? 'anonymous');
@@ -39,7 +40,7 @@ export async function PUT(
     const parsed = parseBody(communityPostUpdateSchema, body);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const db = await getDbOrThrow();
@@ -49,15 +50,15 @@ export async function PUT(
     const existing = await col.findOne({ _id: new ObjectId(id) });
     if (!existing) {
       logRequest(req, 404, start, traceId);
-      return NextResponse.json({ error: '게시글을 찾을 수 없습니다' }, { status: 404 });
+      return errors.notFound('게시글을 찾을 수 없습니다', 'post_not_found');
     }
     if (existing.anon_id !== anonId) {
       logRequest(req, 403, start, traceId);
-      return NextResponse.json({ error: '본인의 게시글만 수정할 수 있습니다' }, { status: 403 });
+      return errors.forbidden('본인의 게시글만 수정할 수 있습니다', 'not_post_owner');
     }
     if (existing.status === 'hidden') {
       logRequest(req, 410, start, traceId);
-      return NextResponse.json({ error: '삭제된 게시글입니다' }, { status: 410 });
+      return apiError('삭제된 게시글입니다', 'post_deleted', 410);
     }
 
     const updates: Record<string, unknown> = { updated_at: new Date() };
@@ -88,7 +89,7 @@ export async function DELETE(
     const idResult = objectIdSchema.safeParse(id);
     if (!idResult.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: '유효하지 않은 게시글 ID입니다' }, { status: 400 });
+      return errors.badRequest('유효하지 않은 게시글 ID입니다', 'invalid_post_id');
     }
 
     const anonId = anonIdSchema.parse(req.headers.get('x-anon-id') ?? 'anonymous');
@@ -99,11 +100,11 @@ export async function DELETE(
     const existing = await col.findOne({ _id: new ObjectId(id) });
     if (!existing) {
       logRequest(req, 404, start, traceId);
-      return NextResponse.json({ error: '게시글을 찾을 수 없습니다' }, { status: 404 });
+      return errors.notFound('게시글을 찾을 수 없습니다', 'post_not_found');
     }
     if (existing.anon_id !== anonId) {
       logRequest(req, 403, start, traceId);
-      return NextResponse.json({ error: '본인의 게시글만 삭제할 수 있습니다' }, { status: 403 });
+      return errors.forbidden('본인의 게시글만 삭제할 수 있습니다', 'not_post_owner');
     }
 
     await col.updateOne(

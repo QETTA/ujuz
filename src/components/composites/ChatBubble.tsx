@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { formatRelativeTime } from '@/lib/utils';
 import { DataBlockCard } from '@/components/ai/data-block-card';
+import DisclaimerBanner from '@/components/data/DisclaimerBanner';
 import type { UIMessage } from 'ai';
 
 interface DataBlock {
@@ -67,6 +68,7 @@ export function ChatBubble({ message, className }: ChatBubbleProps) {
                 className={isUser ? 'border-brand-400/30 bg-brand-600/20' : undefined}
               />
             ))}
+            {!isUser && <DisclaimerBanner variant="subtle" className="mt-1" />}
           </div>
         )}
 

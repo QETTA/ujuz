@@ -66,7 +66,7 @@ export function errorResponse(error: unknown, traceId?: string): NextResponse {
       ...(traceId && { traceId }),
     });
     return NextResponse.json(
-      { error: error.message, code: error.code, ...(traceId && { traceId }) },
+      { error: error.message, code: error.code ?? 'app_error', ...(traceId && { traceId }) },
       { status: error.statusCode },
     );
   }
@@ -76,7 +76,7 @@ export function errorResponse(error: unknown, traceId?: string): NextResponse {
     ...(traceId && { traceId }),
   });
   return NextResponse.json(
-    { error: '서버 오류가 발생했습니다', ...(traceId && { traceId }) },
+    { error: '서버 오류가 발생했습니다', code: 'internal_error', ...(traceId && { traceId }) },
     { status: 500 },
   );
 }

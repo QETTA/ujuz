@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
 import { errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { facilitySearchSchema, parseBody } from '@/lib/server/validation';
 import { searchFacilities } from '@/lib/server/facility/facilityService';
 import { U } from '@/lib/server/collections';
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
 
       if (ids.length === 0) {
         logRequest(req, 400, start, traceId);
-        return NextResponse.json({ error: 'No facility IDs provided' }, { status: 400 });
+        return errors.badRequest('No facility IDs provided', 'missing_facility_ids');
       }
 
       const db = await getDbOrThrow();
@@ -55,7 +56,7 @@ export async function GET(req: NextRequest) {
     const parsed = parseBody(facilitySearchSchema, params);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const db = await getDbOrThrow();

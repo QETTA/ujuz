@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserId, errorResponse, parseJson, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { searchMemories, upsertMemory, appendEvent } from '@/lib/server/userMemoryService';
 import { profileUpdateSchema, parseBody } from '@/lib/server/validation';
 
@@ -56,7 +57,7 @@ export async function PUT(req: NextRequest) {
     const parsed = parseBody(profileUpdateSchema, body);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
     const data = parsed.data;
 

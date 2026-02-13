@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "UjuZ",
+    "slug": "ujuz",
+    "scheme": "ujuz",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "kr.ujuz.app"
+    },
+    "android": {
+      "package": "kr.ujuz.app"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

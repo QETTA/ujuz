@@ -1,10 +1,12 @@
 {
   "permissions": {
-    "defaultMode": "plan",
+    "defaultMode": "editing",
     "allow": [
       "Bash(pnpm typecheck)",
       "Bash(pnpm test)",
       "Bash(pnpm dev)",
+      "Bash(pnpm dev:*)",
+      "Bash(pnpm --dir mobile*)",
       "Bash(pnpm build)",
       "Bash(git status)",
       "Bash(git diff*)",
@@ -14,6 +16,8 @@
       "Bash(git push*)",
       "Bash(codex exec*)",
       "Read",
+      "Write",
+      "Edit",
       "Glob",
       "Grep"
     ]
@@ -24,17 +28,23 @@
   "hooks": {
     "TaskCompleted": [
       {
-        "command": "cd /mnt/c/Users/sihu2/ujuz-api && pnpm typecheck",
-        "description": "typecheck 통과해야 태스크 완료 가능",
-        "failAction": "block"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pnpm typecheck"
+          }
+        ]
       }
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash(rm -rf*)",
-        "command": "echo 'BLOCKED: rm -rf is not allowed'",
-        "failAction": "block",
-        "description": "rm -rf 차단"
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -q 'rm -rf'; then echo 'rm -rf is not allowed' >&2; exit 2; fi; exit 0"
+          }
+        ]
       }
     ]
   }

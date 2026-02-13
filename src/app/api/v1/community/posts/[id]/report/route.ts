@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
 import { U } from '@/lib/server/collections';
 import { errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { FEATURE_FLAGS } from '@/lib/server/featureFlags';
 import { reportSchema, anonIdSchema, objectIdSchema, parseBody } from '@/lib/server/validation';
 import type { ReportDoc } from '@/lib/server/dbTypes';
@@ -28,9 +29,9 @@ export async function POST(
     const postIdResult = objectIdSchema.safeParse(postId);
     if (!postIdResult.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json(
-        { error: postIdResult.error.issues[0]?.message ?? '유효하지 않은 ID입니다' },
-        { status: 400 },
+      return errors.badRequest(
+        postIdResult.error.issues[0]?.message ?? '유효하지 않은 ID입니다',
+        'invalid_post_id',
       );
     }
 
@@ -39,13 +40,13 @@ export async function POST(
       body = await req.json();
     } catch {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+      return errors.badRequest('Invalid JSON', 'invalid_json');
     }
 
     const parsed = parseBody(reportSchema, body);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const data = parsed.data;

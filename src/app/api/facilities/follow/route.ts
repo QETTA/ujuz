@@ -7,6 +7,7 @@ export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserId, getTraceId, parseJson, logRequest, errorResponse } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { getDbOrThrow } from '@/lib/server/db';
 import { U } from '@/lib/server/collections';
 import { z } from 'zod';
@@ -25,10 +26,7 @@ export async function POST(req: NextRequest) {
     const body = await parseJson(req);
     const parsed = facilityFollowBodySchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'VALIDATION_ERROR', message: parsed.error.message },
-        { status: 400 },
-      );
+      return errors.badRequest(parsed.error.message, 'validation_error');
     }
 
     const db = await getDbOrThrow();
@@ -73,7 +71,7 @@ export async function DELETE(req: NextRequest) {
     const userId = await getUserId(req);
     const facilityId = req.nextUrl.searchParams.get('facility_id');
     if (!facilityId) {
-      return NextResponse.json({ error: 'facility_id is required' }, { status: 400 });
+      return errors.badRequest('facility_id is required', 'missing_facility_id');
     }
 
     const db = await getDbOrThrow();

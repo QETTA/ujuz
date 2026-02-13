@@ -13,7 +13,7 @@ import { ObjectId } from 'mongodb';
 import { getUserId, errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
 import { checkRateLimit } from '@/lib/server/rateLimit';
 import { classifyIntent, generateSuggestions } from '@/lib/server/intentClassifier';
-import { prepareClaudeParams, syncClaudeCost, generateFallback, MAX_TOKENS } from '@/lib/server/responseGenerator';
+import { prepareClaudeParams, syncClaudeCost, generateFallback, MAX_TOKENS, AI_DISCLAIMER } from '@/lib/server/responseGenerator';
 import { calculateAdmissionScoreV2, formatBotResponseV2 } from '@/lib/server/admissionEngineV2';
 import { getCostManager, ensureCostLoaded } from '@/lib/server/costManager';
 import { getDbOrThrow } from '@/lib/server/db';
@@ -214,7 +214,7 @@ export async function POST(req: NextRequest) {
     const { allowed } = await checkRateLimit(`chat:${userId}`, 20, 60_000);
     if (!allowed) {
       logRequest(req, 429, start, traceId);
-      return new Response(JSON.stringify({ error: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' }), {
+      return new Response(JSON.stringify({ error: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.', code: 'rate_limited' }), {
         status: 429,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -223,7 +223,7 @@ export async function POST(req: NextRequest) {
     const rawBody = await req.json().catch(() => null);
     if (!rawBody || typeof rawBody !== 'object') {
       logRequest(req, 400, start, traceId);
-      return new Response(JSON.stringify({ error: '잘못된 요청 형식입니다' }), {
+      return new Response(JSON.stringify({ error: '잘못된 요청 형식입니다', code: 'invalid_json' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -237,7 +237,7 @@ export async function POST(req: NextRequest) {
 
     if (!Array.isArray(body.messages) || body.messages.length === 0) {
       logRequest(req, 400, start, traceId);
-      return new Response(JSON.stringify({ error: '메시지가 필요합니다' }), {
+      return new Response(JSON.stringify({ error: '메시지가 필요합니다', code: 'missing_messages' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -246,7 +246,7 @@ export async function POST(req: NextRequest) {
     // Find the last user message — AI SDK v6 sends UIMessage with parts
     const lastUserMsg = [...body.messages].reverse().find((m) => m.role === 'user');
     if (!lastUserMsg) {
-      return new Response(JSON.stringify({ error: '사용자 메시지가 필요합니다' }), {
+      return new Response(JSON.stringify({ error: '사용자 메시지가 필요합니다', code: 'missing_user_message' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -257,7 +257,7 @@ export async function POST(req: NextRequest) {
       ? extractTextFromParts(lastUserMsg.parts)
       : '';
     if (!userText || userText.length > 2000) {
-      return new Response(JSON.stringify({ error: '메시지를 입력해 주세요 (2000자 이내)' }), {
+      return new Response(JSON.stringify({ error: '메시지를 입력해 주세요 (2000자 이내)', code: 'invalid_message' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -288,7 +288,7 @@ export async function POST(req: NextRequest) {
             waiting_position: body.context?.waiting_position,
             priority_type: body.context?.priority_type ?? 'general',
           });
-          content = formatBotResponseV2(admissionResult);
+          content = formatBotResponseV2(admissionResult) + AI_DISCLAIMER;
         } catch {
           content = generateFallback(intent, dataBlocks);
         }
@@ -355,10 +355,12 @@ export async function POST(req: NextRequest) {
               );
 
               // Append assistant message to existing conversation
+              // Ensure disclaimer is present (Claude should include it via system prompt)
+              const finalText = text.includes('본 정보는 통계적 추정') ? text : text + AI_DISCLAIMER;
               const assistantMsg: BotMessageDoc = {
                 id: new ObjectId().toString(),
                 role: 'assistant',
-                content: text,
+                content: finalText,
                 intent,
                 data_blocks: dataBlocks,
                 created_at: new Date().toISOString(),

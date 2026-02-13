@@ -7,6 +7,7 @@ export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserId, getTraceId, parseJson, logRequest, errorResponse } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { getPredictionEngine } from '@/lib/server/interfaces/engineFactory';
 import { getDbOrThrow } from '@/lib/server/db';
 import { U } from '@/lib/server/collections';
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
     const body = await parseJson(req);
     const parsed = parseBody(simulateSchema, body);
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const { facility_id, child_age_band, waiting_position, priority_type } = parsed.data;

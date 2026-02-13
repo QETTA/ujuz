@@ -1,5 +1,14 @@
 # CLAUDE.md
 
+## Project Direction
+
+**`PROJECT-DIRECTION.md`** 참조 — 사업기획 보고서 2건(기술 실사 + 네이티브 확장 전략) 기반 12개월 로드맵.
+- 현재 위치: TRL 5~6, 7개 서브시스템 (모바일 10% 포함)
+- 핵심 가치: **(a) 시설 탐색(지도) + (b) TO 알림 즉시성** → 네이티브 필수
+- 우선순위: **신뢰**(Phase 1) → **재방문/네이티브**(Phase 2) → **유료전환**(Phase 3) → **확장**(Phase 4)
+- 기술 조합: Expo + react-native-maps + Expo Push + Toss(웹) + MongoDB → LRU → Redis
+- 웹 = 유입 채널(SEO/결제), 모바일 = 핵심 경험(지도/알림/채팅)
+
 ## Workflow Preferences
 
 - **자동 검증 우선**: 브라우저 수동 확인 요청 대신 `pnpm typecheck`, 테스트 스크립트, curl 등으로 자동 검증할 것
@@ -9,12 +18,20 @@
 
 ## Project Stack
 
+### Web (Next.js)
 - Next.js 15 (App Router)
 - AI SDK v6 (`ai@^6.0.85`, `@ai-sdk/react@^3.0.87`)
 - Zod 4 (`zod@^4.3.6`)
 - MongoDB Atlas
 - Zustand (state management)
 - TypeScript strict mode
+
+### Mobile (Expo) — `mobile/`
+- Expo SDK 52 + expo-router
+- NativeWind v4 (Tailwind for RN)
+- react-native-maps (Apple Maps/Google Maps)
+- Zustand + TanStack Query + expo-secure-store
+- EAS Build (CI/CD)
 
 ## Key Architecture
 
@@ -65,6 +82,14 @@
   ```
 - **주의**: worktree에 node_modules 없음 → Codex가 pnpm install 시도 시 DNS 부하 발생 가능
 - **해결**: typecheck는 메인 디렉토리에서 머지 후 1회 실행
+
+### Codex MCP 연동 (Claude Code ↔ Codex-Spark)
+- `.mcp.json`으로 Codex를 MCP 도구로 연결 (개인 세팅, `.gitignore` 처리)
+- 모델: `gpt-5.3-codex-spark` (프로젝트 `.mcp.json`에서 고정)
+- `approval_policy: "on-failure"` — Claude Code가 이미 사용자 승인 거치므로 이중 승인 방지
+- Claude Code에서 `codex` / `codex-reply` 도구로 직접 호출 가능
+- **역할 분담 8:2** — Codex-Spark (80%): 컴포넌트 구현, CSS, 데이터 바인딩, API 라우트, 핫픽스 / Claude (20%): 설계, 리뷰, 아키텍처, 보안
+- 대형 태스크: Codex에 자기완결형 프롬프트 전달 → 결과 리뷰 → typecheck 게이트
 
 ## Claude Code 협업 세팅
 

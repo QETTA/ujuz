@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
 import { U } from '@/lib/server/collections';
 import { errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errors } from '@/lib/server/apiError';
 import { FEATURE_FLAGS } from '@/lib/server/featureFlags';
 import { communityPostSchema, communityPostQuerySchema, anonIdSchema, parseBody, parseQuery } from '@/lib/server/validation';
 import type { PostDoc } from '@/lib/server/dbTypes';
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
     const parsed = parseQuery(communityPostQuerySchema, searchParams);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const { region, type, sort, cursor, limit } = parsed.data;
@@ -88,13 +89,13 @@ export async function POST(req: NextRequest) {
       body = await req.json();
     } catch {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+      return errors.badRequest('Invalid JSON', 'invalid_json');
     }
 
     const parsed = parseBody(communityPostSchema, body);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return errors.badRequest(parsed.error, 'validation_error');
     }
 
     const data = parsed.data;
