@@ -21,6 +21,32 @@ interface UserEmailDoc {
   email?: string;
 }
 
+async function logEmailDelivery(
+  db: Db,
+  userId: string,
+  email: string,
+  alertCount: number,
+  status: 'sent' | 'failed' | 'bounced',
+  errorMessage?: string,
+): Promise<void> {
+  try {
+    await db.collection('email_delivery_log').insertOne({
+      user_id: userId,
+      email,
+      alert_count: alertCount,
+      status,
+      error_message: errorMessage,
+      sent_at: new Date(),
+    });
+  } catch (err) {
+    logger.error('Failed to log email delivery', {
+      userId,
+      email,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
 /**
  * Send TO alert emails, grouped by user.
  * Returns the number of emails successfully queued/sent.
@@ -62,6 +88,7 @@ export async function sendToAlertEmails(
   let sent = 0;
 
   for (const [userId, userAlerts] of byUser) {
+    let userEmail = '';
     try {
       // Look up user email from the NextAuth users collection
       const filter = ObjectId.isValid(userId)
@@ -77,13 +104,29 @@ export async function sendToAlertEmails(
         continue;
       }
 
-      const mail = buildAlertEmail(userAlerts, user.email as string);
-      await transport.sendMail({
+      userEmail = user.email;
+      const mail = buildAlertEmail(userAlerts, userEmail);
+      const sendResult = await withRetry(() => transport.sendMail({
         from: env.SMTP_FROM,
         ...mail,
-      });
+      })) as { rejected?: string[] };
       sent++;
+
+      if (Array.isArray(sendResult?.rejected) && sendResult.rejected.includes(userEmail)) {
+        logger.warn('TO alert email bounced', { userId });
+        void logEmailDelivery(db, userId, userEmail, userAlerts.length, 'bounced', 'Recipient was rejected by SMTP');
+      } else {
+        void logEmailDelivery(db, userId, userEmail, userAlerts.length, 'sent');
+      }
     } catch (err) {
+      void logEmailDelivery(
+        db,
+        userId,
+        userEmail || userId,
+        userAlerts.length,
+        'failed',
+        err instanceof Error ? err.message : String(err),
+      );
       logger.error('Failed to send TO alert email', {
         userId,
         error: err instanceof Error ? err.message : String(err),
@@ -93,6 +136,65 @@ export async function sendToAlertEmails(
 
   transport.close();
   return sent;
+}
+
+export async function getEmailDeliveryStats(
+  db: Db,
+  since: Date,
+): Promise<{ total: number; sent: number; failed: number; bounced: number }> {
+  const rows = await db.collection('email_delivery_log')
+    .aggregate<{ _id: 'sent' | 'failed' | 'bounced'; count: number }>([
+      { $match: { sent_at: { $gte: since } } },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+    ]).toArray();
+
+  const stats = { total: 0, sent: 0, failed: 0, bounced: 0 };
+  for (const row of rows) {
+    const count = row.count ?? 0;
+    stats.total += count;
+    switch (row._id) {
+      case 'sent':
+        stats.sent += count;
+        break;
+      case 'failed':
+        stats.failed += count;
+        break;
+      case 'bounced':
+        stats.bounced += count;
+        break;
+      default:
+        break;
+    }
+  }
+
+  return stats;
+}
+
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxAttempts: number = 3,
+  baseDelayMs: number = 1000,
+): Promise<T> {
+  let attempt = 0;
+  while (attempt < maxAttempts) {
+    attempt += 1;
+    try {
+      return await fn();
+    } catch (err) {
+      if (attempt >= maxAttempts) {
+        logger.error('sendMail failed after attempts', {
+          attempts: attempt,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        throw err;
+      }
+
+      const delayMs = baseDelayMs * 2 ** (attempt - 1);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  throw new Error('withRetry exhausted attempts');
 }
 
 function buildAlertEmail(alerts: TOAlertDoc[], to: string): MailOptions {

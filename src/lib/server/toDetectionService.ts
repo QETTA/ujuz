@@ -12,6 +12,7 @@ import { FEATURE_FLAGS } from './featureFlags';
 import { logger } from './logger';
 import type { TOAlertDoc, TOSubscriptionDoc, WaitlistSnapshotDoc } from './dbTypes';
 import { sendToAlertEmails } from './emailService';
+import { sendToAlertPush } from './pushService';
 
 export interface DetectionResult {
   scanned: number;
@@ -165,6 +166,29 @@ async function persistAndNotify(
       logger.error(`${logPrefix}: email send failed`, {
         error: err instanceof Error ? err.message : String(err),
       });
+    }
+  }
+
+  // Send push notifications for each alert
+  if (FEATURE_FLAGS.toPushNotification && persistedAlerts.length > 0) {
+    for (const alert of persistedAlerts) {
+      try {
+        await sendToAlertPush(
+          db,
+          alert.user_id,
+          alert.facility_name,
+          alert.age_class,
+          alert.estimated_slots,
+          alert._id.toString(),
+          alert.facility_id,
+        );
+      } catch (err) {
+        logger.error(`${logPrefix}: push send failed`, {
+          error: err instanceof Error ? err.message : String(err),
+          userId: alert.user_id,
+          facilityId: alert.facility_id,
+        });
+      }
     }
   }
 

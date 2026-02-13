@@ -39,6 +39,12 @@ const envSchema = z.object({
   // ── TO Detection ─────────────────────────────────────
   TO_DETECTION_LOOKBACK_HOURS: z.coerce.number().default(6),
   TO_DETECTION_DEDUP_HOURS: z.coerce.number().default(24),
+
+  // ── Kakao Local API ────────────────────────────────
+  KAKAO_REST_API_KEY: z.string().default(''),
+
+  // ── Cron ───────────────────────────────────────────
+  CRON_SECRET: z.string().default(''),
 });
 
 function parseEnv() {

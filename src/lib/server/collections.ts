@@ -22,6 +22,14 @@ export const U = {
   RECOMMENDATIONS: 'recommendations',
   CHECKLISTS: 'checklists',
 
+  // ── Push & Delivery ──────────────────────────────────
+  PUSH_TOKENS: 'push_tokens',
+  PUSH_DELIVERY_LOG: 'push_delivery_log',
+  EMAIL_DELIVERY_LOG: 'email_delivery_log',
+
+  // ── Community ──────────────────────────────────────────
+  COMMENTS: 'comments',
+
   // ── Facility Pipeline ──────────────────────────────────
   FACILITIES: 'facilities',
   FACILITY_SOURCES: 'facility_sources',

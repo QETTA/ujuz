@@ -4,13 +4,15 @@
  */
 
 export const FEATURE_FLAGS = {
-  communityWrite: false,
+  communityWrite: true,
   communityReport: true,
   aiExplain: true,
   facilityCrawl: true,
   facilityAdminApi: true,
   toDetection: true,
   toEmailNotification: false,
+  toPushNotification: true,
+  nativeMap: true,
 } as const;
 
 export type FeatureFlag = keyof typeof FEATURE_FLAGS;
