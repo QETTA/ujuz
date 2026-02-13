@@ -5,6 +5,7 @@ import { TopBar } from '@/components/nav/top-bar';
 import { TabBar } from '@/components/nav/tab-bar';
 import { ChatThread } from '@/components/ai/chat-thread';
 import { ChatInput } from '@/components/ai/chat-input';
+import { ChatError } from '@/components/ai/chat-error';
 import { AIDisclaimer } from '@/components/ai/ai-disclaimer';
 import { useChat } from '@/lib/client/hooks/useChat';
 import type { BotMessage } from '@/lib/types';
@@ -29,8 +30,25 @@ function toBotMessages(messages: ReturnType<typeof useChat>['messages']): BotMes
 
 export default function AIPage() {
   const [activeTab, setActiveTab] = useState('chat');
-  const { messages: rawMessages, isLoading: loading, suggestions, send: sendMessage } = useChat();
+  const {
+    messages: rawMessages,
+    isLoading: loading,
+    suggestions,
+    error,
+    send: sendMessage,
+    getTextContent,
+  } = useChat();
   const messages = toBotMessages(rawMessages);
+
+  const handleRetry = () => {
+    const lastUserMessage = [...rawMessages].reverse().find((message) => message.role === 'user');
+    if (!lastUserMessage) return;
+
+    const text = getTextContent(lastUserMessage).trim();
+    if (!text) return;
+
+    sendMessage(text);
+  };
 
   return (
     <div className="flex h-dvh flex-col">
@@ -43,6 +61,13 @@ export default function AIPage() {
       {activeTab === 'chat' ? (
         <>
           <ChatThread messages={messages} loading={loading} />
+          {error && (
+            <ChatError
+              message={error}
+              onRetry={handleRetry}
+              className="mx-md mb-2"
+            />
+          )}
           <AIDisclaimer variant="banner" className="mx-md mb-1" />
           <ChatInput
             onSend={sendMessage}

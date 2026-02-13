@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/layouts/PageHeader';
 import { ChatBubble } from '@/components/composites/ChatBubble';
 import { ChatInput } from '@/components/composites/ChatInput';
 import { ConversationListItem } from '@/components/composites/ConversationListItem';
+import { ChatError } from '@/components/ai/chat-error';
 import { EmptyState } from '@/components/primitives/EmptyState';
 import { Spinner } from '@/components/primitives/Spinner';
 import { useChat } from '@/lib/client/hooks/useChat';
@@ -17,6 +18,7 @@ export default function ChatPage() {
     messages,
     conversations,
     isLoading,
+    error,
     suggestions,
     send,
     clear,
@@ -24,6 +26,7 @@ export default function ChatPage() {
     loadConversations,
     deleteConversation,
     conversationId,
+    getTextContent,
   } = useChat();
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -38,6 +41,16 @@ export default function ChatPage() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const handleRetry = () => {
+    const lastUserMessage = [...messages].reverse().find((message) => message.role === 'user');
+    if (!lastUserMessage) return;
+
+    const text = getTextContent(lastUserMessage).trim();
+    if (!text) return;
+
+    send(text);
+  };
 
   return (
     <div className="flex h-[calc(100dvh-5rem)] flex-col lg:h-dvh">
@@ -165,6 +178,12 @@ export default function ChatPage() {
                     <ChatBubble message={msg} />
                   </div>
                 ))}
+                {error && (
+                  <ChatError
+                    message={error}
+                    onRetry={handleRetry}
+                  />
+                )}
                 {isLoading && (
                   <div className="flex justify-start animate-message-enter">
                     <div className="rounded-2xl rounded-bl-sm bg-surface-elevated px-4 py-3">
