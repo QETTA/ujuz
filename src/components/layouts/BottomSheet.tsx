@@ -61,7 +61,7 @@ export function BottomSheet({ state, onStateChange, children, className }: Botto
     <div
       ref={sheetRef}
       role="dialog"
-      aria-modal="false"
+      aria-modal="true"
       className={cn(
         'fixed inset-x-0 bottom-0 z-overlay rounded-t-2xl border-t border-border bg-surface shadow-lg transition-[height] duration-normal ease-smooth',
         dragging && 'transition-none',

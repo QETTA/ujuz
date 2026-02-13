@@ -2,6 +2,7 @@
 
 import { ThemeProvider } from './theme-provider';
 import { AuthProvider } from '@/lib/client/AuthProvider';
+import { ToastProvider } from '@/components/ui/toast';
 
 /**
  * Composite provider wrapping all client-side context providers.
@@ -11,7 +12,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <ThemeProvider>
-        {children}
+        <ToastProvider>
+          {children}
+        </ToastProvider>
       </ThemeProvider>
     </AuthProvider>
   );
