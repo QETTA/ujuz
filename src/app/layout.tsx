@@ -10,6 +10,12 @@ export const metadata: Metadata = {
   },
   description: 'AI 기반 국공립 어린이집 입소 확률 예측, 실시간 TO 알림, 개인화 전략 상담',
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? 'https://ujuz.kr'),
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '16x16', type: 'image/x-icon' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+  },
   openGraph: {
     type: 'website',
     locale: 'ko_KR',
