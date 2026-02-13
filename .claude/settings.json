@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "defaultMode": "plan",
+    "allow": [
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm test)",
+      "Bash(pnpm dev)",
+      "Bash(pnpm build)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(codex exec*)",
+      "Read",
+      "Glob",
+      "Grep"
+    ]
+  },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "hooks": {
+    "TaskCompleted": [
+      {
+        "command": "cd /mnt/c/Users/sihu2/ujuz-api && pnpm typecheck",
+        "description": "typecheck 통과해야 태스크 완료 가능",
+        "failAction": "block"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash(rm -rf*)",
+        "command": "echo 'BLOCKED: rm -rf is not allowed'",
+        "failAction": "block",
+        "description": "rm -rf 차단"
+      }
+    ]
+  }
+}
