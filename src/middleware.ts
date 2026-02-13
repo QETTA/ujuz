@@ -12,6 +12,11 @@ function isPublicPage(pathname: string): boolean {
 }
 
 export function middleware(request: NextRequest) {
+  // Dev bypass: skip all auth checks
+  if (process.env.AUTH_BYPASS === 'true') {
+    return NextResponse.next();
+  }
+
   const { pathname } = request.nextUrl;
 
   // ── Frontend route protection ─────────────────────────

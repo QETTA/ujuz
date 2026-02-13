@@ -17,14 +17,14 @@ export default function DashboardPage() {
   const setActiveRoute = useStrategyStore((s) => s.setActiveRoute);
   const loading = useStrategyStore((s) => s.loading);
   const error = useStrategyStore((s) => s.error);
-  const homeStore = useHomeStore();
+  const loadHome = useHomeStore((s) => s.load);
 
   // Start polling unread alerts
   useUnreadAlerts();
 
   useEffect(() => {
-    homeStore.load();
-  }, [homeStore]);
+    loadHome();
+  }, [loadHome]);
 
   return (
     <div className="flex flex-col">
@@ -40,7 +40,7 @@ export default function DashboardPage() {
         ) : error ? (
           <ChatError
             message={error}
-            onRetry={() => homeStore.load()}
+            onRetry={loadHome}
           />
         ) : recommendation ? (
           <DashboardWidget
