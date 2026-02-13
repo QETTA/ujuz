@@ -69,7 +69,7 @@ export function FacilitySearch({ selected, onAdd, onRemove, onDone }: FacilitySe
           {selected.map((f) => (
             <span key={f.id} className="flex items-center gap-1 rounded-full bg-brand-100 px-3 py-1 text-xs text-brand-700">
               {f.name}
-              <button onClick={() => onRemove(f.id)} aria-label={`${f.name} 제거`}>
+              <button type="button" onClick={() => onRemove(f.id)} aria-label={`${f.name} 시설 제거`}>
                 <XMarkIcon className="h-3 w-3" />
               </button>
             </span>
@@ -78,22 +78,29 @@ export function FacilitySearch({ selected, onAdd, onRemove, onDone }: FacilitySe
       )}
 
       {/* Results */}
-      {effectiveResults.length > 0 && (
-        <div className="max-h-60 space-y-1 overflow-y-auto">
-          {effectiveResults.map((f) => {
-            const isSelected = selected.some((s) => s.id === f._id);
-            return (
-              <button
-                key={f._id}
-                onClick={() => !isSelected && onAdd({ id: f._id, name: f.name })}
-                disabled={isSelected}
-                className="w-full rounded-lg p-2 text-left hover:bg-surface-inset disabled:opacity-50"
-              >
-                <p className="text-sm font-medium text-text-primary">{f.name}</p>
-                {f.address?.full && <p className="text-xs text-text-tertiary">{f.address.full}</p>}
-              </button>
-            );
-          })}
+      {trimmedQuery && (
+        <div aria-live="polite" className="space-y-1">
+          <p className="sr-only">{effectiveResults.length}개 시설 검색됨</p>
+
+          {effectiveResults.length > 0 && (
+            <div className="max-h-60 space-y-1 overflow-y-auto">
+              {effectiveResults.map((f) => {
+                const isSelected = selected.some((s) => s.id === f._id);
+                return (
+                  <button
+                    key={f._id}
+                    onClick={() => !isSelected && onAdd({ id: f._id, name: f.name })}
+                    disabled={isSelected}
+                    aria-disabled={isSelected ? 'true' : undefined}
+                    className="w-full rounded-lg p-2 text-left hover:bg-surface-inset disabled:opacity-50"
+                  >
+                    <p className="text-sm font-medium text-text-primary">{f.name}</p>
+                    {f.address?.full && <p className="text-xs text-text-tertiary">{f.address.full}</p>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
