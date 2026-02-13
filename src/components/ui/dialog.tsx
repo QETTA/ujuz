@@ -11,18 +11,47 @@ export interface DialogProps {
   className?: string;
 }
 
+const CLOSE_ANIMATION_MS = 200;
+
 export function Dialog({ open, onClose, children, className }: DialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const closeTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const el = dialogRef.current;
     if (!el) return;
-    if (open && !el.open) {
-      el.showModal();
-    } else if (!open && el.open) {
-      el.close();
+    if (open) {
+      if (closeTimerRef.current !== null) {
+        window.clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+      if (!el.open) el.showModal();
+      return;
     }
+
+    if (!el.open) return;
+
+    closeTimerRef.current = window.setTimeout(() => {
+      if (dialogRef.current?.open) dialogRef.current.close();
+      closeTimerRef.current = null;
+    }, CLOSE_ANIMATION_MS);
+
+    return () => {
+      if (closeTimerRef.current !== null) {
+        window.clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+    };
   }, [open]);
+
+  useEffect(
+    () => () => {
+      if (closeTimerRef.current !== null) {
+        window.clearTimeout(closeTimerRef.current);
+      }
+    },
+    [],
+  );
 
   const handleCancel = useCallback(
     (e: React.SyntheticEvent) => {
@@ -42,13 +71,17 @@ export function Dialog({ open, onClose, children, className }: DialogProps) {
   return (
     <dialog
       ref={dialogRef}
+      data-state={open ? 'open' : 'closed'}
       onCancel={handleCancel}
       onClick={handleBackdropClick}
       className={cn(
         'fixed inset-0 z-modal m-auto max-h-[85dvh] w-[calc(100%-2rem)] max-w-md',
         'rounded-xl border border-border bg-surface p-0 shadow-lg',
-        'backdrop:bg-black/40 backdrop:backdrop-blur-sm',
-        'open:animate-in open:fade-in-0 open:zoom-in-95',
+        'backdrop:bg-black/40 backdrop:backdrop-blur-sm backdrop:transition-opacity backdrop:duration-200 backdrop:ease-out',
+        'data-[state=open]:backdrop:opacity-100 data-[state=closed]:backdrop:opacity-0',
+        'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom sm:data-[state=open]:zoom-in-95',
+        'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
+        'duration-200 ease-out',
         className,
       )}
     >
