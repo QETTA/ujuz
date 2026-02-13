@@ -3,23 +3,35 @@
     "defaultMode": "editing",
     "allow": [
       "Bash(pnpm typecheck)",
-      "Bash(pnpm test)",
-      "Bash(pnpm dev)",
-      "Bash(pnpm dev:*)",
-      "Bash(pnpm --dir mobile*)",
+      "Bash(pnpm test*)",
+      "Bash(pnpm dev*)",
       "Bash(pnpm build)",
-      "Bash(git status)",
+      "Bash(pnpm lint*)",
+      "Bash(pnpm --dir mobile*)",
+      "Bash(git status*)",
       "Bash(git diff*)",
       "Bash(git log*)",
       "Bash(git add*)",
       "Bash(git commit*)",
       "Bash(git push*)",
+      "Bash(git checkout -- *)",
+      "Bash(git branch*)",
+      "Bash(git stash*)",
+      "Bash(ls *)",
+      "Bash(rm -rf dist/)",
+      "Bash(rm -rf index.ts)",
+      "Bash(rm -rf src/api/)",
+      "Bash(rm -rf tsconfig.build.json)",
       "Bash(codex exec*)",
+      "Bash(curl *)",
+      "Bash(gh *)",
       "Read",
       "Write",
       "Edit",
       "Glob",
-      "Grep"
+      "Grep",
+      "mcp__codex-spark__codex",
+      "mcp__codex-spark__codex-reply"
     ]
   },
   "env": {
@@ -42,7 +54,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -q 'rm -rf'; then echo 'rm -rf is not allowed' >&2; exit 2; fi; exit 0"
+            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE 'rm -rf (/|~|\\*)'; then echo 'Dangerous rm -rf blocked' >&2; exit 2; fi; exit 0"
           }
         ]
       }

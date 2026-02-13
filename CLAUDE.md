@@ -1,122 +1,137 @@
 # CLAUDE.md
 
-## Project Direction
+## Project Status (2026-02-14)
 
-**`PROJECT-DIRECTION.md`** 참조 — 사업기획 보고서 2건(기술 실사 + 네이티브 확장 전략) 기반 12개월 로드맵.
-- 현재 위치: TRL 5~6, 7개 서브시스템 (모바일 10% 포함)
-- 핵심 가치: **(a) 시설 탐색(지도) + (b) TO 알림 즉시성** → 네이티브 필수
-- 우선순위: **신뢰**(Phase 1) → **재방문/네이티브**(Phase 2) → **유료전환**(Phase 3) → **확장**(Phase 4)
-- 기술 조합: Expo + react-native-maps + Expo Push + Toss(웹) + MongoDB → LRU → Redis
-- 웹 = 유입 채널(SEO/결제), 모바일 = 핵심 경험(지도/알림/채팅)
+Phase 1~4 완료. 67파일 +9,424줄. **프로덕션 MVP 기능 세트 구축 완료.**
+
+| Phase | 핵심 | 커밋 |
+|-------|------|------|
+| 1 신뢰 기반 | LRU 캐시, 입소 테스트 60+, UI 컴포넌트, Auth, Expo PoC | `850aa0d` |
+| 2 재방문 엔진 | Push, TO cron, 지오코드, 이메일, 커뮤니티, 모바일 탭 4개, API v2 | `ada8c27` |
+| 3 유료 전환 | Toss 결제, SMS, 가드레일/contentFilter, EAS, 딥링크, 구독 관리 | `40bda07` |
+| 4 프로덕션 완성 | 아이관리, 글쓰기, 관리자, 히스토리, 비교, 검색, 설정, 내보내기 | `3922588` |
 
 ## Workflow Preferences
 
-- **자동 검증 우선**: 브라우저 수동 확인 요청 대신 `pnpm typecheck`, 테스트 스크립트, curl 등으로 자동 검증할 것
-- **dev 서버 포트**: Next.js dev 서버는 포트 **3001** (3000은 별도 서버)
-- **최소한의 확인 요청**: 사용자가 엔터만 누르면 되도록 워크플로우 구성. 반복적인 브라우저 확인 요청 금지.
+- **자동 검증 우선**: `pnpm typecheck`로 자동 검증. 브라우저 수동 확인 요청 금지
+- **dev 서버 포트**: Next.js = **3001** (3000은 별도)
+- **최소한의 확인 요청**: 사용자가 엔터만 누르면 되는 워크플로우
 - **한국어 커뮤니케이션**: 설명과 대화는 한국어로
+- **속도 우선**: "풀가동" = 10개 Codex-Spark 병렬 즉시 발사, Plan Mode 생략
 
 ## Project Stack
 
 ### Web (Next.js)
-- Next.js 15 (App Router)
-- AI SDK v6 (`ai@^6.0.85`, `@ai-sdk/react@^3.0.87`)
+- Next.js 15 (App Router), React 19, TypeScript strict
+- AI SDK v6 (`ai@^6`, `@ai-sdk/react@^3`)
 - Zod 4 (`zod@^4.3.6`)
-- MongoDB Atlas
-- Zustand (state management)
-- TypeScript strict mode
+- MongoDB Atlas (`mongodb@^6`)
+- Zustand 5, TailwindCSS v4, shadcn/ui (new-york)
+- next-auth v5 beta
 
 ### Mobile (Expo) — `mobile/`
 - Expo SDK 52 + expo-router
 - NativeWind v4 (Tailwind for RN)
-- react-native-maps (Apple Maps/Google Maps)
-- Zustand + TanStack Query + expo-secure-store
-- EAS Build (CI/CD)
+- react-native-maps + Zustand + TanStack Query
+- EAS Build (dev/preview/prod)
 
 ## Key Architecture
 
 - **Streaming chat**: `POST /api/bot/chat/stream` → `createUIMessageStream` + `streamText`
-- **Client hook**: `src/lib/client/hooks/useChat.ts` wraps `useAIChat` from `@ai-sdk/react`
-- **Metadata flow**: Server sends `message-metadata` SSE chunk → client captures via `onFinish` callback → syncs to Zustand store
+- **Content filter**: `sanitizeInput` → `isOffTopic` → `checkLimit` → stream → `incrementFeatureUsage` + `checkOutput`
+- **Client hook**: `src/lib/client/hooks/useChat.ts` wraps `useAIChat`
+- **Metadata flow**: SSE `message-metadata` chunk → `onFinish` → Zustand store
 - **Non-streaming fallback**: Admission V2, API key missing → `createNonStreamingResponse`
+- **Logger format**: `logger.error(message: string, extra?: Record<string, unknown>)` — NOT pino-style
 
-## Codex 협업 워크플로우
+## Codex-Spark MCP 협업 (검증된 패턴)
 
-대규모 개선 작업 시 **Codex CLI + Opus 분업** 패턴을 기본으로 사용한다.
+### 기본 세팅
+- `.mcp.json`: `gpt-5.3-codex-spark`, `approval_policy: on-failure`
+- Claude Code에서 `mcp__codex-spark__codex` / `mcp__codex-spark__codex-reply` 도구 직접 호출
+- 역할 분담 **8:2** — Codex (80% 구현), Opus (20% 설계/통합)
 
-### 분업 원칙 (Codex 토큰 극대화)
-- **Codex (85~90%)**: 컴포넌트 구현, CSS, 데이터 바인딩, 에러 상태, 접근성, 테스트 작성, API 라우트, 리팩토링 등 대부분의 코드 작업
-- **Opus (10~15%)**: 스트리밍 파이프라인, 상태 아키텍처, 보안 설계 등 설계 판단이 필수인 고난도 태스크만
+### 대형 태스크 실행 패턴 (Phase 2~4 검증)
+1. Opus가 태스크 10개를 설계 (파일 겹침 0)
+2. 10개 `mcp__codex-spark__codex` 호출을 **단일 메시지에 병렬 발사**
+3. 완료 후 Opus가 후처리:
+   - `git checkout -- tsconfig.json vitest.config.ts package.json .env.example .gitignore`
+   - `rm -rf dist/ index.ts src/api/ tsconfig.build.json` + Codex 정크 파일
+   - 로거 포맷 수정 (Codex는 항상 pino-style로 작성)
+   - 크로스-파일 통합 (featureFlags, collections, env.ts, stream route 등)
+   - `pnpm typecheck` → 에러 수정 → commit + push
 
-### 실행 방법
-1. Opus가 전체 개선 항목을 평가하고 태스크를 분류
-2. Codex 태스크를 `CODEX-TASKS.md`에 자기완결형 프롬프트로 작성 (파일 경로, 변경 전/후, 검증 조건 포함)
-3. Codex CLI 실행: `codex exec --sandbox workspace-write "$(cat CODEX-TASKS.md)"`
-4. Opus 태스크는 직접 구현
-5. 양쪽 완료 후 `pnpm typecheck` → push
+### Codex 프롬프트 필수 규칙
+```
+⚠️ 모든 Codex 프롬프트에 반드시 포함:
+"Do NOT modify tsconfig.json, vitest.config.ts, package.json, .env.example, .gitignore, or README.md.
+ Do NOT create index.ts, dist/, src/api/, or tsconfig.build.json.
+ Only create the specified new files."
+```
 
-### Codex 태스크 작성 규칙
-- 각 태스크에 **수정 파일 경로**, **변경 전 코드**, **변경 후 코드** 명시
-- 한 태스크 = 한 커밋 단위로 독립 실행 가능하게 구성
-- `[CODEX-N]` 접두사로 커밋 메시지 통일
+### Codex 약점 (매번 발생)
+- **금지 파일 수정**: tsconfig.json, package.json을 ~50% 확률로 덮어씀 → 반드시 git checkout 복원
+- **로거 포맷 오류**: pino-style `logger.error({ obj }, 'msg')` 사용 → `logger.error('msg', { obj })` 수정 필요
+- **정크 파일 생성**: `dist/`, `index.ts`, `src/api/`, `tsconfig.build.json` 등 → rm 정리
+- **환경 변수 직접 접근**: `process.env.X` 대신 `env.X` 사용 안 함 → 필요시 수동 통합
 
-### 주의사항
-- Codex는 래퍼 패턴보다 직접 구현을 선호함 — 래퍼 vs 직접 구현 충돌 시 사전에 방침 결정
-- `approval_policy="full-auto"`는 미지원, `--sandbox workspace-write` 필수
+## Claude Code 세팅
 
-### Codex 병렬 실행 (검증된 패턴)
-- **최대 8개 동시 실행** 검증 완료 (Round 3: 8 worktree 병렬, 충돌 0)
-- 각 태스크는 **파일 겹침 없이** 독립적으로 설계
-- Git worktree로 작업 디렉토리 격리:
-  ```bash
-  # N개 worktree 생성
-  for i in $(seq 1 N); do git worktree add ../ujuz-p$i -b codex-batch-$i; done
-  # 각 worktree에서 codex exec 병렬 실행
-  for i in $(seq 1 N); do
-    cd ../ujuz-p$i && codex exec --sandbox workspace-write "태스크 프롬프트" &
-  done
-  # 완료 후: 각 worktree 커밋 → 순차 머지 → typecheck → push
-  for i in $(seq 1 N); do git merge codex-batch-$i --no-edit; done
-  # 정리
-  for i in $(seq 1 N); do git worktree remove ../ujuz-p$i; git branch -d codex-batch-$i; done
-  ```
-- **주의**: worktree에 node_modules 없음 → Codex가 pnpm install 시도 시 DNS 부하 발생 가능
-- **해결**: typecheck는 메인 디렉토리에서 머지 후 1회 실행
+### 권한
+- `defaultMode: "editing"` (빠른 실행)
+- `Bash(*)`, `Read(*)`, `Write(*)`, `Edit(*)`, `mcp__*` 전부 허용
+- `rm -rf` hook 차단
 
-### Codex MCP 연동 (Claude Code ↔ Codex-Spark)
-- `.mcp.json`으로 Codex를 MCP 도구로 연결 (개인 세팅, `.gitignore` 처리)
-- 모델: `gpt-5.3-codex-spark` (프로젝트 `.mcp.json`에서 고정)
-- `approval_policy: "on-failure"` — Claude Code가 이미 사용자 승인 거치므로 이중 승인 방지
-- Claude Code에서 `codex` / `codex-reply` 도구로 직접 호출 가능
-- **역할 분담 8:2** — Codex-Spark (80%): 컴포넌트 구현, CSS, 데이터 바인딩, API 라우트, 핫픽스 / Claude (20%): 설계, 리뷰, 아키텍처, 보안
-- 대형 태스크: Codex에 자기완결형 프롬프트 전달 → 결과 리뷰 → typecheck 게이트
-
-## Claude Code 협업 세팅
-
-### 기본 모드
-- **Plan Mode 기본**: `.claude/settings.json`에 `defaultMode: "plan"` 설정
-- 모든 작업은 Plan → 승인 → 구현 순서
-
-### Agent Teams (실험)
-- `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` 활성화
-- 대형 작업 시 역할 분담: architect(설계) / implementer(구현) / tester(검증)
-- 구현/테스트 트랙은 plan approval 후에만 변경
-
-### 품질 게이트 (Hooks)
-- `TaskCompleted`: `pnpm typecheck` 실패 시 완료 차단
-- `PreToolUse`: `rm -rf` 차단
-- 팀 공유: `.claude/settings.json` 커밋
+### 품질 게이트
+- `TaskCompleted` hook: `pnpm typecheck` 실패 시 차단
+- `PostToolUse` hook: Write/Edit 파일 로깅
 
 ### 세션 관리
-- 작업 시작 시 `/rename feat-xxx`로 세션 이름 지정
-- 이어하기: `claude --resume feat-xxx`
-- 되감기: `/rewind`로 코드/대화 선택적 롤백
+- `/rename feat-xxx` → `claude --resume feat-xxx`
+- `/rewind` → 코드/대화 선택적 롤백
 
 ## Commands
 
-- `pnpm typecheck` — TypeScript type check
-- `pnpm dev` — Start dev server (port 3001)
-- `pnpm test` — Run tests
-- `codex exec --sandbox workspace-write "$(cat CODEX-TASKS.md)"` — Codex CLI 배치 실행
-- `git diff main...HEAD | claude -p "코드리뷰해줘"` — Claude 헤드리스 리뷰
-- `claude --permission-mode plan` — Plan Mode로 시작
+```bash
+pnpm typecheck          # TypeScript 타입 체크 (품질 게이트)
+pnpm dev                # Next.js dev (port 3001)
+pnpm test               # Vitest
+pnpm build              # Next.js 빌드
+git push origin master  # 배포
+```
+
+## File Map (핵심 경로)
+
+```
+src/
+├── app/
+│   ├── (app)/           # 메인 페이지 (children, community, admin, search, pricing, settings...)
+│   ├── api/
+│   │   ├── bot/chat/stream/  # 스트리밍 채팅 (contentFilter + checkLimit 통합)
+│   │   ├── v1/               # REST API (payments, subscription, export, facilities, admin...)
+│   │   ├── v2/               # 모바일 최적화 API (dashboard, facilities)
+│   │   └── cron/             # Vercel Cron (detect-to, push-receipts)
+│   └── (auth)/               # 인증 페이지
+├── lib/
+│   ├── server/               # 서버 유틸리티
+│   │   ├── admissionEngineV2.ts  # 입소 확률 계산
+│   │   ├── contentFilter.ts      # 프롬프트 인젝션/출력 필터/주제 이탈
+│   │   ├── paymentService.ts     # Toss Payments 연동
+│   │   ├── pushService.ts        # Expo Push 알림
+│   │   ├── smsService.ts         # NCP SMS
+│   │   ├── subscriptionService.ts # 구독/요금제/checkLimit
+│   │   ├── toDetectionService.ts  # TO 감지 + push/SMS/email 연동
+│   │   ├── strategyEngine.ts     # 추천 전략 엔진
+│   │   ├── featureFlags.ts       # 기능 플래그
+│   │   ├── collections.ts        # MongoDB 컬렉션명 상수
+│   │   ├── env.ts                # 환경변수 Zod 스키마
+│   │   └── logger.ts             # JSON 구조화 로거
+│   └── client/               # 클라이언트 유틸리티
+│       └── hooks/useChat.ts  # AI SDK useAIChat 래퍼
+├── components/               # UI 컴포넌트 (74+ shadcn/ui 기반)
+└── __tests__/                # Vitest 테스트
+mobile/
+├── src/app/                  # Expo Router 스크린 (tabs, community, auth)
+├── src/lib/                  # 모바일 유틸리티 (deepLink, notifications)
+└── eas.json                  # EAS Build 프로파일
+```

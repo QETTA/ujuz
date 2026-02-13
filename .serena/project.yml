@@ -1,4 +1,4 @@
-# the name by which the project can be referenced within Serena
+# Serena Project Config — UjuZ API
 project_name: "ujuz-api"
 
 languages:
@@ -12,8 +12,10 @@ ignored_paths:
 - ".next/**"
 - ".claude/**"
 - ".playwright/**"
-- ".playwright-cli/**"
 - "coverage/**"
+- "node_modules/**"
+- "mobile/node_modules/**"
+- "dist/**"
 - "*.log"
 
 read_only: false
@@ -26,16 +28,19 @@ base_modes:
 default_modes:
 
 initial_prompt: |
-  UjuZ API — Next.js 15 App Router + AI SDK v6 + MongoDB Atlas 기반 교육 AI 서비스.
+  UjuZ — 어린이집/유치원 입소 AI 서비스. Phase 1~4 완료 (67파일, +9,424줄).
 
   핵심 아키텍처:
-  - Streaming chat: POST /api/bot/chat/stream → createUIMessageStream + streamText
-  - Client hook: src/lib/client/hooks/useChat.ts (useAIChat wrapper)
-  - State: Zustand store, metadata는 SSE message-metadata 청크로 전달
-  - Auth: next-auth v5 beta, OAuth + dev bypass
-  - Styling: TailwindCSS v4 + shadcn/ui (new-york), CSS variables
+  - Streaming chat: POST /api/bot/chat/stream (contentFilter + checkLimit 통합)
+  - 결제: Toss Payments (웹), 딥링크 (앱→웹)
+  - 알림: Expo Push + NCP SMS + Email
+  - 구독: Free/Basic/Premium, checkLimit 기반 사용량 제한
+  - 모바일: Expo SDK 52, 6탭 (홈/검색/지도/채팅/알림/MY)
 
   협업 모델:
-  - Claude Opus = 설계/리뷰/아키텍처 (20%)
-  - Codex-Spark = 빠른 구현/핫픽스 (80%)
-  - TypeScript strict mode 필수, pnpm typecheck 게이트
+  - Claude Opus 4.6 = 설계/리뷰/통합 (20%)
+  - Codex-Spark (gpt-5.3-codex-spark) = 구현 (80%), MCP 연동
+  - 대형 작업: 10개 Codex 병렬 → Opus 후처리 → typecheck → commit
+
+  로거 형식: logger.error('메시지', { extra }) — NOT pino-style
+  품질 게이트: pnpm typecheck 필수
