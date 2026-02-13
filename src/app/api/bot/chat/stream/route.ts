@@ -255,43 +255,61 @@ export async function POST(req: NextRequest) {
     // ── Streaming path ───────────────────────────────────
     const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY });
 
-    const result = streamText({
-      model: anthropic(claudeParams.model),
-      system: claudeParams.systemPrompt,
-      messages: claudeParams.messages.map((m) => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content,
-      })),
-      maxOutputTokens: MAX_TOKENS,
-      onFinish: async ({ text, usage }) => {
-        try {
-          // Cost tracking
-          const costManager = getCostManager(env.COST_DAILY_BUDGET_USD, env.COST_MONTHLY_BUDGET_USD);
-          await ensureCostLoaded();
-          await syncClaudeCost(
-            costManager,
-            claudeParams.model,
-            'chat',
-            usage.inputTokens ?? 0,
-            usage.outputTokens ?? 0,
-          );
+    const stream = createUIMessageStream({
+      execute: async ({ writer }) => {
+        let resolveOnFinish: () => void;
+        const onFinishPromise = new Promise<void>((resolve) => { resolveOnFinish = resolve; });
 
-          // Save conversation
-          await saveAfterResponse(userId, conversationId, userText, text, intent, dataBlocks);
+        const result = streamText({
+          model: anthropic(claudeParams.model),
+          system: claudeParams.systemPrompt,
+          messages: claudeParams.messages.map((m) => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          })),
+          maxOutputTokens: MAX_TOKENS,
+          onFinish: async ({ text, usage }) => {
+            try {
+              // Cost tracking
+              const costManager = getCostManager(env.COST_DAILY_BUDGET_USD, env.COST_MONTHLY_BUDGET_USD);
+              await ensureCostLoaded();
+              await syncClaudeCost(
+                costManager,
+                claudeParams.model,
+                'chat',
+                usage.inputTokens ?? 0,
+                usage.outputTokens ?? 0,
+              );
 
-          // Memory extraction (fire-and-forget)
-          if (env.MEMORY_ENABLED) {
-            extractAndSaveMemories(userId, userText).catch(() => {});
-          }
-        } catch (err) {
-          logger.error('Stream onFinish failed', { error: err instanceof Error ? err.message : String(err) });
-        }
+              // Save conversation → get conversation_id
+              const convId = await saveAfterResponse(userId, conversationId, userText, text, intent, dataBlocks);
+
+              // Send metadata to client
+              writer.write({
+                type: 'message-metadata',
+                messageMetadata: { conversation_id: convId, suggestions },
+              });
+
+              // Memory extraction (fire-and-forget)
+              if (env.MEMORY_ENABLED) {
+                extractAndSaveMemories(userId, userText).catch(() => {});
+              }
+            } catch (err) {
+              logger.error('Stream onFinish failed', { error: err instanceof Error ? err.message : String(err) });
+            } finally {
+              resolveOnFinish!();
+            }
+          },
+        });
+
+        writer.merge(result.toUIMessageStream());
+        await onFinishPromise;
       },
     });
 
     logRequest(req, 200, start, traceId);
 
-    return result.toUIMessageStreamResponse();
+    return createUIMessageStreamResponse({ stream });
   } catch (error) {
     const res = errorResponse(error, traceId);
     logRequest(req, res.status, start, traceId);
@@ -341,14 +359,18 @@ async function saveAfterResponse(
  */
 function createNonStreamingResponse(
   content: string,
-  _conversationId: string,
-  _suggestions: string[],
+  conversationId: string,
+  suggestions: string[],
 ): Response {
   const stream = createUIMessageStream({
     execute: ({ writer }) => {
       writer.write({ type: 'text-start', id: 'msg-0' });
       writer.write({ type: 'text-delta', id: 'msg-0', delta: content });
       writer.write({ type: 'text-end', id: 'msg-0' });
+      writer.write({
+        type: 'message-metadata',
+        messageMetadata: { conversation_id: conversationId, suggestions },
+      });
     },
   });
 
