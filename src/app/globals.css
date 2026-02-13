@@ -4,6 +4,25 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* OKLCH fallback for browsers without support (~7%) */
+@supports not (color: oklch(0% 0 0)) {
+  :root {
+    --color-brand-500: #6d5ce7;
+    --color-surface: #ffffff;
+    --color-surface-elevated: #fafaff;
+    --color-surface-inset: #f3f2fa;
+    --color-border: #e2e0ef;
+    --color-text-primary: #1a1730;
+    --color-text-secondary: #6b6580;
+    --color-text-tertiary: #918ba3;
+    --color-text-inverse: #ffffff;
+    --color-success: #4caf7a;
+    --color-warning: #e0a830;
+    --color-danger: #d44035;
+    --color-info: #5b8fd9;
+  }
+}
+
 /* ── V3 Design Tokens ── */
 
 @theme {
