@@ -49,18 +49,24 @@ export function ChatInput({
     <div className={cn('border-t border-border bg-surface p-3', className)}>
       {/* Suggestions */}
       {suggestions && suggestions.length > 0 && (
-        <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
-          {suggestions.map((suggestion) => (
-            <button
-              key={suggestion}
-              type="button"
-              onClick={() => onSend(suggestion)}
-              disabled={disabled}
-              className="shrink-0 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs text-brand-600 hover:bg-brand-100 transition-colors disabled:opacity-50"
-            >
-              {suggestion}
-            </button>
-          ))}
+        <div role="region" aria-label="추천 질문">
+          <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
+            {suggestions.map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => onSend(suggestion)}
+                disabled={disabled}
+                aria-disabled={disabled ? 'true' : undefined}
+                className={cn(
+                  'shrink-0 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs text-brand-600 hover:bg-brand-50 hover:border-brand-300 focus:outline-2 focus:outline-offset-2 focus:outline-brand-500 active:scale-95 transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-50',
+                  disabled && 'opacity-50'
+                )}
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
         </div>
       )}
       {/* Input */}
