@@ -20,7 +20,7 @@ export function Skeleton({ variant = 'text', className, ...props }: SkeletonProp
       role="status"
       aria-label="로딩 중"
       className={cn(
-        'animate-pulse bg-surface-inset',
+        'animate-pulse bg-surface-inset motion-reduce:animate-none',
         variantStyles[variant],
         className,
       )}

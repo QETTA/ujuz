@@ -37,14 +37,18 @@ const sizes = {
 };
 
 export function ScoreGauge({ score, grade, size = 'md', animated = true, className }: ScoreGaugeProps) {
-  const [displayScore, setDisplayScore] = useState(animated ? 0 : score);
+  // Respect prefers-reduced-motion
+  const prefersReducedMotion = typeof window !== 'undefined'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const shouldAnimate = animated && !prefersReducedMotion;
+
+  const [displayScore, setDisplayScore] = useState(shouldAnimate ? 0 : score);
   const { width, stroke, fontSize } = sizes[size];
   const radius = (width - stroke) / 2;
   const circumference = Math.PI * radius; // half-circle
-  const progress = ((animated ? displayScore : score) / 100) * circumference;
 
   useEffect(() => {
-    if (!animated) return;
+    if (!shouldAnimate) return;
     let frame: number;
     let start: number | null = null;
     const duration = 1200;
@@ -61,10 +65,10 @@ export function ScoreGauge({ score, grade, size = 'md', animated = true, classNa
 
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [score, animated]);
+  }, [score, shouldAnimate]);
 
-  // When not animated, keep displayScore in sync with score
-  const effectiveScore = animated ? displayScore : score;
+  const effectiveScore = shouldAnimate ? displayScore : score;
+  const progress = (effectiveScore / 100) * circumference;
 
   return (
     <div className={cn('flex flex-col items-center', className)}>
@@ -91,7 +95,7 @@ export function ScoreGauge({ score, grade, size = 'md', animated = true, classNa
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={circumference - progress}
-          style={{ transition: animated ? 'none' : 'stroke-dashoffset 0.6s ease-out' }}
+          style={{ transition: shouldAnimate ? 'none' : 'stroke-dashoffset 0.6s ease-out' }}
         />
       </svg>
       {/* Score number */}

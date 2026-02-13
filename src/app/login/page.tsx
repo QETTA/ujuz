@@ -92,7 +92,7 @@ export default function LoginPage() {
           <LoginForm />
         </Suspense>
 
-        <p className="text-center text-[10px] text-text-tertiary leading-relaxed">
+        <p className="text-center text-xs text-text-tertiary leading-relaxed">
           계속하면 이용약관 및 개인정보처리방침에 동의하는 것으로 간주됩니다.
         </p>
       </div>
