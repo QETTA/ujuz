@@ -1,8 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { signOut } from 'next-auth/react';
 import { TopBar } from '@/components/nav/top-bar';
 import { Card } from '@/components/ui/card';
+import { useUjuzSession } from '@/lib/client/auth';
+import { useSubscription } from '@/lib/client/hooks/useSubscription';
 import { ROUTES } from '@/lib/platform/navigation';
 import {
   Cog6ToothIcon,
@@ -17,6 +20,12 @@ const menuItems = [
 ];
 
 export default function MyPage() {
+  const { data: session, isAnonymous } = useUjuzSession();
+  const { subscription } = useSubscription();
+
+  const displayName = isAnonymous ? '비회원' : (session?.user?.name ?? '사용자');
+  const planLabel = subscription.plan_tier === 'premium' ? '프리미엄' : subscription.plan_tier === 'basic' ? '베이직' : '무료 플랜';
+
   return (
     <div className="flex flex-col">
       <TopBar title="MY" />
@@ -28,8 +37,8 @@ export default function MyPage() {
             <UserCircleIcon className="h-8 w-8 text-brand-600" />
           </div>
           <div className="flex-1">
-            <p className="text-base font-semibold text-text-primary">사용자</p>
-            <p className="text-xs text-text-tertiary">무료 플랜</p>
+            <p className="text-base font-semibold text-text-primary">{displayName}</p>
+            <p className="text-xs text-text-tertiary">{planLabel}</p>
           </div>
         </Card>
 
@@ -47,7 +56,11 @@ export default function MyPage() {
         </div>
 
         {/* Logout */}
-        <button className="flex w-full items-center gap-3 rounded-xl px-sm py-3 text-danger transition-colors hover:bg-danger/5">
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: '/login' })}
+          className="flex w-full items-center gap-3 rounded-xl px-sm py-3 text-danger transition-colors hover:bg-danger/5"
+        >
           <ArrowRightOnRectangleIcon className="h-5 w-5" />
           <span className="text-sm font-medium">로그아웃</span>
         </button>
