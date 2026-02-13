@@ -230,7 +230,7 @@ interface TierLimits {
 const TIER_LIMITS: Record<string, TierLimits> = {
   free:    { admission_calc: 1,  explain: 3,  to_alerts_slots: 1,  community_write: 0 },
   basic:   { admission_calc: 10, explain: 30, to_alerts_slots: 5,  community_write: 5 },
-  premium: { admission_calc: -1, explain: -1, to_alerts_slots: -1, community_write: 20 },
+  premium: { admission_calc: -1, explain: -1, to_alerts_slots: -1, community_write: -1 },
 };
 
 function getPeriodKey(feature: GatedFeature): string {

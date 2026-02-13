@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
-import { checkPushReceipts, cleanupInactiveTokens } from '@/lib/server/pushService';
+import { checkPushReceipts, cleanupExpiredPushTickets } from '@/lib/server/pushService';
+import { env } from '@/lib/server/env';
 import { logger } from '@/lib/server/logger';
 
 export const runtime = 'nodejs';
@@ -14,9 +15,9 @@ export const maxDuration = 30;
  */
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
+  const cronSecret = env.CRON_SECRET;
   const adminKey = req.headers.get('x-admin-key');
-  const adminApiKey = process.env.ADMIN_API_KEY;
+  const adminApiKey = env.ADMIN_API_KEY;
 
   const isCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
   const isAdmin = adminApiKey && adminKey === adminApiKey;
@@ -30,14 +31,11 @@ export async function GET(req: NextRequest) {
 
     // 1. Check receipts for pending deliveries
     const receiptResult = await checkPushReceipts(db);
-
-    // 2. Clean up tokens inactive for more than 30 days
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const tokensDeleted = await cleanupInactiveTokens(db, thirtyDaysAgo);
-
+    // 2. Clean up expired sent tickets older than 24h
+    const ticketsDeleted = await cleanupExpiredPushTickets(db);
     const result = {
       receipts: receiptResult,
-      tokens_cleaned: tokensDeleted,
+      tickets_cleaned: ticketsDeleted,
       timestamp: new Date().toISOString(),
     };
 

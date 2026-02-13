@@ -310,6 +310,17 @@ export interface AdmissionRequestDoc {
 
 export interface PostDoc {
   _id: ObjectId;
+  title: string;
+  category?: '질문' | '정보공유' | '후기' | '자유';
+  region?: string;
+  authorId: string;
+  authorName: string;
+  likeCount: number;
+  commentCount: number;
+  reportCount: number;
+  isHidden?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
   anon_id: string;
   anon_handle: string;
   board_region: string;
@@ -325,6 +336,7 @@ export interface PostDoc {
   status: 'published' | 'hidden';
   created_at: Date;
   updated_at?: Date;
+  likedBy?: string[];
 }
 
 // ─── Reports (moderation) ──────────────────────────────

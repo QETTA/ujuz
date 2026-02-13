@@ -172,7 +172,35 @@ async function persistAndNotify(
 
   // Send push notifications for each alert
   if (FEATURE_FLAGS.toPushNotification && persistedAlerts.length > 0) {
+    const facilityIds = [...new Set(persistedAlerts.map((alert) => alert.facility_id))];
+    const userIds = [...new Set(persistedAlerts.map((alert) => alert.user_id))];
+    const subscriptions = await db
+      .collection<TOSubscriptionDoc>(U.TO_SUBSCRIPTIONS)
+      .find(
+        {
+          facility_id: { $in: facilityIds },
+          user_id: { $in: userIds },
+          is_active: true,
+        },
+        { projection: { facility_id: 1, user_id: 1, notification_preferences: 1 } },
+      )
+      .toArray();
+
+    const pushPreferenceByKey = new Map<string, boolean>();
+    for (const sub of subscriptions) {
+      pushPreferenceByKey.set(`${sub.facility_id}|${sub.user_id}`, sub.notification_preferences?.push ?? true);
+    }
+
     for (const alert of persistedAlerts) {
+      const canPush = pushPreferenceByKey.get(`${alert.facility_id}|${alert.user_id}`);
+      if (canPush === false) {
+        logger.debug('TO push notification skipped by user preference', {
+          userId: alert.user_id,
+          facilityId: alert.facility_id,
+        });
+        continue;
+      }
+
       try {
         await sendToAlertPush(
           db,

@@ -55,3 +55,9 @@ mobile/.expo/
 mobile/ios/
 mobile/android/
 mobile/dist/
+
+# Automation generated artifacts
+docs/generated/
+
+# pnpm store
+.pnpm-store/

@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
 import { U } from '@/lib/server/collections';
-import { errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { errorResponse, getTraceId, logRequest, parseJson } from '@/lib/server/apiHelpers';
 import { errors } from '@/lib/server/apiError';
-import { FEATURE_FLAGS } from '@/lib/server/featureFlags';
 import { reportSchema, anonIdSchema, objectIdSchema, parseBody } from '@/lib/server/validation';
 import type { ReportDoc } from '@/lib/server/dbTypes';
+import { ObjectId } from 'mongodb';
 
 export const runtime = 'nodejs';
+
+const POSTS_COLLECTION = U.POSTS;
 
 export async function POST(
   req: NextRequest,
@@ -15,14 +17,6 @@ export async function POST(
 ) {
   const start = Date.now();
   const traceId = getTraceId(req);
-
-  if (!FEATURE_FLAGS.communityReport) {
-    logRequest(req, 400, start, traceId);
-    return NextResponse.json(
-      { error: '신고 기능이 비활성화되어 있습니다', code: 'feature_disabled' },
-      { status: 400 },
-    );
-  }
 
   try {
     const { id: postId } = await params;
@@ -35,36 +29,52 @@ export async function POST(
       );
     }
 
-    let body: unknown;
-    try {
-      body = await req.json();
-    } catch {
-      logRequest(req, 400, start, traceId);
-      return errors.badRequest('Invalid JSON', 'invalid_json');
-    }
-
+    const body = await parseJson(req);
     const parsed = parseBody(reportSchema, body);
     if (!parsed.success) {
       logRequest(req, 400, start, traceId);
       return errors.badRequest(parsed.error, 'validation_error');
     }
 
-    const data = parsed.data;
     const reporterAnonId = anonIdSchema.parse(
       req.headers.get('x-anon-id') ?? req.headers.get('x-device-id') ?? 'anonymous',
     );
 
     const db = await getDbOrThrow();
+
+    const post = await db.collection(POSTS_COLLECTION).findOne(
+      { _id: new ObjectId(postIdResult.data), isHidden: { $ne: true }, status: { $ne: 'hidden' } },
+    );
+    if (!post) {
+      logRequest(req, 404, start, traceId);
+      return errors.notFound('게시글을 찾을 수 없습니다', 'post_not_found');
+    }
+
     const doc: Omit<ReportDoc, '_id'> = {
-      post_id: postIdResult.data,
+      post_id: postId,
       reporter_anon_id: reporterAnonId,
-      reason: data.reason,
-      detail: data.detail,
+      reason: parsed.data.reason,
+      detail: parsed.data.detail,
       action: 'pending',
       created_at: new Date(),
     };
 
-    await db.collection(U.REPORTS).insertOne(doc);
+    const reportResult = await db.collection(U.REPORTS).insertOne(doc);
+
+    const postResult = await db.collection(POSTS_COLLECTION).updateOne(
+      {
+        _id: post._id,
+        isHidden: { $ne: true },
+        status: { $ne: 'hidden' },
+      },
+      { $inc: { reportCount: 1 }, $set: { updatedAt: new Date(), updated_at: new Date() } },
+    );
+
+    if (postResult.matchedCount === 0) {
+      await db.collection(U.REPORTS).deleteOne({ _id: reportResult.insertedId });
+      logRequest(req, 404, start, traceId);
+      return errors.notFound('게시글을 찾을 수 없습니다', 'post_not_found');
+    }
 
     logRequest(req, 201, start, traceId);
     return NextResponse.json({ ok: true }, { status: 201 });

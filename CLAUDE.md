@@ -33,7 +33,11 @@ pnpm typecheck    # TS 체크 (필수)
 pnpm dev          # dev 서버 (3001)
 pnpm test         # Vitest
 pnpm build        # 빌드
+bash scripts/codex-mcp-runbook.sh # Codex MCP 동기화 + 효율 점검 일괄 실행
 ```
+
+## Claude Code 운영 지시문
+`작업 전/후로 다음을 실행해 주세요: 1) bash scripts/codex-mcp-runbook.sh ~/.codex/log/codex-tui.log 15  2) 세션 종료 시 출력 템플릿(thread_id, tool_calls, errors, warnings, 실패성 warning, 알림성 warning, completion 추정치, Top 반복 패턴, 다음 액션)으로 요약`
 
 ## Key Paths
 ```

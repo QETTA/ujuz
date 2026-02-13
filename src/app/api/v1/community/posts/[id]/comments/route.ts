@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getDbOrThrow } from '@/lib/server/db';
+import { errorResponse, getTraceId, logRequest, parseJson } from '@/lib/server/apiHelpers';
 import { errors } from '@/lib/server/apiError';
-import { getTraceId, logRequest, errorResponse } from '@/lib/server/apiHelpers';
 import { anonIdSchema } from '@/lib/server/validation';
+import { U } from '@/lib/server/collections';
 
 export const runtime = 'nodejs';
-
-const COMMENTS_COLLECTION = 'comments';
-const POSTS_COLLECTION = 'posts';
 
 interface CommentDoc {
   _id: ObjectId;
@@ -25,6 +23,9 @@ interface CommentDoc {
 interface RouteContext {
   params: Promise<{ id: string }>;
 }
+
+const COMMENTS_COLLECTION = U.COMMENTS;
+const POSTS_COLLECTION = U.POSTS;
 
 // GET — list comments for a post
 export async function GET(req: NextRequest, context: RouteContext) {
@@ -76,10 +77,12 @@ export async function GET(req: NextRequest, context: RouteContext) {
       created_at: d.created_at.toISOString(),
     }));
 
-    const nextCursor = hasMore && results.length > 0 ? results[results.length - 1]._id.toString() : null;
+    const nextCursor = hasMore && results.length > 0
+      ? results[results.length - 1]._id.toString()
+      : null;
 
     logRequest(req, 200, start, traceId);
-    return NextResponse.json({ comments, nextCursor, hasMore });
+    return NextResponse.json({ comments, nextCursor, has_more: hasMore, cursor: nextCursor });
   } catch (error) {
     const res = errorResponse(error, traceId);
     logRequest(req, res.status, start, traceId);
@@ -114,14 +117,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
       return errors.badRequest('Invalid anon ID', 'invalid_anon_id');
     }
 
-    let body: unknown;
-    try {
-      body = await req.json();
-    } catch {
-      logRequest(req, 400, start, traceId);
-      return errors.badRequest('Invalid JSON', 'invalid_json');
-    }
-
+    const body = await parseJson(req);
     if (!body || typeof body !== 'object') {
       logRequest(req, 400, start, traceId);
       return errors.badRequest('Request body required', 'missing_body');
@@ -142,7 +138,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const db = await getDbOrThrow();
 
     const post = await db.collection(POSTS_COLLECTION).findOne(
-      { _id: new ObjectId(postId), status: 'published' },
+      { _id: new ObjectId(postId), isHidden: { $ne: true }, status: { $ne: 'hidden' } },
       { projection: { _id: 1 } },
     );
 
@@ -173,6 +169,17 @@ export async function POST(req: NextRequest, context: RouteContext) {
     };
 
     const result = await db.collection(COMMENTS_COLLECTION).insertOne(doc);
+
+    const postResult = await db.collection(POSTS_COLLECTION).updateOne(
+      { _id: new ObjectId(postId), isHidden: { $ne: true }, status: { $ne: 'hidden' } },
+      { $inc: { commentCount: 1 }, $set: { updatedAt: new Date(), updated_at: new Date() } },
+    );
+
+    if (postResult.matchedCount === 0) {
+      await db.collection(COMMENTS_COLLECTION).deleteOne({ _id: result.insertedId });
+      logRequest(req, 404, start, traceId);
+      return errors.notFound('Post not found', 'post_not_found');
+    }
 
     logRequest(req, 201, start, traceId);
     return NextResponse.json({ id: result.insertedId.toString() }, { status: 201 });

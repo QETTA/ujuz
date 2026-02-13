@@ -1,17 +1,35 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, pingMongo } from '@/lib/server/mongodb';
-import { logger } from '@/lib/server/logger';
-import { errors } from '@/lib/server/apiError';
+
+import { getDbOrThrow } from '@/lib/server/db';
 
 export const runtime = 'nodejs';
 
 export async function GET() {
+  let dbStatus: 'ok' | 'error' = 'ok';
+  let status: 'ok' | 'degraded' = 'ok';
+
   try {
-    await connectMongo();
-    const ping = await pingMongo();
-    return NextResponse.json({ status: 'ok', db: ping });
-  } catch (error) {
-    logger.error('Health check failed', { error: error instanceof Error ? error.message : String(error) });
-    return errors.internal('Service unavailable', 'health_check_failed');
+    const db = await getDbOrThrow();
+    await db.admin().ping();
+  } catch {
+    dbStatus = 'error';
+    status = 'degraded';
   }
+
+  return NextResponse.json(
+    {
+      status,
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+      checks: {
+        database: dbStatus,
+        uptime: process.uptime(),
+      },
+    },
+    {
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    },
+  );
 }

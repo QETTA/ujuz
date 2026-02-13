@@ -1,7 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
-import { View, Text, ActivityIndicator, Alert, Platform } from 'react-native';
-import MapView, { Marker, Region, PROVIDER_GOOGLE } from 'react-native-maps';
+import { ComponentType, useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Platform, Text, View } from 'react-native';
+import MapView, { Marker, type Region, PROVIDER_GOOGLE } from 'react-native-maps';
 import { getJson } from '@/lib/api';
+
+type MapModule = {
+  MapView: ComponentType<any>;
+  Marker: ComponentType<any>;
+  PROVIDER_GOOGLE?: string;
+};
 
 interface FacilityMapItem {
   id: string;
@@ -35,6 +41,7 @@ export default function MapScreen() {
   const [facilities, setFacilities] = useState<FacilityMapItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [region, setRegion] = useState<Region>(SEOUL_CENTER);
+  const [mapModule, setMapModule] = useState<MapModule | null>(null);
 
   const fetchNearby = useCallback(async (r: Region) => {
     try {
@@ -51,7 +58,23 @@ export default function MapScreen() {
 
   useEffect(() => {
     fetchNearby(region);
-  }, []);
+    setMapModule({
+      MapView,
+      Marker,
+      PROVIDER_GOOGLE,
+    });
+  }, [fetchNearby]);
+
+  if (!mapModule) {
+    return (
+      <View className="flex-1 items-center justify-center bg-black">
+        <ActivityIndicator size="large" color="#3B82F6" />
+        <Text className="mt-2 text-white font-medium">지도 모듈 로딩 중...</Text>
+      </View>
+    );
+  }
+
+  const { MapView: NativeMapView, Marker: NativeMarker, PROVIDER_GOOGLE: NativeProviderGoogle } = mapModule;
 
   const handleRegionChangeComplete = useCallback((r: Region) => {
     setRegion(r);
@@ -60,16 +83,16 @@ export default function MapScreen() {
 
   return (
     <View className="flex-1">
-      <MapView
+      <NativeMapView
         className="flex-1"
-        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+        provider={Platform.OS === 'android' ? NativeProviderGoogle : undefined}
         initialRegion={SEOUL_CENTER}
         onRegionChangeComplete={handleRegionChangeComplete}
         showsUserLocation
         showsMyLocationButton
       >
         {facilities.map((f) => (
-          <Marker
+          <NativeMarker
             key={f.id}
             coordinate={{ latitude: f.lat, longitude: f.lng }}
             title={f.name}
@@ -77,7 +100,7 @@ export default function MapScreen() {
             pinColor={f.grade ? GRADE_COLORS[f.grade] ?? '#6B7280' : '#6B7280'}
           />
         ))}
-      </MapView>
+      </NativeMapView>
 
       {loading && (
         <View className="absolute inset-0 items-center justify-center bg-black/20">

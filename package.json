@@ -17,7 +17,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "tsc -p tsconfig.json --noEmit",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "grants:bizinfo": "tsx scripts/grants/crawl-bizinfo.ts",
+    "grants:prestartup": "tsx scripts/grants/crawl-bizinfo.ts --pre-startup-only 1 --maxPages 5 --sleepMs 200 --out docs/generated/grants/bizinfo.prestartup.json --md docs/generated/grants/bizinfo.prestartup.md",
+    "grants:prestartup:full": "tsx scripts/grants/crawl-bizinfo.ts --pre-startup-only 1 --maxPages 5 --sleepMs 200 --downloadDir docs/generated/grants/attachments --extractText 1 --out docs/generated/grants/bizinfo.prestartup.full.json --md docs/generated/grants/bizinfo.prestartup.full.md"
   },
   "dependencies": {
     "fastify": "^5.5.0",

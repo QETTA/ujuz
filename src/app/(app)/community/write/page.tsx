@@ -1,115 +1,106 @@
-`use client`;
+'use client';
 
-import { useState } from 'react';
+import { type FormEvent, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import TopBar from '@/components/nav/top-bar';
-import Card from '@/components/ui/card';
-import Button from '@/components/ui/button';
+import { PageHeader } from '@/components/layouts/PageHeader';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
-type PostType = 'review' | 'to_report' | 'question';
-type AgeClass = 'AGE_0' | 'AGE_1' | 'AGE_2' | 'AGE_3' | 'AGE_4' | 'AGE_5';
-type Certainty = '확실' | '추정' | '미확인';
+const COMMUNITY_CATEGORIES = ['질문', '정보공유', '후기', '자유'] as const;
+
+const REGION_OPTIONS = [
+  { value: '서울', label: '서울' },
+  { value: '경기', label: '경기' },
+  { value: '부산', label: '부산' },
+  { value: '대구', label: '대구' },
+  { value: '광주', label: '광주' },
+  { value: '대전', label: '대전' },
+  { value: '울산', label: '울산' },
+  { value: '제주', label: '제주' },
+  { value: '기타', label: '기타' },
+] as const;
 
 export default function CommunityWritePage() {
   const router = useRouter();
 
-  const [type, setType] = useState<PostType>('review');
-  const [boardRegion, setBoardRegion] = useState('');
+  const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [ageClass, setAgeClass] = useState<AgeClass | ''>('');
-  const [waitMonths, setWaitMonths] = useState('');
-  const [certainty, setCertainty] = useState<Certainty | ''>('');
+  const [category, setCategory] = useState<(typeof COMMUNITY_CATEGORIES)[number]>('후기');
+  const [region, setRegion] = useState(REGION_OPTIONS[0].value);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const isReport = type === 'to_report';
+  const titleLength = title.length;
+  const contentLength = content.length;
 
-  const trimContent = content.trim();
-  const canSubmit =
-    !!type &&
-    trimContent.length >= 10 &&
-    trimContent.length <= 2000 &&
-    boardRegion.trim().length > 0;
+  const canSubmit = title.trim().length > 0
+    && titleLength <= 100
+    && content.trim().length > 0
+    && contentLength <= 2000
+    && region.trim().length > 0;
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const preview = useMemo(() => ({
+    title: title.trim(),
+    content: content.trim(),
+    category,
+    region,
+  }), [title, content, category, region]);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!type) {
-      setError('게시글 종류를 선택해 주세요.');
+    if (!title.trim()) {
+      setError('제목을 입력해 주세요.');
       return;
     }
 
-    if (trimContent.length < 10) {
-      setError('내용은 최소 10자 이상 입력해야 합니다.');
+    if (title.length > 100) {
+      setError('제목은 최대 100자입니다.');
       return;
     }
 
-    if (trimContent.length > 2000) {
-      setError('내용은 최대 2000자까지 입력 가능합니다.');
+    if (!content.trim()) {
+      setError('내용을 입력해 주세요.');
       return;
     }
 
-    if (!boardRegion.trim()) {
-      setError('지역을 입력해 주세요.');
+    if (content.length > 2000) {
+      setError('내용은 최대 2000자입니다.');
       return;
     }
 
     setLoading(true);
     setError('');
 
-    const payload: {
-      type: PostType;
-      board_region: string;
-      content: string;
-      structured_fields?: {
-        age_class?: AgeClass;
-        wait_months?: number;
-        certainty?: string;
-      };
-    } = {
-      type,
-      board_region: boardRegion.trim(),
-      content: trimContent
-    };
-
-    if (isReport) {
-      const structured: {
-        age_class?: AgeClass;
-        wait_months?: number;
-        certainty?: string;
-      } = {};
-
-      if (ageClass) structured.age_class = ageClass;
-
-      const waitMonthsValue = Number(waitMonths);
-      if (waitMonths.trim() && Number.isFinite(waitMonthsValue)) {
-        structured.wait_months = Math.max(0, Math.round(waitMonthsValue));
-      }
-
-      if (certainty) structured.certainty = certainty;
-
-      if (Object.keys(structured).length > 0) {
-        payload.structured_fields = structured;
-      }
-    }
-
     try {
       const response = await fetch('/api/v1/community/posts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-anon-id': localStorage.getItem('anon_id') || 'anonymous'
-        },
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title.trim(),
+          content: content.trim(),
+          category,
+          region,
+        }),
       });
 
+      const body = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        setError(body?.message || '게시글 등록에 실패했습니다.');
+        setError(body?.error || body?.message || '게시글 등록에 실패했습니다.');
         return;
       }
 
-      router.push('/community');
+      const postId = body?.id || body?._id;
+      if (!postId) {
+        setError('게시글 ID를 받지 못했습니다.');
+        return;
+      }
+
+      router.push(`/community/${postId}`);
     } catch {
       setError('네트워크 오류가 발생했습니다.');
     } finally {
@@ -118,104 +109,71 @@ export default function CommunityWritePage() {
   };
 
   return (
-    <div>
-      <TopBar />
-      <Card>
+    <div className="flex flex-col gap-5">
+      <PageHeader title="커뮤니티 글쓰기" backHref="/community" />
+
+      <div className="px-4 py-2">
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error ? <p className="text-red-500">{error}</p> : null}
+          {error ? <p className="text-sm text-danger">{error}</p> : null}
 
-          <label className="block">
-            <span className="block mb-1 font-medium">유형</span>
-            <select
-              value={type}
-              onChange={(event) => setType(event.target.value as PostType)}
-              className="w-full border rounded px-2 py-1"
-            >
-              <option value="review">후기</option>
-              <option value="to_report">TO 제보</option>
-              <option value="question">질문</option>
-            </select>
-          </label>
+          <Select
+            label="카테고리"
+            value={category}
+            onChange={(event: React.ChangeEvent<HTMLSelectElement>) => setCategory(event.target.value as (typeof COMMUNITY_CATEGORIES)[number])}
+            required
+            options={COMMUNITY_CATEGORIES.map((value) => ({ value, label: value }))}
+          />
 
-          <label className="block">
-            <span className="block mb-1 font-medium">지역</span>
-            <input
-              value={boardRegion}
-              onChange={(event) => setBoardRegion(event.target.value)}
-              required
-              className="w-full border rounded px-2 py-1"
-              placeholder="지역 입력"
-            />
-          </label>
+          <Select
+            label="지역"
+            value={region}
+            onChange={(event: React.ChangeEvent<HTMLSelectElement>) => setRegion(event.target.value)}
+            required
+            options={[...REGION_OPTIONS] as { value: string; label: string; }[]}
+          />
 
-          {isReport ? (
-            <div className="space-y-4">
-              <label className="block">
-                <span className="block mb-1 font-medium">연령대</span>
-                <select
-                  value={ageClass}
-                  onChange={(event) => setAgeClass(event.target.value as AgeClass | '')}
-                  className="w-full border rounded px-2 py-1"
-                >
-                  <option value="">선택 안 함</option>
-                  <option value="AGE_0">AGE_0</option>
-                  <option value="AGE_1">AGE_1</option>
-                  <option value="AGE_2">AGE_2</option>
-                  <option value="AGE_3">AGE_3</option>
-                  <option value="AGE_4">AGE_4</option>
-                  <option value="AGE_5">AGE_5</option>
-                </select>
-              </label>
+          <Input
+            label="제목"
+            value={title}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setTitle(event.target.value)}
+            maxLength={100}
+            required
+            placeholder="제목(최대 100자)"
+            hint={`${titleLength}/100`}
+          />
 
-              <label className="block">
-                <span className="block mb-1 font-medium">대기개월</span>
-                <input
-                  type="number"
-                  value={waitMonths}
-                  onChange={(event) => setWaitMonths(event.target.value)}
-                  min={0}
-                  className="w-full border rounded px-2 py-1"
-                  placeholder="입력 (개월)"
-                />
-              </label>
+          <Textarea
+            label="내용"
+            value={content}
+            onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setContent(event.target.value)}
+            maxLength={2000}
+            rows={14}
+            required
+            placeholder="내용을 입력하세요"
+            hint={`${contentLength}/2000`}
+          />
 
-              <label className="block">
-                <span className="block mb-1 font-medium">확실성</span>
-                <select
-                  value={certainty}
-                  onChange={(event) => setCertainty(event.target.value as Certainty | '')}
-                  className="w-full border rounded px-2 py-1"
-                >
-                  <option value="">선택 안 함</option>
-                  <option value="확실">확실</option>
-                  <option value="추정">추정</option>
-                  <option value="미확인">미확인</option>
-                </select>
-              </label>
-            </div>
-          ) : null}
-
-          <label className="block">
-            <span className="block mb-1 font-medium">
-              내용 <span className="text-gray-500">({trimContent.length}/2000)</span>
-            </span>
-            <textarea
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              minLength={10}
-              maxLength={2000}
-              rows={10}
-              required
-              className="w-full border rounded px-2 py-1"
-              placeholder="내용을 입력하세요 (10자 이상)"
-            />
-          </label>
-
-          <Button type="submit" disabled={loading || !canSubmit}>
-            {loading ? '등록 중...' : '작성하기'}
+          <Button type="submit" className="w-full" loading={loading} disabled={!canSubmit}>
+            {loading ? '등록 중...' : '게시글 등록'}
           </Button>
         </form>
-      </Card>
+
+        <Card className="mt-5">
+          <CardHeader>
+            <CardTitle>미리보기</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-text-secondary">
+            <p className="text-text-primary font-semibold">{preview.title || '제목 미입력'}</p>
+            <p className="text-xs">
+              <span className="mr-2 rounded-full bg-surface-elevated px-2 py-0.5">{preview.category}</span>
+              <span className="rounded-full bg-surface-elevated px-2 py-0.5">{preview.region}</span>
+            </p>
+            <p className="whitespace-pre-wrap break-words text-text-primary">
+              {preview.content || '내용 미입력'}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
