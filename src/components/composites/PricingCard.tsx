@@ -25,7 +25,7 @@ export function PricingCard({
   return (
     <div
       className={cn(
-        'relative flex flex-col rounded-2xl border p-6',
+        'group relative flex flex-col rounded-2xl border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] ring-brand-500 focus-within:ring-2 focus-within:ring-brand-500',
         plan.highlight
           ? 'border-brand-500 bg-brand-50 shadow-md'
           : 'border-border bg-surface',
@@ -33,7 +33,7 @@ export function PricingCard({
       )}
     >
       {plan.highlight && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-500 px-3 py-1 text-xs font-bold text-text-inverse">
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-500 px-3 py-1 text-xs font-bold text-text-inverse transition-transform duration-300 group-hover:scale-105">
           추천
         </span>
       )}

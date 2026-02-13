@@ -58,11 +58,17 @@ export default function PricingPage() {
     <div className="flex flex-col">
       <TopBar showBack title="요금제" />
       <div className="space-y-4 px-md py-md">
-        {plans.map((plan) => (
+        {plans.map((plan, index) => (
           <Card
             key={plan.id}
             variant={plan.highlight ? 'elevated' : 'default'}
-            className={plan.highlight ? 'ring-2 ring-brand-500' : ''}
+            className={`animate-in fade-in slide-in-from-bottom-4 duration-500 ${
+              plan.highlight ? 'ring-2 ring-brand-500' : ''
+            }`}
+            style={{
+              animationDelay: `${index * 120}ms`,
+              animationFillMode: 'both',
+            }}
           >
             <div className="flex items-start justify-between">
               <div>
