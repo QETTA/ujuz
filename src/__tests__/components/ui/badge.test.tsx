@@ -15,6 +15,20 @@ describe('Badge', () => {
     render(<Badge variant="count">5</Badge>);
     const badge = screen.getByText('5');
     expect(badge.className).toContain('bg-danger');
+    expect(badge).toHaveAttribute('aria-live', 'polite');
+  });
+
+  it('adds interactive scale classes only when badge is interactive', () => {
+    render(<Badge onClick={() => {}}>클릭</Badge>);
+    const badge = screen.getByText('클릭');
+    expect(badge.className).toContain('hover:scale-105');
+  });
+
+  it('renders notification variant with pulse animation', () => {
+    render(<Badge variant="notification">3</Badge>);
+    const badge = screen.getByText('3');
+    expect(badge.className).toContain('animate-notification-pulse');
+    expect(badge).toHaveAttribute('aria-live', 'polite');
   });
 
   const gradeColors: Record<Grade, string> = {

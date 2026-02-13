@@ -105,6 +105,7 @@
   --duration-fast: 150ms;
   --duration-normal: 250ms;
   --duration-slow: 400ms;
+  --animate-notification-pulse: notification-pulse 1.4s var(--ease-smooth) infinite;
 
   /* Z-Index */
   --z-base: 0;
@@ -114,6 +115,18 @@
   --z-modal: 400;
   --z-toast: 500;
   --z-nav: 600;
+
+  @keyframes notification-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.08);
+      opacity: 0.92;
+    }
+  }
 }
 
 /* ── Dark Mode Tokens ── */
