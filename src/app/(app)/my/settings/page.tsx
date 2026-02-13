@@ -5,6 +5,7 @@ import { TopBar } from '@/components/nav/top-bar';
 import { Card } from '@/components/ui/card';
 import { apiFetch } from '@/lib/api';
 import { useTheme, nextThemeMode } from '@/lib/hooks/useTheme';
+import { useToast } from '@/components/ui/toast';
 import { SunIcon, MoonIcon, ComputerDesktopIcon } from '@heroicons/react/24/outline';
 import type { ThemeMode } from '@/components/providers/theme-provider';
 
@@ -28,6 +29,7 @@ interface Settings {
 
 export default function SettingsPage() {
   const { mode, setMode } = useTheme();
+  const { toast } = useToast();
   const [settings, setSettings] = useState<Settings | null>(null);
 
   useEffect(() => {
@@ -36,9 +38,15 @@ export default function SettingsPage() {
 
   const toggleNotification = async (key: 'push' | 'email' | 'sms') => {
     if (!settings) return;
-    const updated = { ...settings.notifications, [key]: !settings.notifications[key] };
+    const prev = settings.notifications;
+    const updated = { ...prev, [key]: !prev[key] };
     setSettings({ ...settings, notifications: updated });
-    await apiFetch('/api/settings', { method: 'PATCH', json: { notifications: updated } }).catch(() => {});
+    try {
+      await apiFetch('/api/settings', { method: 'PATCH', json: { notifications: updated } });
+    } catch {
+      setSettings({ ...settings, notifications: prev });
+      toast('알림 설정 변경에 실패했습니다', 'error');
+    }
   };
 
   const cycleTheme = () => {

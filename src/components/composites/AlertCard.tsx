@@ -47,7 +47,7 @@ export function AlertCard({ alert, onMarkRead, className }: AlertCardProps) {
         <p className="mt-0.5 text-xs text-text-secondary">
           {alert.age_class} · 예상 {alert.estimated_slots}석
         </p>
-        <div className="mt-1 flex items-center gap-2 text-[10px] text-text-tertiary">
+        <div className="mt-1 flex items-center gap-2 text-xs text-text-tertiary">
           <span>신뢰도 {(alert.confidence * 100).toFixed(0)}%</span>
           <span>·</span>
           <span>{formatRelativeTime(alert.detected_at)}</span>

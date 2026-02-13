@@ -6,6 +6,7 @@ import { PricingCard } from '@/components/composites/PricingCard';
 import { Toggle } from '@/components/ui/toggle';
 import { useSubscription } from '@/lib/client/hooks/useSubscription';
 import { clientApiFetch } from '@/lib/client/api';
+import { useToast } from '@/components/ui/toast';
 import type { SubscriptionPlan } from '@/lib/types';
 
 const PLANS: SubscriptionPlan[] = [
@@ -58,7 +59,8 @@ const PLANS: SubscriptionPlan[] = [
 ];
 
 export default function SubscriptionPage() {
-  const { subscription } = useSubscription();
+  const { subscription, refetch } = useSubscription();
+  const { toast } = useToast();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   const handleSelect = async (planId: string) => {
@@ -70,9 +72,10 @@ export default function SubscriptionPage() {
           billing_cycle: billingCycle,
         },
       });
-      window.location.reload();
+      refetch();
+      toast('플랜이 변경되었습니다', 'success');
     } catch {
-      // Error handled by clientApiFetch
+      toast('플랜 변경에 실패했습니다', 'error');
     }
   };
 

@@ -130,7 +130,7 @@ export function TabsTrigger({
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1',
         isActive
           ? 'bg-surface text-text-primary shadow-sm'
-          : 'text-text-tertiary hover:bg-muted/50 hover:text-text-secondary',
+          : 'text-text-tertiary hover:bg-surface-inset hover:text-text-secondary',
         className,
       )}
     >

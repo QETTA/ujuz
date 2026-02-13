@@ -23,7 +23,7 @@ export function WidgetSummaryBar({ summary, className }: WidgetSummaryBarProps) 
         </span>
         <p className="text-sm font-medium text-text-primary">{summary.one_liner}</p>
       </div>
-      <p className="mt-1 text-[10px] text-text-tertiary">
+      <p className="mt-1 text-xs text-text-tertiary">
         마지막 업데이트: {summary.updated_at}
       </p>
     </div>

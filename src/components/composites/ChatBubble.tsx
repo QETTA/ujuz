@@ -37,7 +37,7 @@ export function ChatBubble({ message, className }: ChatBubbleProps) {
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start', className)}>
       <div
         className={cn(
-          'max-w-[85%] rounded-2xl px-4 py-2.5',
+          'max-w-[85%] sm:max-w-[75%] lg:max-w-[65%] rounded-2xl px-4 py-2.5',
           isUser
             ? 'rounded-br-sm bg-brand-500 text-text-inverse'
             : 'rounded-bl-sm bg-surface-elevated text-text-primary',
@@ -74,7 +74,7 @@ export function ChatBubble({ message, className }: ChatBubbleProps) {
         {message.created_at && (
           <p
             className={cn(
-              'mt-1 text-[10px]',
+              'mt-1 text-xs',
               isUser ? 'text-text-inverse/60' : 'text-text-tertiary',
             )}
           >

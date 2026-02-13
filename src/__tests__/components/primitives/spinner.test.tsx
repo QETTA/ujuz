@@ -18,7 +18,7 @@ describe('Spinner', () => {
     const svg = status.querySelector('svg');
 
     expect(svg).toBeInTheDocument();
-    expect(svg).toHaveClass('h-8', 'w-8', 'text-muted-foreground', 'custom-class');
+    expect(svg).toHaveClass('h-8', 'w-8', 'text-text-tertiary', 'custom-class');
   });
 
   it('renders an optional label below the spinner', () => {

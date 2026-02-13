@@ -41,6 +41,7 @@ export function AlertSubscriptionCard({
             <button
               type="button"
               onClick={onToggle}
+              aria-label={subscription.is_active ? '알림 일시중지' : '알림 재개'}
               className="rounded-lg px-2 py-1 text-xs text-text-secondary hover:bg-surface-inset transition-colors"
             >
               {subscription.is_active ? '일시중지' : '재개'}
@@ -50,6 +51,7 @@ export function AlertSubscriptionCard({
             <button
               type="button"
               onClick={onUnsubscribe}
+              aria-label={`${subscription.facility_name} 알림 삭제`}
               className="rounded-lg px-2 py-1 text-xs text-danger hover:bg-danger/10 transition-colors"
             >
               삭제

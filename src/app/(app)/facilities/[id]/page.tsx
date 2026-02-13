@@ -1,6 +1,6 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import { PageHeader } from '@/components/layouts/PageHeader';
 import { FacilityDetailHeader } from '@/components/composites/FacilityDetailHeader';
 import { ScoreResultPanel } from '@/components/composites/ScoreResultPanel';
@@ -33,6 +33,7 @@ export default function FacilityDetailPage({ params }: { params: Promise<{ id: s
   const { data: facility, loading } = useApiFetch<FacilityDetail>(`/api/v1/facilities/${id}`);
   const { data: scoreResult } = useApiFetch<AdmissionScoreResultV2>(`/api/simulate?facility_id=${id}&child_age_band=${ageBand}`);
   const subscribe = useToAlertStore((s) => s.subscribe);
+  const [activeTab, setActiveTab] = useState('info');
 
   if (loading || !facility) {
     return (
@@ -70,14 +71,14 @@ export default function FacilityDetailPage({ params }: { params: Promise<{ id: s
             <BellIcon className="h-4 w-4" />
             TO 알림 설정
           </Button>
-          <Button variant="secondary" className="flex-1">
+          <Button variant="secondary" className="flex-1" onClick={() => setActiveTab('score')}>
             <CalculatorIcon className="h-4 w-4" />
             입소 확률 계산
           </Button>
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="info">
+        <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="info">기본정보</TabsTrigger>
             <TabsTrigger value="score">입소분석</TabsTrigger>

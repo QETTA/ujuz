@@ -35,6 +35,16 @@ export default function ChatPage() {
     loadConversations();
   }, [loadConversations]);
 
+  // Close mobile overlay on Escape key
+  useEffect(() => {
+    if (!showMobileList) return;
+    const handleEscape = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') setShowMobileList(false);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showMobileList]);
+
   // Auto-scroll to bottom on new messages or streaming updates
   useEffect(() => {
     if (scrollRef.current) {
@@ -81,7 +91,12 @@ export default function ChatPage() {
 
       {/* Mobile conversation list overlay */}
       {showMobileList && (
-        <div className="fixed inset-0 z-overlay lg:hidden">
+        <div
+          className="fixed inset-0 z-overlay lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="대화 목록"
+        >
           <div
             className="absolute inset-0 bg-black/40"
             onClick={() => setShowMobileList(false)}

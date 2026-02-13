@@ -32,11 +32,11 @@ export function EvidenceCard({ evidence, className }: EvidenceCardProps) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-text-secondary">{meta.label}</span>
-          <span className="text-[10px] text-text-tertiary">신뢰도 {strengthPct}%</span>
+          <span className="text-xs text-text-tertiary">신뢰도 {strengthPct}%</span>
         </div>
         <p className="mt-0.5 text-sm text-text-primary">{evidence.summary}</p>
         {evidence.source && (
-          <p className="mt-1 text-[10px] text-text-tertiary">출처: {evidence.source}</p>
+          <p className="mt-1 text-xs text-text-tertiary">출처: {evidence.source}</p>
         )}
       </div>
     </div>

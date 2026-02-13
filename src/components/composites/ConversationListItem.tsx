@@ -36,7 +36,7 @@ export function ConversationListItem({
     <div
       className={cn(
         'group flex items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 transition-all duration-200',
-        isActive ? 'border-brand-500 bg-brand-50' : 'hover:bg-muted/50',
+        isActive ? 'border-brand-500 bg-brand-50' : 'hover:bg-surface-inset',
         className,
       )}
     >
@@ -56,7 +56,7 @@ export function ConversationListItem({
             aria-label="읽지 않은 메시지"
           />
         )}
-        <span className="shrink-0 text-[10px] text-text-tertiary">
+        <span className="shrink-0 text-xs text-text-tertiary">
           {formatRelativeTime(conversation.updated_at)}
         </span>
       </button>

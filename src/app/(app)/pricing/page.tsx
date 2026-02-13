@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { TopBar } from '@/components/nav/top-bar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,6 +55,8 @@ const plans: SubscriptionPlan[] = [
 ];
 
 export default function PricingPage() {
+  const router = useRouter();
+
   return (
     <div className="flex flex-col">
       <TopBar showBack title="요금제" />
@@ -104,6 +107,8 @@ export default function PricingPage() {
               variant={plan.highlight ? 'primary' : 'secondary'}
               className="mt-4 w-full"
               size="sm"
+              onClick={() => plan.priceMonthly > 0 && router.push('/subscription')}
+              disabled={plan.priceMonthly === 0}
             >
               {plan.priceMonthly === 0 ? '현재 플랜' : '선택'}
             </Button>

@@ -64,7 +64,7 @@ export function useChat() {
       }
 
       if (meta.suggestions) {
-        setSuggestions(meta.suggestions);
+        setSuggestions(meta.suggestions.filter((s): s is string => typeof s === 'string'));
       }
     },
   });
