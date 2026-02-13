@@ -44,7 +44,14 @@ export function ChatBubble({ message, className }: ChatBubbleProps) {
         )}
       >
         {/* Main content */}
-        <p className="text-sm whitespace-pre-wrap leading-relaxed">{textContent}</p>
+        <p
+          className={cn(
+            'text-sm whitespace-pre-wrap leading-relaxed',
+            !isUser && !message.created_at && 'animate-streaming-text',
+          )}
+        >
+          {textContent}
+        </p>
 
         {/* Data blocks */}
         {message.data_blocks && message.data_blocks.length > 0 && (

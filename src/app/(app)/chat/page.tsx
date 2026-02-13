@@ -173,7 +173,7 @@ export default function ChatPage() {
                   <div
                     key={msg.id}
                     className="animate-message-enter"
-                    style={{ animationDelay: i === messages.length - 1 ? '0ms' : '0ms' }}
+                    style={{ animationDelay: `${Math.min(i * 50, 300)}ms` }}
                   >
                     <ChatBubble message={msg} />
                   </div>
