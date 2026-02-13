@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { Button } from '@/components/ui/button';
 
 const consentItems = [
@@ -12,16 +13,21 @@ const consentItems = [
 
 export interface ConsentFormProps {
   onSubmit: (consent: Record<string, boolean>) => void;
+  isSubmitting?: boolean;
 }
 
-export function ConsentForm({ onSubmit }: ConsentFormProps) {
+export function ConsentForm({ onSubmit, isSubmitting = false }: ConsentFormProps) {
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const requiredItems = consentItems.filter((c) => c.required);
+  const completedRequiredCount = requiredItems.filter((c) => checked[c.key]).length;
+  const requiredTotalCount = requiredItems.length;
 
   const toggle = (key: string) => {
     setChecked((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const allRequired = consentItems.filter((c) => c.required).every((c) => checked[c.key]);
+  const allRequired = completedRequiredCount === requiredTotalCount;
+  const progressLabel = `${completedRequiredCount}/${requiredTotalCount} 필수 항목 완료`;
 
   return (
     <div className="space-y-4">
@@ -34,17 +40,24 @@ export function ConsentForm({ onSubmit }: ConsentFormProps) {
             className="mt-0.5 h-4 w-4 rounded border-border text-brand-500 focus:ring-brand-500"
           />
           <div>
-            <p className="text-sm font-medium text-text-primary">
-              {item.label}
-              {item.required && <span className="ml-1 text-danger">*</span>}
+            <p className="flex items-center gap-1 text-sm font-medium text-text-primary">
+              <span>{item.label}</span>
+              {item.required && <span className="text-danger">*</span>}
+              {item.required && checked[item.key] && (
+                <CheckCircleIcon className="h-4 w-4 text-success" aria-hidden="true" />
+              )}
             </p>
             <p className="mt-0.5 text-xs text-text-tertiary">{item.description}</p>
           </div>
         </label>
       ))}
 
-      <Button onClick={() => onSubmit(checked)} disabled={!allRequired} className="w-full">
-        동의하고 계속
+      <div aria-live="polite" role="status" className="rounded-lg bg-surface-inset px-3 py-2">
+        <p className="text-sm text-text-secondary">{progressLabel}</p>
+      </div>
+
+      <Button onClick={() => onSubmit(checked)} disabled={!allRequired || isSubmitting} className="w-full">
+        {isSubmitting ? '저장 중...' : '동의하고 계속'}
       </Button>
     </div>
   );
