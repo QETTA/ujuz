@@ -44,7 +44,8 @@ export function PostCard({
       type="button"
       onClick={onClick}
       className={cn(
-        'w-full text-left rounded-xl border border-border bg-surface p-4 transition-colors hover:bg-surface-inset',
+        'w-full text-left rounded-xl border border-border bg-surface p-4 transition-[background-color,border-color,box-shadow,transform] duration-200 hover:bg-surface-inset hover:border-brand-200 hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 motion-reduce:active:scale-100',
+        onClick ? 'cursor-pointer' : 'cursor-default',
         className,
       )}
     >
