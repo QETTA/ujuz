@@ -6,16 +6,17 @@ import { ChevronDownIcon } from '@heroicons/react/24/outline';
 
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
-  error?: string;
+  error?: boolean;
+  errorMessage?: string;
   hint?: string;
   options: { value: string; label: string; disabled?: boolean }[];
   placeholder?: string;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, hint, options, placeholder, className, id, ...props }, ref) => {
+  ({ label, error, errorMessage, hint, options, placeholder, className, id, ...props }, ref) => {
     const selectId = id ?? (label ? `select-${label.replace(/\s+/g, '-').toLowerCase()}` : undefined);
-    const errorId = error ? `${selectId}-error` : undefined;
+    const errorId = error && errorMessage ? `${selectId}-error` : undefined;
 
     return (
       <div className="flex flex-col gap-1.5">
@@ -24,7 +25,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             {label}
           </label>
         )}
-        <div className="relative">
+        <div className="group relative">
           <select
             ref={ref}
             id={selectId}
@@ -32,9 +33,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             aria-describedby={errorId}
             className={cn(
               'h-10 w-full appearance-none rounded-lg border bg-surface px-3 pr-9 text-sm text-text-primary',
-              'transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none',
+              'transition-colors duration-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500 focus:outline-none',
               'disabled:opacity-50 disabled:cursor-not-allowed',
-              error ? 'border-danger' : 'border-border',
+              error ? 'border-danger ring-danger focus:border-danger focus:ring-danger' : 'border-border',
               className,
             )}
             {...props}
@@ -51,13 +52,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             ))}
           </select>
           <ChevronDownIcon
-            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary"
+            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary transition-transform duration-200 group-focus-within:rotate-180"
             aria-hidden="true"
           />
         </div>
-        {error && (
+        {error && errorMessage && (
           <p id={errorId} className="text-xs text-danger" role="alert">
-            {error}
+            {errorMessage}
           </p>
         )}
         {hint && !error && (
