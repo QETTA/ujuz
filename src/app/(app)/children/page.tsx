@@ -62,7 +62,7 @@ export default function ChildrenPage() {
     setIsLoading(true)
     setError('')
     try {
-      const res = await fetch('/api/children', { cache: 'no-store' })
+      const res = await fetch('/api/v1/children', { cache: 'no-store' })
       if (!res.ok) {
         throw new Error('자녀 목록을 불러오지 못했습니다.')
       }
@@ -119,8 +119,8 @@ export default function ChildrenPage() {
     try {
       const method = editingChild ? 'PATCH' : 'POST'
       const endpoint = editingChild
-        ? `/api/children/${editingChild.id}`
-        : '/api/children'
+        ? `/api/v1/children/${editingChild.id}`
+        : '/api/v1/children'
 
       const res = await fetch(endpoint, {
         method,
@@ -152,7 +152,7 @@ export default function ChildrenPage() {
 
     setError('')
     try {
-      const res = await fetch(`/api/children/${id}`, {
+      const res = await fetch(`/api/v1/children/${id}`, {
         method: 'DELETE',
       })
       if (!res.ok) {

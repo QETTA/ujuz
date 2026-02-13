@@ -83,8 +83,8 @@ export default function HomeScreen() {
     setIsLoadingSubscriptions(true);
 
     const [unreadResult, subscriptionsResult] = await Promise.allSettled([
-      getJson<UnreadResponse>('/api/to-alerts/unread'),
-      getJson<SubscriptionsResponse>('/api/to-alerts'),
+      getJson<UnreadResponse>('/api/v1/to-alerts/unread'),
+      getJson<SubscriptionsResponse>('/api/v1/to-alerts'),
     ]);
 
     if (unreadResult.status === 'fulfilled' && typeof unreadResult.value.total === 'number') {

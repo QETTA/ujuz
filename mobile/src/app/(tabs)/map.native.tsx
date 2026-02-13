@@ -1,6 +1,6 @@
 import { ComponentType, useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Text, View } from 'react-native';
-import MapView, { Marker, type Region, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, type Region, PROVIDER_GOOGLE } from '@/lib/react-native-maps';
 import { getJson } from '@/lib/api';
 
 type MapModule = {

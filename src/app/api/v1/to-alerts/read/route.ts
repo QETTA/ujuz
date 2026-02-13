@@ -48,7 +48,7 @@ export async function PATCH(req: NextRequest) {
 
     logRequest(req, 200, start, traceId);
     return NextResponse.json({
-      modified: result.modifiedCount,
+      updated: result.modifiedCount,
     });
   } catch (error) {
     const res = errorResponse(error, traceId);

@@ -30,7 +30,7 @@ interface UserProfile {
 
 export default function ProfilePage() {
   const { isAnonymous, provider } = useUjuzSession();
-  const { data: profile } = useApiFetch<UserProfile>('/api/user/account');
+  const { data: profile } = useApiFetch<UserProfile>('/api/v1/user/account');
   const { mode, setMode } = useTheme();
 
   const themeIcons = {

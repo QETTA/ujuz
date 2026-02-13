@@ -15,9 +15,11 @@ export interface ApiRequestConfig {
 }
 
 export interface ApiErrorPayload {
-  error: string;
-  message: string;
-  details?: Record<string, unknown>;
+  error: {
+    code: string;
+    message: string;
+    details?: Record<string, unknown>;
+  };
 }
 
 const buildUrl = (path: string): string => {
@@ -65,9 +67,11 @@ export async function requestJson<T>(path: string, config: ApiRequestConfig = {}
 
   if (!response.ok) {
     const fallbackError: ApiErrorPayload = {
-      error: 'API_ERROR',
-      message: response.statusText,
-      details: { status: response.status, body: data },
+      error: {
+        code: 'API_ERROR',
+        message: response.statusText,
+        details: { status: response.status },
+      },
     };
 
     if (
@@ -75,7 +79,7 @@ export async function requestJson<T>(path: string, config: ApiRequestConfig = {}
       typeof data === 'object' &&
       data !== null &&
       'error' in data &&
-      'message' in data
+      typeof (data as Record<string, unknown>).error === 'object'
     ) {
       throw data as ApiErrorPayload;
     }

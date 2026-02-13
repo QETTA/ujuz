@@ -65,8 +65,8 @@ export default function PricingPage() {
     (async () => {
       try {
         const [plansResponse, subscriptionResponse] = await Promise.all([
-          fetch('/api/subscription?action=plans', { cache: 'no-store' }),
-          fetch('/api/subscription', { cache: 'no-store' }).catch(() => null),
+          fetch('/api/v1/subscription?action=plans', { cache: 'no-store' }),
+          fetch('/api/v1/subscription', { cache: 'no-store' }).catch(() => null),
         ]);
 
         const plansPayload: PlansResponse = plansResponse.ok

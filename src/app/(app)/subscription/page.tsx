@@ -65,7 +65,7 @@ export default function SubscriptionPage() {
 
   const handleSelect = async (planId: string) => {
     try {
-      await clientApiFetch('/api/user/account', {
+      await clientApiFetch('/api/v1/user/account', {
         method: 'POST',
         json: {
           plan_tier: planId,

@@ -67,7 +67,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   loadConversations: async () => {
     try {
-      const data = await apiFetch<{ conversations: ConversationSummary[] }>('/api/bot/conversations');
+      const data = await apiFetch<{ conversations: ConversationSummary[] }>('/api/v1/bot/conversations');
       set({ conversations: data.conversations });
     } catch {
       // Non-fatal
@@ -79,7 +79,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const data = await apiFetch<{
         id: string;
         messages: BotMessage[];
-      }>(`/api/bot/conversations/${id}`);
+      }>(`/api/v1/bot/conversations/${id}`);
       set({
         conversationId: data.id,
         messages: data.messages,
@@ -91,7 +91,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   deleteConversation: async (id) => {
     try {
-      await apiFetch(`/api/bot/conversations/${id}`, { method: 'DELETE' });
+      await apiFetch(`/api/v1/bot/conversations/${id}`, { method: 'DELETE' });
       set((s) => ({
         conversations: s.conversations.filter((c) => c.id !== id),
         ...(s.conversationId === id
@@ -136,7 +136,7 @@ export const useToAlertStore = create<ToAlertStore>((set, get) => ({
   load: async () => {
     set({ loading: true, error: null });
     try {
-      const data = await apiFetch<{ subscriptions: ToAlertSubscription[] }>('/api/to-alerts');
+      const data = await apiFetch<{ subscriptions: ToAlertSubscription[] }>('/api/v1/to-alerts');
       set({ subscriptions: data.subscriptions ?? [], loading: false });
     } catch (err) {
       set({ loading: false, error: err instanceof Error ? err.message : 'Failed to load' });
@@ -159,7 +159,7 @@ export const useToAlertStore = create<ToAlertStore>((set, get) => ({
       error: null,
     }));
     try {
-      const result = await apiFetch<ToAlertSubscription>('/api/to-alerts', {
+      const result = await apiFetch<ToAlertSubscription>('/api/v1/to-alerts', {
         method: 'POST',
         json: { facility_id: facilityId, facility_name: facilityName, target_classes: targetClasses },
       });
@@ -175,7 +175,7 @@ export const useToAlertStore = create<ToAlertStore>((set, get) => ({
 
   unsubscribe: async (facilityId) => {
     try {
-      await apiFetch(`/api/to-alerts?facility_id=${encodeURIComponent(facilityId)}`, { method: 'DELETE' });
+      await apiFetch(`/api/v1/to-alerts?facility_id=${encodeURIComponent(facilityId)}`, { method: 'DELETE' });
       set((s) => ({ subscriptions: s.subscriptions.filter((sub) => sub.facility_id !== facilityId) }));
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Unsubscribe failed' });
@@ -184,7 +184,7 @@ export const useToAlertStore = create<ToAlertStore>((set, get) => ({
 
   loadHistory: async () => {
     try {
-      const data = await apiFetch<{ alerts: ToAlertHistory[]; total: number; unread_count: number }>('/api/to-alerts/history');
+      const data = await apiFetch<{ alerts: ToAlertHistory[]; total: number; unread_count: number }>('/api/v1/to-alerts/history');
       set({ history: data.alerts ?? [], unreadCount: data.unread_count ?? 0 });
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Failed to load history' });
@@ -195,7 +195,7 @@ export const useToAlertStore = create<ToAlertStore>((set, get) => ({
     try {
       const since = get().lastPolledAt;
       const qs = since ? `?since=${encodeURIComponent(since)}` : '';
-      const data = await apiFetch<{ alerts: ToAlertHistory[]; unread_count: number }>(`/api/to-alerts/unread${qs}`);
+      const data = await apiFetch<{ alerts: ToAlertHistory[]; unread_count: number }>(`/api/v1/to-alerts/unread${qs}`);
       set({
         unreadCount: data.unread_count,
         lastPolledAt: new Date().toISOString(),
@@ -234,7 +234,7 @@ export const useToAlertStore = create<ToAlertStore>((set, get) => ({
 
   markAsRead: async (ids) => {
     try {
-      await apiFetch('/api/to-alerts/read', {
+      await apiFetch('/api/v1/to-alerts/read', {
         method: 'PATCH',
         json: { alert_ids: ids },
       });
@@ -392,7 +392,7 @@ export const useHomeStore = create<HomeStore>((set) => ({
         heroState: HeroState;
         unreadAlerts: number;
         followedFacilities: number;
-      }>('/api/home');
+      }>('/api/v1/home');
       set({
         heroState: data.heroState,
         unreadAlerts: data.unreadAlerts,

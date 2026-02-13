@@ -87,8 +87,8 @@ export default function AlertsScreen() {
 
       try {
         const [alertRes, subscriptionRes] = await Promise.all([
-          getJson<UnreadAlertsResponse>('/api/to-alerts/unread'),
-          getJson<SubscriptionsResponse>('/api/to-alerts'),
+          getJson<UnreadAlertsResponse>('/api/v1/to-alerts/unread'),
+          getJson<SubscriptionsResponse>('/api/v1/to-alerts'),
         ]);
 
         const unreadAlerts = (alertRes.alerts ?? []).filter((item) => !item.is_read);
@@ -135,7 +135,7 @@ export default function AlertsScreen() {
       });
 
       try {
-        await postJson('/api/to-alerts/read', { alert_ids: [alertId] });
+        await postJson('/api/v1/to-alerts/read', { alert_ids: [alertId] });
         setAlerts((prev) => prev.filter((item) => item._id !== alertId));
       } catch {
         setErrorMessage('알림을 읽음 처리하지 못했습니다.');

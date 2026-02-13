@@ -27,16 +27,13 @@ export async function errorHandler(
 ) {
   if (isAppError(error)) {
     return reply.status(error.statusCode).send({
-      error: error.code,
-      message: error.message,
-      ...(error.details ? { details: error.details } : {}),
+      error: { code: error.code.toUpperCase(), message: error.message, ...(error.details ? { details: error.details } : {}) },
     });
   }
 
   const statusCode = (error as FastifyError).statusCode ?? 500;
   const message = error.message || 'Internal server error';
   return reply.status(statusCode).send({
-    error: statusCode >= 500 ? 'INTERNAL_ERROR' : 'ERROR',
-    message,
+    error: { code: statusCode >= 500 ? 'SERVER_ERROR' : 'ERROR', message },
   });
 }

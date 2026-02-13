@@ -24,7 +24,7 @@ const FREE_LIMITS: SubscriptionState = {
 };
 
 export function useSubscription() {
-  const { data, loading, error, refetch } = useApiFetch<SubscriptionState>('/api/user/account');
+  const { data, loading, error, refetch } = useApiFetch<SubscriptionState>('/api/v1/user/account');
   const subscription = data ?? FREE_LIMITS;
 
   const canUseFeature = (_feature: 'score' | 'alerts' | 'chat'): boolean => {

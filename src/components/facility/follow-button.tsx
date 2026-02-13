@@ -51,10 +51,10 @@ export function FollowButton({ facilityId, facilityName, initialFollowed = false
     setLoading(true);
     try {
       if (followed) {
-        await apiFetch(`/api/facilities/follow?facility_id=${encodeURIComponent(facilityId)}`, { method: 'DELETE' });
+        await apiFetch(`/api/v1/facilities/follow?facility_id=${encodeURIComponent(facilityId)}`, { method: 'DELETE' });
         setFollowed(false);
       } else {
-        await apiFetch('/api/facilities/follow', {
+        await apiFetch('/api/v1/facilities/follow', {
           method: 'POST',
           json: { facility_id: facilityId, facility_name: facilityName },
         });

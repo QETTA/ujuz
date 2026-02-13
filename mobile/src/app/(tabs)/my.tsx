@@ -119,7 +119,7 @@ export default function MyScreen() {
   const fetchSubscriptions = useCallback(async () => {
     setError('');
     try {
-      const data = await getJson<ToAlertsResponse>('/api/to-alerts');
+      const data = await getJson<ToAlertsResponse>('/api/v1/to-alerts');
       const fetched = Array.isArray(data?.subscriptions) ? data.subscriptions : [];
       setSubscriptions(fetched);
 
@@ -187,7 +187,7 @@ export default function MyScreen() {
           onPress: async () => {
             try {
               setDeletingFacilityId(facilityId);
-              await deleteJson(`/api/to-alerts?facility_id=${encodeURIComponent(facilityId)}`);
+              await deleteJson(`/api/v1/to-alerts?facility_id=${encodeURIComponent(facilityId)}`);
               await fetchSubscriptions();
             } catch (error: unknown) {
               Alert.alert('구독 해제 실패', extractErrorMessage(error));

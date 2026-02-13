@@ -41,7 +41,7 @@ export function useChat() {
   const chatTransport = useMemo(
     () =>
       new DefaultChatTransport({
-        api: '/api/bot/chat/stream',
+        api: '/api/v1/bot/chat/stream',
         headers: () => ({ 'x-device-id': typeof window !== 'undefined' ? getDeviceId() : '' }),
         body: () => {
           const convId = currentConvIdRef.current;

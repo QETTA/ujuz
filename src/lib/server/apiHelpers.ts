@@ -55,18 +55,19 @@ export function logRequest(req: NextRequest, status: number, startMs: number, tr
   });
 }
 
-/** Standard JSON error response */
+/** Standard JSON error response — 정본: { error: { code, message, details? } } */
 export function errorResponse(error: unknown, traceId?: string): NextResponse {
   if (error instanceof AppError) {
     const level = error.statusCode >= 500 ? 'error' : 'warn';
+    const code = (error.code ?? 'APP_ERROR').toUpperCase();
     logger[level]('API error', {
       status: error.statusCode,
-      code: error.code,
+      code,
       message: error.message,
       ...(traceId && { traceId }),
     });
     return NextResponse.json(
-      { error: error.message, code: error.code ?? 'app_error', ...(traceId && { traceId }) },
+      { error: { code, message: error.message, ...(error.details && { details: error.details }) } },
       { status: error.statusCode },
     );
   }
@@ -76,7 +77,7 @@ export function errorResponse(error: unknown, traceId?: string): NextResponse {
     ...(traceId && { traceId }),
   });
   return NextResponse.json(
-    { error: '서버 오류가 발생했습니다', code: 'internal_error', ...(traceId && { traceId }) },
+    { error: { code: 'SERVER_ERROR', message: '일시적인 오류가 발생했어요.' } },
     { status: 500 },
   );
 }

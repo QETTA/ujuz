@@ -23,7 +23,7 @@ export default function OnboardingComplete() {
         if (child?.nickname) {
           const birthParts = child.birthDateMasked?.split('-');
           const birthMonth = birthParts ? `${birthParts[0]}-${birthParts[1]}` : '2023-01';
-          await apiFetch('/api/children', {
+          await apiFetch('/api/v1/children', {
             method: 'POST',
             json: {
               nickname: child.nickname,
@@ -36,7 +36,7 @@ export default function OnboardingComplete() {
 
         // Follow facilities
         for (const f of selectedFacilities) {
-          await apiFetch('/api/facilities/follow', {
+          await apiFetch('/api/v1/facilities/follow', {
             method: 'POST',
             json: { facility_id: f.id, facility_name: f.name },
           });
