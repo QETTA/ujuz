@@ -12,8 +12,8 @@ function isPublicPage(pathname: string): boolean {
 }
 
 export function middleware(request: NextRequest) {
-  // Dev bypass: skip all auth checks
-  if (process.env.AUTH_BYPASS === 'true') {
+  // Dev bypass: skip all auth checks outside production only
+  if (process.env.NODE_ENV !== 'production' && process.env.AUTH_BYPASS === 'true') {
     return NextResponse.next();
   }
 

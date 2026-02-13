@@ -92,8 +92,25 @@ DEVICE_HASH_SALT=change-me
 AI_DEGRADED=false
 COMMUNITY_WRITE_ENABLED=false
 TIER_DEFAULT=free
+AUTH_BYPASS=false
 NODE_ENV=development
 ```
+
+### Dev Auth Bypass Mode
+
+For local testing, you can bypass all auth checks:
+
+```bash
+AUTH_BYPASS=true pnpm dev
+```
+
+Or set it in your local env file:
+
+```env
+AUTH_BYPASS=true
+```
+
+This bypass is ignored in `NODE_ENV=production`.
 
 ## API Endpoints
 
