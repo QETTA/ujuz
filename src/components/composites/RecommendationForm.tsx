@@ -78,8 +78,8 @@ export function RecommendationForm({ className, onSubmit }: RecommendationFormPr
           {needExtended ? '필요' : '불필요'}
         </Toggle>
       </div>
-      <Button type="submit" loading={loading} className="w-full" size="lg">
-        AI 분석 시작
+      <Button type="submit" loading={loading} disabled={loading} aria-busy={loading} className="w-full" size="lg">
+        {loading ? '분석 중...' : 'AI 분석 시작'}
       </Button>
     </form>
   );
