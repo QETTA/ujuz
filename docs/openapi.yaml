@@ -1,0 +1,1213 @@
+openapi: 3.0.3
+info:
+  title: UjuZ Canonical API (v1)
+  version: 1.0.0
+  description: |
+    정본(Canonical) API 스펙 (Phase 5~8 MVP)
+    - 모든 경로는 /api/v1/*
+    - 성공 응답은 비래핑(= { data, meta } 없음)
+    - 실패 응답은 공통 포맷:
+        { "error": { "code": "...", "message": "...", "details": {} } }
+
+servers:
+  - url: https://{domain}
+    variables:
+      domain:
+        default: example.com
+
+tags:
+  - name: Facilities
+  - name: ToAlerts
+  - name: AlertSubscriptions
+  - name: Push
+  - name: Bot
+  - name: Consultations
+  - name: Payments
+  - name: Admin
+  - name: Partner
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    adminApiKey:
+      type: apiKey
+      in: header
+      name: x-admin-key
+    partnerApiKey:
+      type: apiKey
+      in: header
+      name: x-partner-api-key
+
+  parameters:
+    XDeviceId:
+      name: x-device-id
+      in: header
+      required: true
+      schema:
+        type: string
+      description: 모바일/비로그인 식별을 위한 device id (uuid 권장)
+      example: "b9b1b0b2-7e5f-4b67-9a0a-2e2b0d9c1a11"
+
+    FacilityIdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      example: "fac_abc"
+
+    AlertSubscriptionIdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      example: "sub_001"
+
+    OrderIdPath:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: "ord_001"
+
+    Range7d30d:
+      name: range
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [7d, 30d]
+        default: 7d
+
+    Range24h7d:
+      name: range
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [24h, 7d]
+        default: 24h
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          $ref: "#/components/schemas/ErrorObject"
+
+    ErrorObject:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: "RATE_LIMITED"
+        message:
+          type: string
+          example: "요청이 많아요. 잠시 후 다시 시도해 주세요."
+        details:
+          type: object
+          additionalProperties: true
+          example: {}
+
+    Facility:
+      type: object
+      required: [id, name, lat, lng]
+      properties:
+        id:
+          type: string
+          example: "fac_abc"
+        name:
+          type: string
+          example: "해피키즈 어린이집"
+        lat:
+          type: number
+          format: double
+          example: 37.1234
+        lng:
+          type: number
+          format: double
+          example: 127.1234
+        address:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        type:
+          type: string
+          nullable: true
+          example: "public"
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["국공립", "연장보육"]
+        distance_m:
+          type: integer
+          nullable: true
+          example: 820
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ToAlert:
+      type: object
+      required: [id, title, summary, facility_id, created_at]
+      properties:
+        id:
+          type: string
+          example: "alt_123"
+        title:
+          type: string
+          example: "TO 변동 감지"
+        summary:
+          type: string
+          example: "관심 시설에 변동이 있을 수 있어요."
+        facility_id:
+          type: string
+          example: "fac_abc"
+        created_at:
+          type: string
+          format: date-time
+        read_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    QuietHours:
+      type: object
+      required: [from, to]
+      properties:
+        from:
+          type: string
+          example: "22:00"
+        to:
+          type: string
+          example: "07:00"
+
+    AlertSchedule:
+      type: object
+      required: [mode]
+      properties:
+        mode:
+          type: string
+          enum: [immediate, daily]
+        quiet_hours:
+          $ref: "#/components/schemas/QuietHours"
+
+    AlertChannels:
+      type: object
+      required: [push, sms]
+      properties:
+        push:
+          type: boolean
+        sms:
+          type: boolean
+
+    AlertSubscription:
+      type: object
+      required: [id, facility_id, schedule, channels, created_at]
+      properties:
+        id:
+          type: string
+        facility_id:
+          type: string
+        schedule:
+          $ref: "#/components/schemas/AlertSchedule"
+        channels:
+          $ref: "#/components/schemas/AlertChannels"
+        created_at:
+          type: string
+          format: date-time
+
+    ConsultationPackage:
+      type: object
+      required: [id, tier, title, price_krw, duration_min, includes]
+      properties:
+        id:
+          type: string
+        tier:
+          type: string
+          enum: [lite, standard, premium]
+        title:
+          type: string
+        price_krw:
+          type: integer
+        duration_min:
+          type: integer
+        includes:
+          type: array
+          items:
+            type: string
+
+    ConsultationOrder:
+      type: object
+      required: [order_id, order_no, status, tier, amount_krw]
+      properties:
+        order_id:
+          type: string
+        order_no:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT, INTAKE_SUBMITTED, PAYMENT_PENDING, PAID, SCHEDULED, COMPLETED, REPORT_WRITING, REPORT_READY, REPORT_DELIVERED, CANCELLED, REFUNDED]
+        tier:
+          type: string
+          enum: [lite, standard, premium]
+        amount_krw:
+          type: integer
+
+    ConsultationIntake:
+      type: object
+      required: [region, desired_start_month, child, constraints]
+      properties:
+        region:
+          type: object
+          required: [sido, sigungu]
+          properties:
+            sido:
+              type: string
+            sigungu:
+              type: string
+        desired_start_month:
+          type: string
+          pattern: "^[0-9]{4}-[0-9]{2}$"
+        child:
+          type: object
+          required: [age_years]
+          properties:
+            age_years:
+              type: integer
+        constraints:
+          type: array
+          items:
+            type: string
+        preferred_facilities:
+          type: array
+          items:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+        notes:
+          type: string
+          nullable: true
+
+    ActionItem:
+      type: object
+      required: [title, detail]
+      properties:
+        title:
+          type: string
+        detail:
+          type: string
+
+    ConsultationReport:
+      type: object
+      required: [summary, actions]
+      properties:
+        summary:
+          type: string
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActionItem"
+
+    PaymentInitiateRequest:
+      type: object
+      required: [order_id, amount_krw, order_name]
+      properties:
+        order_id:
+          type: string
+        amount_krw:
+          type: integer
+        order_name:
+          type: string
+
+    PaymentInitiateResponse:
+      type: object
+      required: [pg_order_id, amount_krw, success_url, fail_url]
+      properties:
+        pg_order_id:
+          type: string
+        amount_krw:
+          type: integer
+        success_url:
+          type: string
+          format: uri
+        fail_url:
+          type: string
+          format: uri
+
+    PaymentConfirmRequest:
+      type: object
+      required: [paymentKey, orderId, amount]
+      properties:
+        paymentKey:
+          type: string
+        orderId:
+          type: string
+        amount:
+          type: integer
+
+    PaymentConfirmResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [PAID]
+        receipt_url:
+          type: string
+          format: uri
+          nullable: true
+
+    PushRegisterRequest:
+      type: object
+      required: [token, platform]
+      properties:
+        token:
+          type: string
+        platform:
+          type: string
+          enum: [ios, android]
+        device_name:
+          type: string
+          nullable: true
+
+    PushRegisterResponse:
+      type: object
+      required: [registered]
+      properties:
+        registered:
+          type: boolean
+
+    BotChatRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+
+    BotChatResponse:
+      type: object
+      required: [reply]
+      properties:
+        reply:
+          type: string
+        disclaimer:
+          type: string
+          nullable: true
+
+    CreateOrderRequest:
+      type: object
+      required: [package_id]
+      properties:
+        package_id:
+          type: string
+
+    IntakeSubmitResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    AppointmentCreateRequest:
+      oneOf:
+        - type: object
+          required: [mode, start_at, channel]
+          properties:
+            mode:
+              type: string
+              enum: [slot]
+            start_at:
+              type: string
+              format: date-time
+            channel:
+              type: string
+              enum: [phone, zoom, kakao, inapp]
+        - type: object
+          required: [mode, choices, channel]
+          properties:
+            mode:
+              type: string
+              enum: [choices]
+            choices:
+              type: array
+              items:
+                type: string
+                format: date-time
+            channel:
+              type: string
+              enum: [phone, zoom, kakao, inapp]
+
+    AppointmentCreateResponse:
+      type: object
+      required: [appointment_id, status]
+      properties:
+        appointment_id:
+          type: string
+        status:
+          type: string
+          enum: [CONFIRMED, HOLD]
+
+    ReportResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [WRITING, READY, DELIVERED]
+        report:
+          $ref: "#/components/schemas/ConsultationReport"
+        pdf_url:
+          type: string
+          format: uri
+          nullable: true
+
+    AdminMetricsResponse:
+      type: object
+      required: [revenue_today, payments_fail_rate, report_sla_overdue, push_fail_rate, map_calls_est, sms_cost_krw]
+      properties:
+        revenue_today:
+          type: integer
+        payments_fail_rate:
+          type: number
+          format: float
+        report_sla_overdue:
+          type: integer
+        push_fail_rate:
+          type: number
+          format: float
+        map_calls_est:
+          type: integer
+        sms_cost_krw:
+          type: integer
+
+    AdminPushMetricsResponse:
+      type: object
+      required: [sent, delivered, failed, top_failures, tokens_cleaned]
+      properties:
+        sent:
+          type: integer
+        delivered:
+          type: integer
+        failed:
+          type: integer
+        top_failures:
+          type: array
+          items:
+            type: object
+            required: [reason, count]
+            properties:
+              reason:
+                type: string
+              count:
+                type: integer
+        tokens_cleaned:
+          type: integer
+
+    PartnerProfilePatchRequest:
+      type: object
+      required: [org_id, name, address]
+      properties:
+        org_id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+          nullable: true
+
+    PartnerProfilePatchResponse:
+      type: object
+      required: [updated]
+      properties:
+        updated:
+          type: boolean
+
+    PartnerLeadCreateRequest:
+      type: object
+      required: [org_id, parent_name, phone, message]
+      properties:
+        org_id:
+          type: string
+        parent_name:
+          type: string
+        phone:
+          type: string
+        message:
+          type: string
+
+    PartnerLeadCreateResponse:
+      type: object
+      required: [lead_id, status]
+      properties:
+        lead_id:
+          type: string
+        status:
+          type: string
+          enum: [new, in_progress, done]
+
+    PartnerLead:
+      type: object
+      required: [id, status, parent_name, phone, message, created_at]
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [new, in_progress, done]
+        parent_name:
+          type: string
+        phone:
+          type: string
+        message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    PartnerLeadsListResponse:
+      type: object
+      required: [leads]
+      properties:
+        leads:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartnerLead"
+
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Conflict (PLAN_LIMIT_REACHED)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    RateLimited:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServerError:
+      description: Server Error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+paths:
+  /api/v1/facilities/nearby:
+    get:
+      tags: [Facilities]
+      operationId: getFacilitiesNearby
+      summary: 주변 시설 조회
+      parameters:
+        - $ref: "#/components/parameters/XDeviceId"
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+        - name: lng
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+        - name: radius_m
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 2000
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [facilities]
+                properties:
+                  facilities:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Facility"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/v1/facilities/{id}:
+    get:
+      tags: [Facilities]
+      operationId: getFacilityById
+      summary: 시설 상세 조회
+      parameters:
+        - $ref: "#/components/parameters/XDeviceId"
+        - $ref: "#/components/parameters/FacilityIdPath"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [facility, saved]
+                properties:
+                  facility:
+                    $ref: "#/components/schemas/Facility"
+                  saved:
+                    type: boolean
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/v1/facilities/{id}/save:
+    post:
+      tags: [Facilities]
+      operationId: saveFacility
+      summary: 시설 저장
+      parameters:
+        - $ref: "#/components/parameters/XDeviceId"
+        - $ref: "#/components/parameters/FacilityIdPath"
+      responses:
+        "200":
+          description: Saved
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [saved]
+                properties:
+                  saved:
+                    type: boolean
+                    example: true
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Facilities]
+      operationId: unsaveFacility
+      summary: 시설 저장 해제
+      parameters:
+        - $ref: "#/components/parameters/XDeviceId"
+        - $ref: "#/components/parameters/FacilityIdPath"
+      responses:
+        "200":
+          description: Unsaved
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [saved]
+                properties:
+                  saved:
+                    type: boolean
+                    example: false
+
+  /api/v1/to-alerts/unread:
+    get:
+      tags: [ToAlerts]
+      operationId: getUnreadToAlerts
+      summary: 미확인 TO 알림 조회
+      parameters:
+        - $ref: "#/components/parameters/XDeviceId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [alerts, unread_count]
+                properties:
+                  alerts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ToAlert"
+                  unread_count:
+                    type: integer
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/v1/to-alerts/read:
+    patch:
+      tags: [ToAlerts]
+      operationId: markToAlertsRead
+      summary: TO 알림 읽음 처리
+      parameters:
+        - $ref: "#/components/parameters/XDeviceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [alert_ids]
+              properties:
+                alert_ids:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [updated]
+                properties:
+                  updated:
+                    type: integer
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/v1/alert-subscriptions:
+    post:
+      tags: [AlertSubscriptions]
+      operationId: createAlertSubscription
+      summary: 알림 구독 생성
+      parameters:
+        - $ref: "#/components/parameters/XDeviceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [facility_id, schedule, channels]
+              properties:
+                facility_id:
+                  type: string
+                schedule:
+                  $ref: "#/components/schemas/AlertSchedule"
+                channels:
+                  $ref: "#/components/schemas/AlertChannels"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [subscription_id]
+                properties:
+                  subscription_id:
+                    type: string
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    get:
+      tags: [AlertSubscriptions]
+      operationId: listAlertSubscriptions
+      summary: 알림 구독 목록
+      parameters:
+        - $ref: "#/components/parameters/XDeviceId"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [subscriptions]
+                properties:
+                  subscriptions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AlertSubscription"
+
+  /api/v1/alert-subscriptions/{id}:
+    patch:
+      tags: [AlertSubscriptions]
+      operationId: updateAlertSubscription
+      summary: 알림 구독 수정
+      parameters:
+        - $ref: "#/components/parameters/XDeviceId"
+        - $ref: "#/components/parameters/AlertSubscriptionIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schedule:
+                  $ref: "#/components/schemas/AlertSchedule"
+                channels:
+                  $ref: "#/components/schemas/AlertChannels"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [updated]
+                properties:
+                  updated:
+                    type: boolean
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /api/v1/push/register:
+    post:
+      tags: [Push]
+      operationId: registerPushToken
+      summary: Expo Push 토큰 등록
+      parameters:
+        - $ref: "#/components/parameters/XDeviceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushRegisterRequest"
+      responses:
+        "200":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PushRegisterResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/v1/bot/chat:
+    post:
+      tags: [Bot]
+      operationId: botChat
+      summary: 챗봇 응답(non-stream)
+      parameters:
+        - $ref: "#/components/parameters/XDeviceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BotChatRequest"
+      responses:
+        "200":
+          description: Reply
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotChatResponse"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /api/v1/consultations/packages:
+    get:
+      tags: [Consultations]
+      operationId: listConsultationPackages
+      summary: 상담 패키지 목록
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [packages]
+                properties:
+                  packages:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ConsultationPackage"
+
+  /api/v1/consultations/orders:
+    post:
+      tags: [Consultations]
+      operationId: createConsultationOrder
+      summary: 상담 주문 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsultationOrder"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/v1/consultations/orders/{orderId}/intake:
+    post:
+      tags: [Consultations]
+      operationId: submitConsultationIntake
+      summary: 사전 설문 제출
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultationIntake"
+      responses:
+        "200":
+          description: Submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntakeSubmitResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/payments/initiate:
+    post:
+      tags: [Payments]
+      operationId: initiatePayment
+      summary: Toss 결제 initiate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInitiateRequest"
+      responses:
+        "200":
+          description: Initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentInitiateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/v1/payments/confirm:
+    post:
+      tags: [Payments]
+      operationId: confirmPayment
+      summary: Toss 결제 confirm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentConfirmRequest"
+      responses:
+        "200":
+          description: Paid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentConfirmResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/v1/consultations/orders/{orderId}/appointments:
+    post:
+      tags: [Consultations]
+      operationId: createConsultationAppointment
+      summary: 상담 예약 생성
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppointmentCreateRequest"
+      responses:
+        "200":
+          description: Appointment Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppointmentCreateResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/consultations/orders/{orderId}/report:
+    get:
+      tags: [Consultations]
+      operationId: getConsultationReport
+      summary: 리포트 조회
+      parameters:
+        - $ref: "#/components/parameters/OrderIdPath"
+      responses:
+        "200":
+          description: Report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/admin/metrics:
+    get:
+      tags: [Admin]
+      operationId: getAdminMetrics
+      summary: Admin 대시보드 지표
+      security:
+        - adminApiKey: []
+      parameters:
+        - $ref: "#/components/parameters/Range7d30d"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminMetricsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/admin/push-metrics:
+    get:
+      tags: [Admin]
+      operationId: getAdminPushMetrics
+      summary: Admin 푸시 모니터링
+      security:
+        - adminApiKey: []
+      parameters:
+        - $ref: "#/components/parameters/Range24h7d"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminPushMetricsResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/partner/profile:
+    patch:
+      tags: [Partner]
+      operationId: patchPartnerProfile
+      summary: 파트너 프로필 수정
+      security:
+        - partnerApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartnerProfilePatchRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PartnerProfilePatchResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/partner/leads:
+    post:
+      tags: [Partner]
+      operationId: createPartnerLead
+      summary: 리드 생성
+      security:
+        - partnerApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartnerLeadCreateRequest"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PartnerLeadCreateResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+    get:
+      tags: [Partner]
+      operationId: listPartnerLeads
+      summary: 리드 목록
+      security:
+        - partnerApiKey: []
+      parameters:
+        - name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PartnerLeadsListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"

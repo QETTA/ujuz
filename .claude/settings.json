@@ -29,9 +29,7 @@
       "Write",
       "Edit",
       "Glob",
-      "Grep",
-      "mcp__codex-spark__codex",
-      "mcp__codex-spark__codex-reply"
+      "Grep"
     ]
   },
   "env": {

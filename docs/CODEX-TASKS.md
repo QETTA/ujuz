@@ -1,399 +1,922 @@
-# Codex Tasks — UX/UI Round 2 (P0 + P1 + P2 Fixes)
+# Codex Tasks — Phase 5~8 정본 (Claude Code 실행용)
 
-Each task below is self-contained. Execute all 7 in order.
-Commit each as `feat(codex): [CODEX-N] description`.
-Run `pnpm typecheck` after each task.
-
----
-
-## CODEX-1: Community onLoadMore + write button
-
-**File**: `src/app/(app)/community/page.tsx`
-
-**Problem**: `onLoadMore: () => {}` is empty — infinite scroll doesn't work. Write button has no handler.
-
-**Changes**:
-
-1. Add state for cursor-based pagination and accumulated posts:
-```tsx
-import { useCallback, useState } from 'react';
-import { useRouter } from 'next/navigation';
-// ... existing imports
-
-export default function CommunityPage() {
-  const router = useRouter();
-  const [postType, setPostType] = useState<'review' | 'to_report' | 'question'>('review');
-  const [cursor, setCursor] = useState<string | undefined>();
-  const [allPosts, setAllPosts] = useState<PostData[]>([]);
-```
-
-2. When `data` changes, accumulate posts:
-```tsx
-  const { data, loading } = useApiFetch<PostsResponse>(
-    `/api/v1/community/posts?type=${postType}&limit=20${cursor ? `&cursor=${cursor}` : ''}`,
-  );
-
-  const loadMore = useCallback(() => {
-    if (data?.cursor) {
-      setCursor(data.cursor);
-      if (data.posts) {
-        setAllPosts((prev) => [...prev, ...data.posts]);
-      }
-    }
-  }, [data]);
-
-  const { sentinelRef } = useInfiniteScroll({
-    onLoadMore: loadMore,
-    hasMore: data?.has_more ?? false,
-    loading,
-  });
-
-  const posts = allPosts.length > 0 ? allPosts : (data?.posts ?? []);
-```
-
-3. Reset cursor and accumulated posts when postType changes:
-```tsx
-  // In the Tabs onValueChange callback:
-  onValueChange={(v) => {
-    setPostType(v as typeof postType);
-    setCursor(undefined);
-    setAllPosts([]);
-  }}
-```
-
-4. Wire the write button:
-```tsx
-  <Button variant="primary" size="sm" onClick={() => router.push('/community/write')}>
-    <PencilSquareIcon className="h-4 w-4" />
-    글쓰기
-  </Button>
-```
-
-**Verify**: `pnpm typecheck`
+> A 패키지 티켓 + B 피그마 프레임 명칭 + 실행 순서 통합본.
+> API 계약은 `docs/CANONICAL-SPEC.md` 참조. 비래핑 응답(Option A) 통일.
 
 ---
 
-## CODEX-2: My Page profile data + logout
+## 운영 규칙(필수)
 
-**File**: `src/app/(app)/my/page.tsx`
-
-**Problem**: Profile shows hardcoded "사용자" and "무료 플랜". Logout button has no handler.
-
-**Changes**:
-
-1. Add imports:
-```tsx
-import { signOut } from 'next-auth/react';
-import { useUjuzSession } from '@/lib/client/auth';
-import { useSubscription } from '@/lib/client/hooks/useSubscription';
-```
-
-2. Inside the component, get real data:
-```tsx
-export default function MyPage() {
-  const { data: session, isAnonymous } = useUjuzSession();
-  const { subscription } = useSubscription();
-
-  const displayName = isAnonymous ? '비회원' : (session?.user?.name ?? '사용자');
-  const planLabel = subscription.plan_tier === 'premium' ? '프리미엄' : subscription.plan_tier === 'basic' ? '베이직' : '무료 플랜';
-```
-
-3. Replace the hardcoded profile text:
-```tsx
-  <p className="text-base font-semibold text-text-primary">{displayName}</p>
-  <p className="text-xs text-text-tertiary">{planLabel}</p>
-```
-
-4. Wire the logout button:
-```tsx
-  <button
-    type="button"
-    onClick={() => signOut({ callbackUrl: '/login' })}
-    className="flex w-full items-center gap-3 rounded-xl px-sm py-3 text-danger transition-colors hover:bg-danger/5"
-  >
-    <ArrowRightOnRectangleIcon className="h-5 w-5" />
-    <span className="text-sm font-medium">로그아웃</span>
-  </button>
-```
-
-**Verify**: `pnpm typecheck`
+* 한 번에 **1티켓만** Claude Code에 입력
+* **P0 → P1 → P2** 순서
+* 티켓 완료 시:
+  1. **AC(완료조건)** 체크
+  2. 수동 테스트 3개(**성공/실패/빈상태**)
+  3. 로그/이벤트가 남는지 확인
+* **API 계약 변경은 모바일만 고치지 말고**, 서버 응답/에러 규격도 함께 정본에 맞춤
 
 ---
 
-## CODEX-3: Facility Detail dynamic child_age_band
+## 인덱스(우선순위)
 
-**File**: `src/app/(app)/facilities/[id]/page.tsx`
+### P0
 
-**Problem**: Score simulation uses hardcoded `child_age_band=2`. Should use actual child profile.
+| 티켓 | 설명 | 상태 |
+|------|------|------|
+| **T-000** | API 계약 정합화(모바일↔서버): 지도/알림/채팅 | ✅ 완료 |
+| **T-001** | 공통 상태 UI 컴포넌트(로딩/빈/오류/권한/제한) | 🔲 대기 |
+| **T-002** | 권한 UX(위치/푸시) "필요한 순간 요청" + 거절 대체 동선 | 🔲 대기 |
 
-**Changes**:
+### P1
 
-1. Add import:
-```tsx
-import { useOnboardingStore } from '@/lib/store';
-```
+| 티켓 | 설명 | Phase | 상태 |
+|------|------|-------|------|
+| **T-101** | 커뮤니티 글쓰기 UI + 안전장치 | 5 | 🔲 대기 |
+| **T-102** | Push 알림 설정 화면(웹/모바일) + 설정 저장 | 5 | 🔲 대기 |
+| **T-103** | SEO/GPT 노출 기본기(sitemap/robots/canonical) + 가이드 템플릿 | 5 | 🔲 대기 |
+| **T-201** | 온보딩(3-step) + 프리프롬프트 연결 | 6 | 🔲 대기 |
+| **T-202** | 지도 메인(주변+검색+필터) | 6 | 🔲 대기 |
+| **T-203** | 시설 상세(저장/알림 CTA) | 6 | 🔲 대기 |
+| **T-204** | TO 알림 목록(unread 배지/읽음 처리) | 6 | 🔲 대기 |
+| **T-205** | 알림 생성/설정(구독 생성/조건/채널/테스트) | 6 | 🔲 대기 |
+| **T-206** | 채팅 화면(작동 우선 MVP) | 6 | 🔲 대기 |
+| **T-301** | 상담 상품 랜딩(티어+비교+샘플) | 7 | 🔲 대기 |
+| **T-302** | 사전 설문(주문/설문 저장) | 7 | 🔲 대기 |
+| **T-303** | Toss 결제(initiate+confirm) | 7 | 🔲 대기 |
+| **T-304** | 예약 화면(슬롯 or 희망 3개) | 7 | 🔲 대기 |
+| **T-305** | 리포트 화면(상태+PDF+체크리스트) | 7 | 🔲 대기 |
+| **T-401** | 관리자 대시보드(매출/SLA/실패/원가) | 8 | 🔲 대기 |
+| **T-402** | 푸시 모니터링(receipt+token cleanup) | 8 | 🔲 대기 |
 
-2. Get child age from store:
-```tsx
-  const child = useOnboardingStore((s) => s.child);
-  const ageBand = child?.ageBand ?? 2;
-```
+### P2
 
-3. Replace hardcoded age_band in the API call:
-```tsx
-  // Change:
-  const { data: scoreResult } = useApiFetch<AdmissionScoreResultV2>(`/api/simulate?facility_id=${id}&child_age_band=2`);
-  // To:
-  const { data: scoreResult } = useApiFetch<AdmissionScoreResultV2>(`/api/simulate?facility_id=${id}&child_age_band=${ageBand}`);
-```
-
-**Verify**: `pnpm typecheck`
-
----
-
-## CODEX-4: Error states for Dashboard, Checklist, Alerts
-
-**Files**:
-- `src/app/(app)/dashboard/page.tsx`
-- `src/app/(app)/checklist/page.tsx`
-- `src/app/(app)/alerts/page.tsx`
-
-**Problem**: No error state UI. API failures show blank content.
-
-**Changes for Dashboard** (`dashboard/page.tsx`):
-
-1. Add import:
-```tsx
-import { ChatError } from '@/components/ai/chat-error';
-```
-
-2. Get error from store:
-```tsx
-  const error = useStrategyStore((s) => s.error);
-```
-
-3. Add error state in the conditional rendering, after loading check:
-```tsx
-  {loading ? (
-    // ... existing skeleton
-  ) : error ? (
-    <ChatError
-      message={error}
-      onRetry={() => homeStore.load()}
-    />
-  ) : recommendation ? (
-    // ... existing widget
-  ) : (
-    // ... existing empty state
-  )}
-```
-
-**Changes for Checklist** (`checklist/page.tsx`):
-
-1. Add import:
-```tsx
-import { ChatError } from '@/components/ai/chat-error';
-```
-
-2. Destructure `error` from useApiFetch:
-```tsx
-  const { data, loading, error, refetch } = useApiFetch<ChecklistResponse>(
-```
-
-3. Add error state:
-```tsx
-  {loading ? (
-    // ... existing skeleton
-  ) : error ? (
-    <ChatError message={error} onRetry={refetch} />
-  ) : !data || data.items.length === 0 ? (
-    // ... existing empty state
-  ) : (
-    // ... existing checklist
-  )}
-```
-
-**Changes for Alerts** (`alerts/page.tsx`):
-
-1. Add import:
-```tsx
-import { ChatError } from '@/components/ai/chat-error';
-```
-
-2. Get error from store:
-```tsx
-  const error = useToAlertStore((s) => s.error);
-```
-
-3. Add error display above the Tabs:
-```tsx
-  <div className="p-4">
-    {error && (
-      <ChatError message={error} onRetry={() => { load(); loadHistory(); }} className="mb-4" />
-    )}
-    <Tabs defaultValue="history">
-```
-
-**Verify**: `pnpm typecheck`
+| 티켓 | 설명 | Phase | 상태 |
+|------|------|-------|------|
+| **T-207** | 마이페이지(정책/문의/권한) | 6 | 🔲 대기 |
+| **T-306** | SMS 백업(유료 애드온) | 7 | 🔲 대기 |
+| **T-403** | 캐시/레이트리밋 | 8 | 🔲 대기 |
+| **T-404** | 기관 Lite(B2B) API + 기본 UI | 8 | 🔲 대기 |
 
 ---
 
-## CODEX-5: Chat stagger animation + streaming-text
+## P0 티켓 상세
 
-**Files**:
-- `src/app/(app)/chat/page.tsx`
-- `src/components/composites/ChatBubble.tsx`
+### T-000. API 계약 정합화 — ✅ 완료
 
-**Problem**: All messages have `animationDelay: 0ms` — no stagger effect. `animate-streaming-text` class is defined but never used.
-
-**Changes for chat/page.tsx**:
-
-Find:
-```tsx
-  style={{ animationDelay: i === messages.length - 1 ? '0ms' : '0ms' }}
 ```
-
-Replace with:
-```tsx
-  style={{ animationDelay: `${Math.min(i * 50, 300)}ms` }}
+커밋: d757a0a feat(T-000): API 계약 정합화 — 에러포맷 정본 + 22개 라우트 v1 마이그레이션
+완료: 2026-02-14
 ```
-
-This gives 50ms stagger per message, capped at 300ms.
-
-**Changes for ChatBubble.tsx** (`src/components/composites/ChatBubble.tsx`):
-
-In the text content `<p>` tag, add the streaming animation class when the message is the last assistant message (detected by checking if content is still being generated — we approximate this by checking if the message has no created_at, meaning it's currently streaming):
-
-Find:
-```tsx
-  <p className="text-sm whitespace-pre-wrap leading-relaxed">{textContent}</p>
-```
-
-Replace with:
-```tsx
-  <p className={cn(
-    'text-sm whitespace-pre-wrap leading-relaxed',
-    !isUser && !message.created_at && 'animate-streaming-text',
-  )}>{textContent}</p>
-```
-
-**Verify**: `pnpm typecheck`
 
 ---
 
-## CODEX-6: ChatInput dedup (ai/ → composites/ wrapper)
+### T-001. 공통 상태 UI 컴포넌트 세트(정본)
 
-**File**: `src/components/ai/chat-input.tsx`
-
-**Problem**: `ai/chat-input.tsx` and `composites/ChatInput.tsx` are near-identical implementations (code duplication from Codex round 1).
-
-**Change**: Convert `ai/chat-input.tsx` to a thin wrapper that delegates to `composites/ChatInput.tsx`.
-
-Replace the entire file content with:
-```tsx
-'use client';
-
-import { ChatInput as PrimaryChatInput } from '@/components/composites/ChatInput';
-
-export interface ChatInputProps {
-  onSend: (text: string) => void;
-  suggestions?: string[];
-  disabled?: boolean;
-  className?: string;
-}
-
-export function ChatInput({ onSend, suggestions, disabled, className }: ChatInputProps) {
-  return (
-    <PrimaryChatInput
-      onSend={onSend}
-      suggestions={suggestions}
-      disabled={disabled}
-      className={className}
-    />
-  );
-}
 ```
+Title: T-001 공통 상태 UI 컴포넌트 세트(정본)
+Phase: 5~6
+Priority: P0
 
-**Verify**: `pnpm typecheck`
+Goal:
+- 모바일 전 화면에서 동일한 상태 컴포넌트를 사용한다.
+
+Scope:
+- 공통 상태 컴포넌트 6종:
+  1) LoadingSkeleton
+  2) EmptyFirstUse
+  3) EmptyNoResults
+  4) PermissionDenied (location/push variant)
+  5) NetworkError
+  6) PlanLimit
+- props 표준화:
+  - title, description, primaryCta({label, onPress}), secondaryCta?(...)
+
+Files:
+- mobile/src/components/states/LoadingSkeleton.tsx
+- mobile/src/components/states/EmptyFirstUse.tsx
+- mobile/src/components/states/EmptyNoResults.tsx
+- mobile/src/components/states/PermissionDenied.tsx
+- mobile/src/components/states/NetworkError.tsx
+- mobile/src/components/states/PlanLimit.tsx
+- mobile/src/app/(tabs)/*
+
+Copy Tone:
+- 과장/보장 금지, 다음 행동 1개 CTA 중심
+
+Analytics:
+- state_view(screen, state_type)
+- state_cta_click(screen, state_type, action)
+
+Acceptance Criteria:
+- map/alerts/chat 최소 3개 화면에서 공통 상태 컴포넌트 사용
+- CTA 동작(재시도/설정 열기/필터 초기화)이 실제 수행
+- 접근성: 터치타겟 44px+, 폰트 확대 시 레이아웃 유지
+
+Manual Tests:
+- 네트워크 오프 -> NetworkError 노출 + 재시도
+- 권한 거절 -> PermissionDenied 노출 + 설정 열기
+- 결과 0개 -> EmptyNoResults 노출 + 필터 초기화 동작
+```
 
 ---
 
-## CODEX-7: ScoreGauge + Skeleton reduced-motion + Login font size
+### T-002. 권한 UX(정본) — 필요 순간 요청 + 거절 대체 동선
 
-**Files**:
-- `src/components/composites/ScoreGauge.tsx`
-- `src/components/ui/skeleton.tsx`
-- `src/app/login/page.tsx`
-
-**Problem 1**: ScoreGauge rAF animation ignores `prefers-reduced-motion`.
-**Problem 2**: Skeleton `animate-pulse` has no reduced-motion alternative.
-**Problem 3**: Login page terms text uses `text-[10px]` — below WCAG minimum.
-
-**Changes for ScoreGauge.tsx**:
-
-Add a hook to detect reduced motion at the top of the component:
-```tsx
-export function ScoreGauge({ score, grade, size = 'md', animated = true, className }: ScoreGaugeProps) {
-  // Respect prefers-reduced-motion
-  const prefersReducedMotion = typeof window !== 'undefined'
-    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const shouldAnimate = animated && !prefersReducedMotion;
-
-  const [displayScore, setDisplayScore] = useState(shouldAnimate ? 0 : score);
 ```
+Title: T-002 권한 UX(정본) - 위치/푸시 필요 순간 요청
+Phase: 6
+Priority: P0
 
-Then replace all references to `animated` with `shouldAnimate` in the useEffect and the progress calculation:
-```tsx
-  useEffect(() => {
-    if (!shouldAnimate) return;
-    // ... rest of animation code
-  }, [score, shouldAnimate]);
+Goal:
+- 위치/푸시 권한을 "기능 진입 시점"에서만 요청한다.
+- 거절해도 핵심 플로우(탐색/알림 확인)가 끊기지 않는다.
 
-  const effectiveScore = shouldAnimate ? displayScore : score;
+Scope:
+1) 위치 권한
+   - 지도 첫 진입에 요청 금지
+   - "내 주변 보기" 버튼 탭 -> 프리프롬프트 -> OS 권한 요청
+   - 거절 시: 지역 검색(수동 선택)으로 대체
+2) 푸시 권한
+   - 알림 목록 진입에 요청 금지
+   - alert-subscription 생성 직전에 프리프롬프트 -> OS 권한 요청
+   - 거절 시: 앱 내 알림센터로 확인(폴백) + 설정 열기 안내
+3) 설정 열기
+   - OS 설정 페이지로 안내
+
+Files:
+- mobile/src/lib/permissions.ts (신규)
+- mobile/src/app/(tabs)/map.tsx
+- mobile/src/app/alerts/create.tsx (또는 알림 구독 생성 화면)
+- mobile/src/components/states/PermissionDenied.tsx
+
+UX States:
+- pre_prompt_shown, granted, denied
+
+Analytics:
+- permission_prompt(type, entry_point)
+- permission_result(type, granted)
+- permission_open_settings(type)
+
+Acceptance Criteria:
+- 앱 첫 실행 시 권한 팝업 자동 노출 없음
+- 지도: "내 주변 보기" 클릭 시에만 위치 권한 요청
+- 알림 구독 생성 시점에만 푸시 권한 요청
+- 거절해도 지도(검색 기반)와 알림(앱 내 확인)은 정상 사용 가능
+
+Manual Tests:
+- iOS/Android: 허용/거절 각각 동선 확인
+- 거절 후에도 대체 동선으로 기능 사용 가능한지 확인
 ```
-
-Also update the SVG stroke transition:
-```tsx
-  style={{ transition: shouldAnimate ? 'none' : 'stroke-dashoffset 0.6s ease-out' }}
-```
-
-**Changes for skeleton.tsx**:
-
-The globals.css already handles `prefers-reduced-motion` by setting all animation durations to near-zero, so Skeleton needs no code change. But add a visual fallback — a static background instead of pulse:
-
-Find:
-```tsx
-  'animate-pulse bg-surface-inset',
-```
-
-Replace with:
-```tsx
-  'animate-pulse bg-surface-inset motion-reduce:animate-none',
-```
-
-**Changes for login/page.tsx**:
-
-Find:
-```tsx
-  <p className="text-center text-[10px] text-text-tertiary leading-relaxed">
-```
-
-Replace with:
-```tsx
-  <p className="text-center text-xs text-text-tertiary leading-relaxed">
-```
-
-This changes from 10px to 12px (0.75rem), meeting WCAG minimum text size.
-
-**Verify**: `pnpm typecheck`
 
 ---
 
-## After All Tasks
+## Phase 5 (P1) 티켓 상세
 
-Run full verification:
-```bash
-pnpm typecheck
+### T-101. 커뮤니티 글쓰기 UI + 안전장치(정본)
+
+```
+Title: T-101 커뮤니티 글쓰기 UI + 안전장치(정본)
+Phase: 5
+Priority: P1
+
+Goal:
+- 글쓰기 MVP를 만들되, 임시저장/가이드/신고 안내로 운영 리스크를 낮춘다.
+
+Scope:
+- 제목/본문/카테고리/익명 옵션
+- 임시저장(로컬) + 이탈 경고
+- 가이드 인라인(개인정보/명예훼손/허위정보 주의)
+- 제출 성공/실패 UX
+
+Files:
+- src/app/(app)/community/write/page.tsx
+- src/components/community/Editor.tsx
+- src/lib/validation/community.ts
+
+UX States:
+- draft_saved, submit_loading, validation_error, submit_fail
+
+Analytics:
+- community_write_start
+- community_draft_save
+- community_submit_success/fail
+
+Acceptance Criteria:
+- 필수 누락 시 필드 단위 에러
+- 성공 시 상세/목록 이동 + 토스트
+- 임시저장 복구 가능
+
+Manual Tests:
+- 빈 제목 제출 -> validation_error
+- 서버 500 -> submit_fail UI + 재시도
+- 임시저장 후 새로고침 -> 복구 확인
 ```
 
-All tasks should pass typecheck.
+---
+
+### T-102. 알림 설정 화면(웹/모바일) + 저장(정본)
+
+```
+Title: T-102 알림 설정 화면(정본) + 저장
+Phase: 5
+Priority: P1
+
+Goal:
+- 사용자가 알림 통제감을 느끼게 하고, 설정을 저장/복원한다.
+
+Scope:
+- 전체 토글
+- quiet hours 프리셋(22:00~07:00)
+- 알림 종류 토글(TO/공지/상담)
+- 저장(서버 우선):
+  - GET/PUT /api/v1/user/notification-settings (권장)
+  - 서버가 아직 없으면 MVP는 로컬 저장 -> Phase 6/7에서 서버 연동
+
+Files:
+- mobile/src/app/(tabs)/settings/notifications.tsx
+- src/app/(app)/settings/notifications/page.tsx (웹 존재 시)
+- src/app/api/v1/user/notification-settings/route.ts (신규 가능)
+
+UX States:
+- loading, save_success, save_fail
+
+Analytics:
+- notif_settings_view
+- notif_settings_change(key, value)
+
+Acceptance Criteria:
+- 변경 즉시 UI 반영
+- 저장 성공/실패 피드백
+- 재진입 시 설정 유지(서버/로컬)
+
+Manual Tests:
+- 저장 실패 -> 재시도 버튼
+- 변경 후 앱 재시작 -> 유지 확인
+```
+
+---
+
+### T-103. SEO/GPT 노출 기본기 + 가이드 템플릿(정본)
+
+```
+Title: T-103 SEO/GPT 노출 기본기(정본) + 가이드 템플릿
+Phase: 5
+Priority: P1
+
+Goal:
+- 검색/LLM 인용 가능한 콘텐츠 템플릿 + 색인 기본기를 구축한다.
+
+Scope:
+- sitemap / robots / canonical 기본 세팅
+- 가이드 템플릿:
+  - 요약 3줄 -> 체크리스트 -> 주의/리스크 -> 근거 링크 -> 무료 진단 CTA -> 상담 CTA
+
+Files:
+- src/app/sitemap.ts
+- src/app/robots.ts
+- src/app/(marketing)/guides/[slug]/page.tsx
+- src/components/guide/Checklist.tsx
+
+Analytics:
+- guide_view(slug, region)
+- guide_cta_click(cta_type)
+
+Acceptance Criteria:
+- /sitemap.xml, /robots.txt 응답 정상
+- 가이드 3개 샘플 발행 가능
+- canonical 적용 확인
+
+Manual Tests:
+- sitemap에 guide URL 포함
+- 가이드 렌더/CTA 이벤트 확인
+```
+
+---
+
+## Phase 6 (P1/P2) 티켓 상세
+
+### T-201. 온보딩(3-step) + 프리프롬프트 연결(정본)
+
+```
+Title: T-201 모바일 온보딩(정본) 3-step
+Phase: 6
+Priority: P1
+
+Goal:
+- 60초 내 가치 전달 + 다음 행동(지도/알림/상담)으로 연결
+
+Scope:
+- 3-step: TO 알림 / 지도 탐색 / 상담·리포트
+- 완료/스킵 상태 저장
+- 권한 프리프롬프트는 연결만(실제 요청은 T-002)
+
+Files:
+- mobile/src/app/onboarding.tsx
+- mobile/src/lib/storage/onboarding.ts
+
+Analytics:
+- onboarding_view
+- onboarding_complete
+- onboarding_skip
+
+Acceptance Criteria:
+- 최초 1회만 노출(재노출 제어)
+- 완료/스킵 저장 확인
+
+Manual Tests:
+- 스킵 후 재실행 -> 미노출
+```
+
+---
+
+### T-202. 지도 메인(정본) — 주변/검색/필터
+
+```
+Title: T-202 지도 메인(정본) - nearby/search/filter
+Phase: 6
+Priority: P1
+
+Goal:
+- 탐색 -> 시설 상세 -> 저장/알림 구독으로 이어지는 핵심 화면 완성
+
+Scope:
+- 지도 렌더 + "내 주변 보기"(권한은 T-002)
+- GET /api/v1/facilities/nearby -> { facilities: [...] }
+- 검색(지역/키워드)
+- 필터 2~3개: 설립유형/거리/운영시간(최소)
+
+Files:
+- mobile/src/app/(tabs)/map.tsx
+- mobile/src/components/map/*
+- mobile/src/lib/api.ts
+
+UX States:
+- loading, empty_no_results, permission_denied, error_network, error_server
+
+Analytics:
+- map_view
+- map_search(query)
+- map_filter_change(key, value)
+
+Acceptance Criteria:
+- 검색/필터 적용 시 마커/리스트 갱신 일관
+- 마커 탭 -> 시설 상세 이동
+
+Manual Tests:
+- 성공/0개/네트워크 오프 상태 확인
+```
+
+---
+
+### T-203. 시설 상세(정본) — 저장 + 알림 구독 CTA
+
+```
+Title: T-203 시설 상세(정본) - save + alert-subscription CTA
+Phase: 6
+Priority: P1
+
+Scope:
+- 요약 카드(이름/주소/거리/연락)
+- 저장 토글(낙관적 업데이트 + 실패 롤백)
+  - POST /api/v1/facilities/{id}/save
+  - DELETE /api/v1/facilities/{id}/save
+- CTA: "TO 알림 받기" -> 알림 구독 생성 화면 이동
+
+Files:
+- mobile/src/app/facilities/[id].tsx
+- mobile/src/components/facility/*
+
+UX States:
+- data_missing, save_fail, error_network
+
+Analytics:
+- facility_detail_view(id)
+- facility_save_toggle(id, saved)
+- facility_create_subscription_click(id)
+
+Acceptance Criteria:
+- 저장 토글 즉시 반영
+- 알림 구독 생성 화면으로 이동
+
+Manual Tests:
+- 저장 성공/저장 실패/정보 일부 누락 상태 확인
+```
+
+---
+
+### T-204. TO 알림 목록(정본) — unread + 읽음 처리
+
+```
+Title: T-204 TO 알림 목록(정본) - unread + read patch
+Phase: 6
+Priority: P1
+
+Scope:
+- GET /api/v1/to-alerts/unread -> { alerts, unread_count }
+- PATCH /api/v1/to-alerts/read body { alert_ids } -> { updated }
+- 빈 상태 2종 분리:
+  - empty_first_use(알림 구독 없음)
+  - empty_no_alerts(구독은 있으나 이벤트 없음)
+
+Files:
+- mobile/src/app/(tabs)/alerts.tsx
+- mobile/src/components/alerts/*
+- mobile/src/lib/api.ts
+
+UX States:
+- empty_first_use, empty_no_alerts, error_network, loading
+
+Analytics:
+- alerts_view
+- alert_open(alert_id)
+- alert_mark_read(count)
+
+Acceptance Criteria:
+- 읽음 처리 후 unread_count 감소 및 UI 반영
+- 실패 시 토스트 + 재시도
+
+Manual Tests:
+- unread 존재/0개/서버500 케이스 확인
+```
+
+---
+
+### T-205. 알림 생성/설정(정본) — "구독 생성"
+
+```
+Title: T-205 알림 구독 생성/설정(정본) - alert-subscriptions
+Phase: 6
+Priority: P1
+
+Scope:
+- 구독 생성:
+  - POST /api/v1/alert-subscriptions
+    body { facility_id, schedule, channels }
+  - Response { subscription_id }
+- 조건: 빈도/quiet hours(MVP)
+- 채널: push 기본, sms는 Phase7 옵션 토글만
+- 성공 시: 알림 목록으로 이동 + 성공 토스트
+- 푸시 권한 요청은 "구독 생성 직전"(T-002)
+
+Files:
+- mobile/src/app/alerts/create.tsx
+- mobile/src/components/alerts/settings/*
+- mobile/src/lib/api.ts
+
+UX States:
+- validation_error, save_fail, permission_prompt(push)
+
+Analytics:
+- subscription_create_start
+- subscription_create_success/fail(reason)
+
+Acceptance Criteria:
+- 구독 생성 성공 -> 목록 이동 + 성공 토스트
+- 푸시 거절해도 구독 생성은 가능(앱 내 확인 폴백)
+
+Manual Tests:
+- 성공/validation 실패/plan limit(409) 상태 확인
+```
+
+---
+
+### T-206. 채팅 화면(정본) — non-stream
+
+```
+Title: T-206 채팅 화면(정본) - POST /api/v1/bot/chat
+Phase: 6
+Priority: P1
+
+Scope:
+- 메시지 리스트 + 입력 + 전송
+- POST /api/v1/bot/chat body { message } -> { reply, disclaimer? }
+- 에러 처리:
+  - 429 RATE_LIMITED -> plan_limited UI
+  - 500 SERVER_ERROR -> 네트워크/서버 오류 UI
+- CTA: 상담 상품 보기(Phase7 연결)
+
+Files:
+- mobile/src/app/(tabs)/chat.tsx
+- mobile/src/components/chat/*
+- mobile/src/lib/api.ts
+
+Analytics:
+- chat_view
+- chat_send(len)
+- chat_error(type)
+
+Acceptance Criteria:
+- 질문->답변 1회 이상 정상 출력
+- 실패 시 안내+재시도 동작
+
+Manual Tests:
+- 성공/429/네트워크 오프 확인
+```
+
+---
+
+### T-207. 마이페이지(정본) — P2
+
+```
+Title: T-207 마이페이지(정본) - 정책/문의/권한
+Phase: 6
+Priority: P2
+
+Scope:
+- 메뉴: 알림 설정 / 개인정보처리방침 / 이용약관 / 문의 / 권한 관리
+- 정책 문서 링크(웹 URL)
+
+Files:
+- mobile/src/app/(tabs)/me.tsx
+
+Analytics:
+- me_view
+- legal_open(doc_type)
+
+Acceptance Criteria:
+- 정책 문서 접근 가능
+- 문의 동선 동작
+```
+
+---
+
+## Phase 7 (P0/P1/P2) 티켓 상세 — 상담/결제
+
+### T-301. 상담 상품 랜딩(정본)
+
+```
+Title: T-301 상담 상품 랜딩(정본) - tier + compare + sample
+Phase: 7
+Priority: P0
+
+Scope:
+- 티어 3개 카드 + 비교표 + 샘플 리포트 미리보기
+- CTA: "설문 시작" "상담 예약"
+- 패키지 데이터는 API로(권장):
+  - GET /api/v1/consultations/packages -> { packages: [...] }
+
+Files:
+- src/app/(marketing)/consult/page.tsx
+- mobile/src/app/consult/index.tsx (앱 제공 시)
+
+Analytics:
+- consult_landing_view
+- consult_tier_select(tier)
+
+Acceptance Criteria:
+- 티어 선택 -> 설문으로 진입
+```
+
+---
+
+### T-302. 사전 설문(정본) — 주문/설문 저장
+
+```
+Title: T-302 상담 사전 설문(정본) - create order + intake submit
+Phase: 7
+Priority: P0
+
+Scope:
+- 필수5/선택5 + 진행률
+- 로컬 임시저장
+- 제출 플로우:
+  1) POST /api/v1/consultations/orders -> { order_id, status }
+  2) POST /api/v1/consultations/orders/{orderId}/intake -> { status }
+
+Files:
+- src/app/(marketing)/consult/intake/page.tsx
+- src/app/api/v1/consultations/orders/route.ts
+- src/app/api/v1/consultations/orders/[id]/intake/route.ts
+
+Analytics:
+- consult_intake_start
+- consult_intake_submit_success/fail
+
+Acceptance Criteria:
+- 제출 후 결제 단계로 이동
+- 임시저장 복구 가능
+```
+
+---
+
+### T-303. Toss 결제(정본) — initiate + confirm
+
+```
+Title: T-303 Toss 결제 플로우(정본) - initiate + confirm
+Phase: 7
+Priority: P0
+
+정본 플로우:
+1) POST /api/v1/payments/initiate  body { order_id, amount_krw, order_name }
+2) Toss 결제창 -> 성공 시 /payment/success 페이지로 리다이렉트
+3) 페이지가 POST /api/v1/payments/confirm 호출:
+   body { paymentKey, orderId, amount }
+4) 성공 시 주문 status=PAID
+
+Scope:
+- 결제 진행/성공/실패 화면
+- 실패 시 재시도/CS 안내
+
+Files:
+- src/app/api/v1/payments/initiate/route.ts
+- src/app/api/v1/payments/confirm/route.ts (신규)
+- src/app/(marketing)/consult/payment/*
+- src/app/payment/success/page.tsx
+- src/app/payment/fail/page.tsx
+
+Analytics:
+- payment_initiate
+- payment_confirm_success
+- payment_confirm_fail(reason)
+
+Acceptance Criteria:
+- sandbox 결제 성공/실패 재현 가능
+- confirm 성공 시 order 상태가 PAID로 전이
+```
+
+---
+
+### T-304. 예약 화면(정본)
+
+```
+Title: T-304 상담 예약(정본) - slot or 3 choices
+Phase: 7
+Priority: P1
+
+Scope:
+- 옵션 A: 슬롯 선택(availability 제공)
+- 옵션 B(MVP): 희망시간 3개 제출 -> 운영자 확정
+- API:
+  - (옵션) GET /api/v1/consultations/availability?date=YYYY-MM-DD
+  - POST /api/v1/consultations/orders/{orderId}/appointments
+
+Files:
+- src/app/(marketing)/consult/booking/*
+- src/app/api/v1/consultations/availability/route.ts
+- src/app/api/v1/consultations/orders/[id]/appointments/route.ts
+
+Analytics:
+- consult_booking_view
+- consult_booking_submit
+
+Acceptance Criteria:
+- 예약 정보가 주문에 연결되고 어드민에서 확인 가능
+```
+
+---
+
+### T-305. 리포트 화면(정본)
+
+```
+Title: T-305 리포트 화면(정본) - status + pdf + checklist
+Phase: 7
+Priority: P1
+
+Scope:
+- 상태: WRITING/READY/DELIVERED
+- PDF 다운로드
+- 다음 행동 체크리스트(앱에서도 표시)
+- CTA: TO 알림 구독 만들기
+
+API:
+- GET /api/v1/consultations/orders/{orderId}/report -> { status, report?, pdf_url? }
+
+Files:
+- src/app/(marketing)/consult/report/page.tsx
+- src/app/api/v1/consultations/orders/[id]/report/route.ts
+- mobile/src/app/consult/report.tsx (앱 제공 시)
+
+Analytics:
+- report_view
+- report_download
+- report_cta_alert_setup
+
+Acceptance Criteria:
+- READY 상태에서 다운로드 가능
+```
+
+---
+
+### T-306. SMS 백업(유료 애드온)(정본) — P2
+
+```
+Title: T-306 SMS 백업(정본) - opt-in + cost cap
+Phase: 7
+Priority: P2
+
+Scope:
+- SMS 옵션 토글(기본 OFF)
+- 비용 안내 + 동의 체크박스 + 해지 경로
+- 서버: 월/일 상한(캡) 초과 시 차단 + 로그
+
+Files:
+- mobile/src/app/(tabs)/settings/notifications.tsx
+- src/app/api/v1/sms/*
+
+Analytics:
+- sms_opt_in
+- sms_send
+- sms_blocked(reason)
+
+Acceptance Criteria:
+- opt-in 없이는 SMS 발송 불가
+- 캡 초과 시 자동 차단 동작
+```
+
+---
+
+## Phase 8 (P1/P2) 티켓 상세 — 운영/Admin/B2B
+
+### T-401. 관리자 대시보드(정본)
+
+```
+Title: T-401 Admin 대시보드(정본) - 매출/SLA/실패/원가
+Phase: 8
+Priority: P1
+
+Scope:
+- 카드 6개:
+  1) 오늘 결제/매출
+  2) 결제 실패율
+  3) 리포트 SLA(48h 초과)
+  4) 푸시 실패율
+  5) 지도 호출 추정(원가 지표)
+  6) SMS 비용(옵션)
+- 기간 필터(7/30d)
+- SLA 초과 리스트 drill-down
+
+API:
+- GET /api/v1/admin/metrics?range=7d
+
+Files:
+- src/app/(app)/admin/page.tsx
+- src/app/api/v1/admin/metrics/route.ts
+
+Analytics:
+- admin_dashboard_view
+
+Acceptance Criteria:
+- 최소 3개 지표가 DB 기반으로 표시
+- SLA 초과 클릭 -> 상세 리스트 이동
+```
+
+---
+
+### T-402. 푸시 모니터링(정본)
+
+```
+Title: T-402 Admin 푸시 모니터링(정본) - receipt + token cleanup
+Phase: 8
+Priority: P1
+
+Scope:
+- 24h/7d 집계: sent/delivered/failed
+- 실패 Top3 테이블
+- 토큰 정리 수 표시
+
+API:
+- GET /api/v1/admin/push-metrics?range=24h
+
+Files:
+- src/app/(app)/admin/push/page.tsx
+- src/app/api/v1/admin/push-metrics/route.ts
+
+Acceptance Criteria:
+- Top3 실패 유형 표 표시
+- tokens_cleaned 수 표시
+```
+
+---
+
+### T-403. 캐시/레이트리밋(정본) — P2
+
+```
+Title: T-403 캐시/레이트리밋(정본) - facilities/to-alerts
+Phase: 8
+Priority: P2
+
+Scope:
+- nearby 캐시(30~120초)
+- facility detail 캐시(더 길게)
+- to-alerts/unread 캐시(짧게)
+- 레이트리밋 저장소 Redis/KV 전환(가능하면)
+
+Files:
+- src/lib/server/cache/*
+- src/app/api/v1/facilities/*
+- src/app/api/v1/to-alerts/*
+
+Acceptance Criteria:
+- 반복 호출 시 체감 성능 개선
+- 캐시 히트 로그 확인
+```
+
+---
+
+### T-404. 기관 Lite(B2B) MVP(정본) — P2
+
+```
+Title: T-404 기관 Lite(B2B) MVP(정본) - profile + leads + admin
+Phase: 8
+Priority: P2
+
+Scope:
+- Partner API(최소 3개):
+  1) PATCH /api/v1/partner/profile
+  2) POST  /api/v1/partner/leads
+  3) GET   /api/v1/partner/leads
+- 인증: partner API key(헤더)
+- Admin UI: 기관 목록/상세 + 리드 인박스 + 상태 변경(new/in_progress/done)
+
+Files:
+- src/app/api/v1/partner/*
+- src/app/(app)/admin/orgs/*
+- src/lib/server/authPartner.ts
+
+Analytics:
+- b2b_lead_received
+- b2b_lead_status_change
+
+Acceptance Criteria:
+- 테스트 API key로 리드 생성->조회 가능
+- 관리자 화면에서 리드 상태 변경 가능
+```
+
+---
+
+## 빠른 실행 순서(정본)
+
+```
+1. T-000 ✅ → T-001 → T-002
+2. T-202 / T-204 / T-206
+3. T-301~305 + T-303
+4. T-401 / T-402
+5. T-103
+6. P2 확장
+```
+
+---
+
+## 피그마 프레임 명칭(B 패키지)
+
+> 네이밍 규칙: `P{Phase}/{Tab}/{Screen}/{State}`
+
+### Figma Pages
+
+* `00_Cover & Spec`
+* `01_Flows (User + Admin)`
+* `02_Design Tokens`
+* `03_Components (Core)`
+* `04_Components (Domain)`
+* `05_P5_Web`
+* `06_P6_Mobile`
+* `07_P7_Monetization`
+* `08_P8_Admin`
+* `09_Content (SEO/GPT)`
+
+### 공통 상태 프레임
+
+* `P6/Common/State/loading/default`
+* `P6/Common/State/empty_first_use/default`
+* `P6/Common/State/empty_no_results/default`
+* `P6/Common/State/error_network/default`
+* `P6/Common/State/error_server/default`
+* `P6/Common/State/permission_denied_location/default`
+* `P6/Common/State/permission_denied_push/default`
+* `P6/Common/State/plan_limited/default`
+
+### 권한 프롬프트 프레임
+
+* `P6/Common/Permission/location_pre_prompt/default`
+* `P6/Common/Permission/push_pre_prompt/default`
+* `P6/Common/Permission/open_settings_sheet/default`
+
+### Phase 6 모바일
+
+* `P6/온보딩/step1~3/default`, `P6/온보딩/complete/default`
+* `P6/탐색/지도메인/default|loading|permission_denied|empty_no_results|error_network`
+* `P6/탐색/검색결과_리스트/default`, `P6/탐색/필터_바텀시트/default`
+* `P6/탐색/시설상세/default|loading|error_network|data_missing`
+* `P6/알림/목록/default|loading|empty_first_use|empty_no_alerts|error_network`
+* `P6/알림/구독생성/default|permission_prompt|success_toast`
+* `P6/상담/채팅/default|loading_reply|error_network|plan_limited`
+* `P6/마이/메인/default`, `P6/마이/알림설정/default`, `P6/마이/정책문서/default`, `P6/마이/권한관리/default`
+
+### Phase 7 수익화
+
+* `P7/상담/랜딩/default|tier_compare_table|sample_report_preview`
+* `P7/상담/설문/default|progress_60|validation_error|save_draft_toast`
+* `P7/결제/진행/default`, `P7/결제/성공/default`, `P7/결제/실패/default`
+* `P7/상담/예약/default|optionA_slot_picker|optionB_3choices_submit`
+* `P7/상담/리포트/writing|ready|delivered|checklist_module`
+* `P7/설정/SMS옵션/default|consent_required|blocked_by_cap`
+
+### Phase 8 Admin
+
+* `P8/Admin/Dashboard/default|filters_7d_30d|card_drilldown_orders`
+* `P8/Admin/PushMonitor/default|failure_top3_table|token_cleanup_stats`
+* `P8/Admin/Orgs/list|detail`, `P8/Admin/Leads/inbox`
+
+---
+
+*정본 v2 — 2026-02-14. API 계약 변경 시 `docs/CANONICAL-SPEC.md`와 동기화 필수.*

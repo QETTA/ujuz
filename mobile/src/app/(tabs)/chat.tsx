@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BASE_URL } from '@/lib/api';
 import { getOrCreateDeviceId } from '@/lib/auth';
+import { NetworkError, PlanLimit } from '@/components/states';
 
 interface ChatMessage {
   id: string;
@@ -35,6 +36,8 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
+  const [planLimited, setPlanLimited] = useState(false);
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [streamingAssistantId, setStreamingAssistantId] = useState<string | null>(null);
   const [dotTick, setDotTick] = useState(0);
@@ -90,6 +93,8 @@ export default function ChatScreen() {
   const sendMessage = useCallback(async () => {
     const trimmed = input.trim();
     if (!trimmed || isStreaming) return;
+    setNetworkError(false);
+    setPlanLimited(false);
 
     const now = new Date().toISOString();
     const userMessage: ChatMessage = {
@@ -127,6 +132,11 @@ export default function ChatScreen() {
         }),
       });
 
+      if (response.status === 429) {
+        setPlanLimited(true);
+        setMessages((prev) => prev.filter((message) => message.id !== assistantId));
+        return;
+      }
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
@@ -183,7 +193,8 @@ export default function ChatScreen() {
       if (buffer.trim()) {
         handleSseLine(buffer);
       }
-    } catch (error) {
+    } catch {
+      setNetworkError(true);
       setAssistantError(assistantId);
     } finally {
       setIsStreaming(false);
@@ -230,33 +241,49 @@ export default function ChatScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View className="flex-1">
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            renderItem={renderMessage}
-            keyExtractor={(item) => item.id}
-            inverted={false}
-            className="flex-1"
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12 }}
-            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-            ListEmptyComponent={
-              <View className="flex-1 items-center justify-center px-6">
-                <Text className="text-center text-base text-slate-500">
-                  AI 상담사에게 어린이집 입소에 대해 물어보세요
-                </Text>
-              </View>
-            }
-            ListFooterComponent={
-              isStreaming ? (
-                <View className="mb-3 items-start">
-                  <View className="max-w-[82%] rounded-2xl rounded-bl-sm bg-slate-200 px-4 py-2">
-                    <Text className="text-sm text-slate-700">{'.'.repeat((dotTick % 3) + 1)}</Text>
+          {networkError && messages.length === 0 ? (
+            <NetworkError
+              className="bg-slate-100"
+              primaryCta={{ label: '다시 시도', onPress: () => setNetworkError(false) }}
+            />
+          ) : (
+            <View className="flex-1">
+              {planLimited && (
+                <PlanLimit
+                  className="absolute inset-0 z-10 bg-slate-100"
+                  title="오늘은 여기까지 도와드릴 수 있어요"
+                  primaryCta={{ label: '플랜 보기', onPress: () => setPlanLimited(false) }}
+                />
+              )}
+              <FlatList
+                ref={flatListRef}
+                data={messages}
+                renderItem={renderMessage}
+                keyExtractor={(item) => item.id}
+                inverted={false}
+                className="flex-1"
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12 }}
+                onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                ListEmptyComponent={
+                  <View className="flex-1 items-center justify-center px-6">
+                    <Text className="text-center text-base text-slate-500">
+                      인공지능 상담사에게 어린이집 입소를 물어보세요
+                    </Text>
                   </View>
-                </View>
-              ) : null
-            }
-          />
+                }
+                ListFooterComponent={
+                  isStreaming ? (
+                    <View className="mb-3 items-start">
+                      <View className="max-w-[82%] rounded-2xl rounded-bl-sm bg-slate-200 px-4 py-2">
+                        <Text className="text-sm text-slate-700">{'.'.repeat((dotTick % 3) + 1)}</Text>
+                      </View>
+                    </View>
+                  ) : null
+                }
+              />
+            </View>
+          )}
           <View className="border-t border-slate-200 bg-slate-50 px-3 py-2">
             <View className="mb-1 flex-row items-center">
               <TextInput
@@ -266,15 +293,15 @@ export default function ChatScreen() {
                 placeholder="메시지를 입력하세요"
                 className="min-h-12 flex-1 rounded-full border border-slate-300 bg-white px-4 text-slate-900"
                 placeholderTextColor="#94a3b8"
-                editable={!isStreaming}
+                editable={!isStreaming && !planLimited}
                 returnKeyType="send"
                 textAlignVertical="center"
               />
               <TouchableOpacity
                 onPress={sendMessage}
-                disabled={!input.trim() || isStreaming}
+                disabled={!input.trim() || isStreaming || planLimited}
                 className={`ml-2 h-12 w-12 items-center justify-center rounded-full ${
-                  !input.trim() || isStreaming ? 'bg-slate-300' : 'bg-[#6366f1]'
+                  !input.trim() || isStreaming || planLimited ? 'bg-slate-300' : 'bg-[#6366f1]'
                 }`}
                 activeOpacity={0.8}
               >

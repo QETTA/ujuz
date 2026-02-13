@@ -5,10 +5,10 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getJson, postJson } from '@/lib/api';
+import { LoadingSkeleton, NetworkError, EmptyFirstUse, EmptyNoResults } from '@/components/states';
 
 type UnreadAlert = {
   _id: string;
@@ -161,30 +161,37 @@ export default function AlertsScreen() {
             </Text>
           </View>
         </View>
-        {errorMessage ? (
-          <Text className="mt-2 text-xs text-rose-500">{errorMessage}</Text>
-        ) : null}
       </View>
 
       <ScrollView
         className="flex-1"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 28 }}
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingBottom: 28 }}
       >
         {loading ? (
-          <View className="flex-1 items-center justify-center py-16">
-            <ActivityIndicator size="large" color="#6366f1" />
-          </View>
+          <LoadingSkeleton />
+        ) : !loading && errorMessage && alerts.length === 0 && subscriptions.length === 0 ? (
+          <NetworkError
+            primaryCta={{
+              label: '다시 시도',
+              onPress: () => loadData(),
+            }}
+          />
+        ) : !loading && !errorMessage && subscriptions.length === 0 ? (
+          <EmptyFirstUse
+            title="아직 구독한 시설이 없어요"
+            description="시설을 구독하면 빈자리 알림을 받을 수 있어요."
+            primaryCta={{ label: '시설 찾아보기', onPress: () => {} }}
+          />
         ) : (
           <View className="py-4">
             <View>
               <Text className="mb-3 text-lg font-bold text-slate-900">활성 알림</Text>
-              {alerts.length === 0 ? (
-                <View className="mb-6 rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
-                  <Text className="text-sm text-slate-700">
-                    아직 감지된 TO가 없습니다. 시설을 구독하면 빈자리 알림을 받을 수 있습니다.
-                  </Text>
-                </View>
+              {subscriptions.length > 0 && alerts.length === 0 ? (
+                <EmptyNoResults
+                  title="아직 감지된 TO가 없어요"
+                  description="구독한 시설에 변동이 있으면 알려드릴게요."
+                />
               ) : (
                 <View className="mb-6 gap-3">
                   {alerts.map((alert) => {
@@ -229,7 +236,7 @@ export default function AlertsScreen() {
             </View>
 
             <View>
-              <Text className="mb-3 text-lg font-bold text-slate-900">Subscriptions</Text>
+              <Text className="mb-3 text-lg font-bold text-slate-900">구독 목록</Text>
               <View className="gap-3 pb-2">
                 {subscriptions.length === 0 ? (
                   <View className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
@@ -273,7 +280,7 @@ export default function AlertsScreen() {
                         )}
                       </View>
                       <Text className="mt-2 text-xs text-slate-400">
-                        시설ID: {sub.facility_id}
+                        시설 아이디: {sub.facility_id}
                         {parseFacilityClasses(sub.target_classes).length > 0
                           ? ` / 대상: ${parseFacilityClasses(sub.target_classes)}`
                           : ''}

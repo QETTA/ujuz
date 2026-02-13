@@ -166,7 +166,7 @@ UjuZ의 제품 가치는 **(a) 시설 탐색(지도/주변)과 (b) TO(결원/입
 | 데이터 파이프라인 인메모리 캐시 | Codex | 🔲 대기 | data.go.kr 장애 시 서비스 유지 |
 | 입소 엔진 테스트 확장 (60+ 케이스) | Codex | 🔲 대기 | 규정 변경 자동 감지 |
 | EvidenceLabel/DisclaimerBanner UI 통합 | Codex | 🔲 대기 | 모든 점수에 근거 라벨 |
-| API 에러 포맷 표준화 | Codex | 🔲 대기 | `{ error, code }` 통일 |
+| API 에러 포맷 표준화 (T-000) | Codex | ✅ 완료 | `{ error, code }` 통일 → 22개 라우트 v1 마이그레이션 |
 | **AUTH_BYPASS 프로덕션 안전 검증** | **Claude** | 🔲 대기 | NODE_ENV 이중 게이트 확인 |
 | **Expo 푸시/지도 PoC (실기기)** | **Codex+Claude** | 🔲 대기 | 1~2주 내 실기기 동작 검증 |
 
