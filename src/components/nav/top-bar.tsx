@@ -19,6 +19,7 @@ export function TopBar({ title, showBack = false, onBack, action, transparent = 
 
   return (
     <header
+      role="banner"
       className={cn(
         'sticky top-0 z-sticky flex h-14 items-center gap-3 px-md',
         transparent

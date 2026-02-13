@@ -18,10 +18,22 @@ import {
 } from '@heroicons/react/24/solid';
 
 const tabs = [
-  { href: ROUTES.HOME, label: '홈', Icon: HomeIcon, ActiveIcon: HomeIconSolid },
-  { href: ROUTES.FACILITIES, label: '시설', Icon: BuildingOffice2Icon, ActiveIcon: BuildingOffice2IconSolid },
-  { href: ROUTES.AI, label: 'AI', Icon: ChatBubbleLeftEllipsisIcon, ActiveIcon: ChatBubbleLeftEllipsisIconSolid },
-  { href: ROUTES.MY, label: 'MY', Icon: UserCircleIcon, ActiveIcon: UserCircleIconSolid },
+  { href: ROUTES.HOME, label: '홈', ariaLabel: '홈', Icon: HomeIcon, ActiveIcon: HomeIconSolid },
+  {
+    href: ROUTES.FACILITIES,
+    label: '시설',
+    ariaLabel: '검색',
+    Icon: BuildingOffice2Icon,
+    ActiveIcon: BuildingOffice2IconSolid,
+  },
+  {
+    href: ROUTES.AI,
+    label: 'AI',
+    ariaLabel: 'AI 상담',
+    Icon: ChatBubbleLeftEllipsisIcon,
+    ActiveIcon: ChatBubbleLeftEllipsisIconSolid,
+  },
+  { href: ROUTES.MY, label: 'MY', ariaLabel: '마이페이지', Icon: UserCircleIcon, ActiveIcon: UserCircleIconSolid },
 ] as const;
 
 export function BottomNav() {
@@ -30,9 +42,9 @@ export function BottomNav() {
   return (
     <nav
       className="fixed bottom-4 left-1/2 z-nav flex -translate-x-1/2 items-center gap-1 rounded-full border border-border-subtle bg-surface-glass px-2 py-1.5 shadow-glass backdrop-blur-xl safe-bottom"
-      aria-label="메인 내비게이션"
+      aria-label="메인 네비게이션"
     >
-      {tabs.map(({ href, label, Icon, ActiveIcon }) => {
+      {tabs.map(({ href, label, ariaLabel, Icon, ActiveIcon }) => {
         const isActive = href === ROUTES.HOME ? pathname === ROUTES.HOME : pathname.startsWith(href);
         const IconComponent = isActive ? ActiveIcon : Icon;
 
@@ -40,6 +52,7 @@ export function BottomNav() {
           <Link
             key={href}
             href={href}
+            aria-label={ariaLabel}
             aria-current={isActive ? 'page' : undefined}
             className={cn(
               'flex flex-col items-center rounded-full px-4 py-1.5 text-[10px] font-medium transition-colors',
