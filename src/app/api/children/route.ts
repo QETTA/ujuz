@@ -9,8 +9,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserId, getTraceId, parseJson, logRequest, errorResponse } from '@/lib/server/apiHelpers';
 import { getDbOrThrow } from '@/lib/server/db';
 import { U } from '@/lib/server/collections';
-import { parseBody, childCreateSchema } from '@/lib/server/validation';
 import { ObjectId } from 'mongodb';
+import { z } from 'zod';
+
+const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+function isValidIsoDate(value: string): boolean {
+  if (!isoDateRegex.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day
+  );
+}
+
+const childCreateBodySchema = z.object({
+  name: z.string().min(1).max(50),
+  birthDate: z.string().refine(isValidIsoDate, {
+    message: 'birthDate must be a valid ISO date (YYYY-MM-DD)',
+  }),
+  ageBand: z.number().int().min(0).max(5),
+});
 
 export async function GET(req: NextRequest) {
   const start = Date.now();
@@ -26,12 +47,15 @@ export async function GET(req: NextRequest) {
       tags: 'child_profile',
     }).sort({ createdAt: -1 }).toArray();
 
-    const mapped = children.map((c) => ({
-      id: c._id.toString(),
-      nickname: c.value ? JSON.parse(c.value).nickname : c.memoryKey,
-      ...(() => { try { return JSON.parse(c.value); } catch { return {}; } })(),
-      created_at: c.createdAt?.toISOString?.() ?? null,
-    }));
+    const mapped = children.map((c) => {
+      const parsedValue = (() => { try { return JSON.parse(c.value); } catch { return {}; } })();
+      return {
+        id: c._id.toString(),
+        nickname: parsedValue.name ?? parsedValue.nickname ?? c.memoryKey,
+        ...parsedValue,
+        created_at: c.createdAt?.toISOString?.() ?? null,
+      };
+    });
 
     logRequest(req, 200, start, traceId);
     return NextResponse.json({ children: mapped });
@@ -48,9 +72,12 @@ export async function POST(req: NextRequest) {
   try {
     const userId = await getUserId(req);
     const body = await parseJson(req);
-    const parsed = parseBody(childCreateSchema, body);
+    const parsed = childCreateBodySchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return NextResponse.json(
+        { error: 'VALIDATION_ERROR', message: parsed.error.message },
+        { status: 400 },
+      );
     }
 
     const db = await getDbOrThrow();
@@ -60,7 +87,7 @@ export async function POST(req: NextRequest) {
     await db.collection(U.USER_MEMORIES).insertOne({
       _id: childId,
       userId,
-      memoryKey: `child_${parsed.data.nickname}`,
+      memoryKey: `child_${parsed.data.name}`,
       value: JSON.stringify(parsed.data),
       tags: ['child_profile'],
       isActive: true,
