@@ -19,7 +19,7 @@ const envSchema = z.object({
   COST_MONTHLY_BUDGET_USD: z.coerce.number().default(100),
   MEMORY_ENABLED: z
     .enum(['true', 'false'])
-    .default('false')
+    .default('true')
     .transform((v) => v === 'true'),
 
   // ── Facility Pipeline ──────────────────────────────────

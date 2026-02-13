@@ -11,6 +11,9 @@ import { generateResponse } from './responseGenerator';
 import { logger } from './logger';
 import type { ConversationDoc, DataBlockDoc, BotMessageDoc } from './dbTypes';
 import type { BotContext, BotDataBlock, ConversationHistoryMessage } from './botTypes';
+import { env } from './env';
+import { extractMemoriesFromMessage } from './memoryExtractor';
+import { upsertMemory } from './userMemoryService';
 
 type BotMessage = BotMessageDoc;
 
@@ -163,6 +166,23 @@ async function saveConversationMessages(params: {
   return newConversationId.toString();
 }
 
+// ── Memory Extraction (fire-and-forget) ─────────────────
+
+async function extractAndSaveMemories(userId: string, message: string): Promise<void> {
+  try {
+    const memories = extractMemoriesFromMessage(message);
+    if (memories.length === 0) return;
+    await Promise.allSettled(
+      memories.map((m) =>
+        upsertMemory({ userId, memoryKey: m.memoryKey, value: m.value, tags: m.tags }),
+      ),
+    );
+    logger.info('Extracted memories from chat', { userId, count: memories.length });
+  } catch (err) {
+    logger.warn('Memory extraction failed', { error: err instanceof Error ? err.message : String(err) });
+  }
+}
+
 // ── Query Processing ────────────────────────────────────
 
 export async function processQuery(input: BotQueryInput): Promise<{
@@ -213,6 +233,11 @@ export async function processQuery(input: BotQueryInput): Promise<{
     assistantMessage,
     titleSeed: input.message,
   });
+
+  // Fire-and-forget: extract memories from user message
+  if (env.MEMORY_ENABLED) {
+    extractAndSaveMemories(input.user_id, input.message).catch(() => {});
+  }
 
   return {
     conversation_id: conversationId,

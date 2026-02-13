@@ -63,6 +63,12 @@ export async function ensureIndexes(db: Db): Promise<void> {
         { background: true },
       ),
 
+      // User memories — tag-based context composition
+      db.collection(U.USER_MEMORIES).createIndex(
+        { userId: 1, isActive: 1, tags: 1, updatedAt: -1 },
+        { background: true },
+      ),
+
       // User events — TTL cleanup
       db.collection(U.USER_EVENTS).createIndex(
         { expireAt: 1 },

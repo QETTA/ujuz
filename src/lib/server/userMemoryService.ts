@@ -195,26 +195,45 @@ export async function appendEvent(params: {
   });
 }
 
-// ─── Context Composition ────────────────────────────────────
+// ─── Context Composition (tag-priority based) ───────────────
+
+interface TagBucket {
+  tag: string;
+  max: number;
+  label: string;
+}
+
+const TAG_PRIORITY: TagBucket[] = [
+  { tag: 'child_profile', max: 3, label: '아이 프로필' },
+  { tag: 'chat_extracted', max: 3, label: '대화에서 파악한 정보' },
+  { tag: 'followed_facility', max: 2, label: '관심 시설' },
+  { tag: 'settings', max: 1, label: '설정' },
+];
 
 export async function composeContext(userId: string): Promise<string> {
   try {
     const db = await getDbOrThrow();
+    const sections: string[] = [];
 
-    const memories = await db.collection<UserMemoryDoc>(U.USER_MEMORIES)
-      .find({ userId, isActive: true })
-      .sort({ updatedAt: -1 })
-      .limit(MAX_CONTEXT_MEMORIES)
-      .toArray();
+    for (const bucket of TAG_PRIORITY) {
+      const docs = await db.collection<UserMemoryDoc>(U.USER_MEMORIES)
+        .find({ userId, isActive: true, tags: bucket.tag })
+        .sort({ updatedAt: -1 })
+        .limit(bucket.max)
+        .toArray();
 
-    if (memories.length === 0) return '';
+      if (docs.length === 0) continue;
 
-    const lines = memories.map(mapMemoryDoc).map((memory) => {
-      const value = memory.value.slice(0, MAX_MEMORY_VALUE_LENGTH);
-      return `- ${memory.memoryKey}: ${value}`;
-    });
+      const lines = docs.map(mapMemoryDoc).map((m) => {
+        const value = m.value.slice(0, MAX_MEMORY_VALUE_LENGTH);
+        return `- ${m.memoryKey}: ${value}`;
+      });
+      sections.push(`[${bucket.label}]\n${lines.join('\n')}`);
+    }
 
-    return `사용자 기억:\n${lines.join('\n')}`;
+    if (sections.length === 0) return '';
+
+    return `사용자 기억:\n${sections.join('\n\n')}`;
   } catch {
     return '';
   }
