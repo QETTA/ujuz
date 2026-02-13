@@ -47,11 +47,19 @@ function isTabActive(href: string, pathname: string): boolean {
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-text-primary focus:shadow-lg"
+      >
+        본문으로 건너뛰기
+      </a>
       {/* Desktop sidebar */}
       <DesktopSidebar />
       {/* Main content */}
       <div className="relative mx-auto flex w-full max-w-lg flex-1 flex-col bg-surface lg:max-w-none">
-        <main className="flex-1 pb-20 lg:pb-0 lg:pl-64">{children}</main>
+        <main id="main-content" role="main" className="flex-1 pb-20 lg:pb-0 lg:pl-64">
+          {children}
+        </main>
       </div>
       {/* Mobile bottom nav */}
       <MobileBottomNav />
