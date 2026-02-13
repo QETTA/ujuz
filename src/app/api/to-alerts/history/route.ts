@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAlertHistory } from '@/lib/server/toAlertService';
 import { getUserId, errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
+import { objectIdSchema } from '@/lib/server/validation';
 
 export const runtime = 'nodejs';
 
@@ -9,7 +10,38 @@ export async function GET(req: NextRequest) {
   const traceId = getTraceId(req);
   try {
     const userId = await getUserId(req);
-    const result = await getAlertHistory(userId);
+    const { searchParams } = new URL(req.url);
+    const cursorParam = searchParams.get('cursor');
+    const limitParam = searchParams.get('limit');
+
+    if (cursorParam) {
+      const cursorResult = objectIdSchema.safeParse(cursorParam);
+      if (!cursorResult.success) {
+        logRequest(req, 400, start, traceId);
+        return NextResponse.json(
+          { error: cursorResult.error.issues[0]?.message ?? '유효하지 않은 ID입니다' },
+          { status: 400 },
+        );
+      }
+    }
+
+    let limit: number | undefined;
+    if (limitParam != null) {
+      const parsedLimit = Number(limitParam);
+      if (!Number.isInteger(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) {
+        logRequest(req, 400, start, traceId);
+        return NextResponse.json(
+          { error: 'limit must be an integer between 1 and 100' },
+          { status: 400 },
+        );
+      }
+      limit = parsedLimit;
+    }
+
+    const result = await getAlertHistory(userId, {
+      cursor: cursorParam ?? undefined,
+      limit,
+    });
     logRequest(req, 200, start, traceId);
     return NextResponse.json(result);
   } catch (error) {

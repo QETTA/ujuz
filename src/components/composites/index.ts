@@ -1,2 +1,20 @@
-// barrel exports — add components here
-export {};
+export { ScoreGauge } from './ScoreGauge';
+export { ScoreResultPanel } from './ScoreResultPanel';
+export { RouteCardWidget } from './RouteCardWidget';
+export { ChatBubble } from './ChatBubble';
+export { RecommendationForm } from './RecommendationForm';
+export { DashboardWidget } from './DashboardWidget';
+export { EvidenceCard } from './EvidenceCard';
+export { WidgetSummaryBar } from './WidgetSummaryBar';
+export { WeeklyActionCard } from './WeeklyActionCard';
+export { FacilityMiniCard } from './FacilityMiniCard';
+export { FacilityCard } from './FacilityCard';
+export { FacilityDetailHeader } from './FacilityDetailHeader';
+export { AlertCard } from './AlertCard';
+export { AlertSubscriptionCard } from './AlertSubscriptionCard';
+export { ChatInput } from './ChatInput';
+export { ConversationListItem } from './ConversationListItem';
+export { PostCard } from './PostCard';
+export { PricingCard } from './PricingCard';
+export { ChildProfileForm } from './ChildProfileForm';
+export { ChecklistPanel } from './ChecklistPanel';

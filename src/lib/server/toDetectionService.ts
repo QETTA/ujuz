@@ -117,17 +117,50 @@ async function persistAndNotify(
   db: Db,
   alerts: TOAlertDoc[],
   logPrefix: string,
-): Promise<number> {
+): Promise<{ alertsCreated: number; emailsQueued: number }> {
   let emailsQueued = 0;
+  let persistedAlerts = alerts;
 
   if (alerts.length > 0) {
-    await db.collection<TOAlertDoc>(U.TO_ALERTS).insertMany(alerts);
-    logger.info(`${logPrefix}: alerts created`, { count: alerts.length });
+    try {
+      await db.collection<TOAlertDoc>(U.TO_ALERTS).insertMany(alerts, { ordered: false });
+    } catch (err) {
+      const writeErrors = (
+        typeof err === 'object'
+        && err !== null
+        && 'writeErrors' in err
+        && Array.isArray((err as { writeErrors?: Array<{ code?: number; index?: number }> }).writeErrors)
+      )
+        ? (err as { writeErrors: Array<{ code?: number; index?: number }> }).writeErrors
+        : null;
+
+      if (writeErrors && writeErrors.length > 0 && writeErrors.every((e) => e.code === 11000)) {
+        const duplicateIndexes = new Set(
+          writeErrors
+            .map((e) => e.index)
+            .filter((index): index is number => typeof index === 'number'),
+        );
+        persistedAlerts = alerts.filter((_, index) => !duplicateIndexes.has(index));
+      } else if (
+        typeof err === 'object'
+        && err !== null
+        && 'code' in err
+        && (err as { code?: number }).code === 11000
+      ) {
+        persistedAlerts = [];
+      } else {
+        throw err;
+      }
+    }
+
+    if (persistedAlerts.length > 0) {
+      logger.info(`${logPrefix}: alerts created`, { count: persistedAlerts.length });
+    }
   }
 
-  if (FEATURE_FLAGS.toEmailNotification && alerts.length > 0) {
+  if (FEATURE_FLAGS.toEmailNotification && persistedAlerts.length > 0) {
     try {
-      emailsQueued = await sendToAlertEmails(db, alerts);
+      emailsQueued = await sendToAlertEmails(db, persistedAlerts);
     } catch (err) {
       logger.error(`${logPrefix}: email send failed`, {
         error: err instanceof Error ? err.message : String(err),
@@ -135,7 +168,7 @@ async function persistAndNotify(
     }
   }
 
-  return emailsQueued;
+  return { alertsCreated: persistedAlerts.length, emailsQueued };
 }
 
 // ── Public API ───────────────────────────────────────────
@@ -182,12 +215,12 @@ export async function detectToEvents(db: Db): Promise<DetectionResult> {
   const dedupSince = new Date(Date.now() - dedupMs);
 
   const alerts = await createAlertsFromSnapshots(db, snapshots, subscriptions, dedupSince);
-  const emailsQueued = await persistAndNotify(db, alerts, 'TO detection');
+  const persisted = await persistAndNotify(db, alerts, 'TO detection');
 
   return {
     scanned: snapshots.length,
-    alerts_created: alerts.length,
-    emails_queued: emailsQueued,
+    alerts_created: persisted.alertsCreated,
+    emails_queued: persisted.emailsQueued,
   };
 }
 
@@ -230,12 +263,12 @@ export async function detectToForFacility(
   const dedupSince = new Date(Date.now() - dedupMs);
 
   const alerts = await createAlertsFromSnapshots(db, snapshots, subscriptions, dedupSince);
-  const emailsQueued = await persistAndNotify(db, alerts, 'TO detection (single)');
+  const persisted = await persistAndNotify(db, alerts, 'TO detection (single)');
 
   return {
     scanned: snapshots.length,
-    alerts_created: alerts.length,
-    emails_queued: emailsQueued,
+    alerts_created: persisted.alertsCreated,
+    emails_queued: persisted.emailsQueued,
   };
 }
 

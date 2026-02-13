@@ -1,0 +1,59 @@
+import { cn } from '@/lib/utils';
+import { formatRelativeTime } from '@/lib/utils';
+import type { BotMessage } from '@/lib/types';
+
+interface ChatBubbleProps {
+  message: BotMessage;
+  className?: string;
+}
+
+export function ChatBubble({ message, className }: ChatBubbleProps) {
+  const isUser = message.role === 'user';
+
+  return (
+    <div className={cn('flex', isUser ? 'justify-end' : 'justify-start', className)}>
+      <div
+        className={cn(
+          'max-w-[85%] rounded-2xl px-4 py-2.5',
+          isUser
+            ? 'rounded-br-sm bg-brand-500 text-text-inverse'
+            : 'rounded-bl-sm bg-surface-elevated text-text-primary',
+        )}
+      >
+        {/* Main content */}
+        <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+
+        {/* Data blocks */}
+        {message.data_blocks && message.data_blocks.length > 0 && (
+          <div className="mt-2 space-y-2">
+            {message.data_blocks.map((block, i) => (
+              <div
+                key={`${block.type}-${i}`}
+                className={cn(
+                  'rounded-lg p-3 text-xs',
+                  isUser ? 'bg-brand-600/50' : 'bg-surface-inset',
+                )}
+              >
+                <p className="font-medium">{block.title}</p>
+                <p className="mt-1 opacity-80">{block.content}</p>
+                {block.source && (
+                  <p className="mt-1 text-[10px] opacity-60">출처: {block.source}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Timestamp */}
+        <p
+          className={cn(
+            'mt-1 text-[10px]',
+            isUser ? 'text-text-inverse/60' : 'text-text-tertiary',
+          )}
+        >
+          {formatRelativeTime(message.created_at)}
+        </p>
+      </div>
+    </div>
+  );
+}

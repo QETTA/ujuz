@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSubscription, getUserSubscriptions, deleteSubscription } from '@/lib/server/toAlertService';
 import { getUserId, errorResponse, parseJson, getTraceId, logRequest } from '@/lib/server/apiHelpers';
 import { checkRateLimit } from '@/lib/server/rateLimit';
-import { toAlertSubscribeSchema, parseBody } from '@/lib/server/validation';
+import { toAlertSubscribeSchema, toAlertDeleteQuerySchema, toAlertPatchSchema, parseBody, parseQuery } from '@/lib/server/validation';
 import { checkLimit } from '@/lib/server/subscriptionService';
 import { getDbOrThrow } from '@/lib/server/db';
 import { U } from '@/lib/server/collections';
@@ -80,14 +80,14 @@ export async function DELETE(req: NextRequest) {
   try {
     const userId = await getUserId(req);
     const { searchParams } = new URL(req.url);
-    const facilityId = searchParams.get('facility_id');
 
-    if (!facilityId) {
+    const parsed = parseQuery(toAlertDeleteQuerySchema, searchParams);
+    if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: 'facility_id is required' }, { status: 400 });
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
 
-    await deleteSubscription(userId, facilityId);
+    await deleteSubscription(userId, parsed.data.facility_id);
     logRequest(req, 200, start, traceId);
     return NextResponse.json({ ok: true });
   } catch (error) {
@@ -103,19 +103,14 @@ export async function PATCH(req: NextRequest) {
   try {
     const userId = await getUserId(req);
 
-    let body: { facility_id?: string; active?: boolean };
-    try {
-      body = await req.json();
-    } catch {
+    const body = await parseJson(req);
+    const parsed = parseBody(toAlertPatchSchema, body);
+    if (!parsed.success) {
       logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
 
-    const { facility_id, active } = body;
-    if (!facility_id || typeof active !== 'boolean') {
-      logRequest(req, 400, start, traceId);
-      return NextResponse.json({ error: 'facility_id and active (boolean) are required' }, { status: 400 });
-    }
+    const { facility_id, active } = parsed.data;
 
     const db = await getDbOrThrow();
     const result = await db.collection<TOSubscriptionDoc>(U.TO_SUBSCRIPTIONS).updateOne(

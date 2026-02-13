@@ -68,35 +68,32 @@ function mapAlertToDto(doc: TOAlertDoc): TOAlertResponse {
 export async function createSubscription(input: TOSubscriptionInput): Promise<TOSubscriptionResponse> {
   const db = await getDbOrThrow();
   const collection = db.collection<DbTOSubscriptionDoc>(U.TO_SUBSCRIPTIONS);
-
-  const existing = await collection.findOne({
-    user_id: input.user_id,
-    facility_id: input.facility_id,
-    is_active: true,
-  });
-
-  if (existing) {
-    await collection.updateOne(
-      { _id: existing._id },
-      { $set: { target_classes: input.target_classes, notification_preferences: input.notification_preferences } },
-    );
-    return mapSubscriptionToDto({
-      ...existing,
-      target_classes: input.target_classes,
-      notification_preferences: input.notification_preferences,
-    });
-  }
-
   const now = new Date();
-  const newDoc: DbTOSubscriptionDoc = {
-    _id: new ObjectId(),
-    ...input,
-    is_active: true,
-    created_at: now,
-  };
-  await collection.insertOne(newDoc);
 
-  return mapSubscriptionToDto(newDoc);
+  // Atomic upsert: update existing or insert new in a single operation
+  const result = await collection.findOneAndUpdate(
+    {
+      user_id: input.user_id,
+      facility_id: input.facility_id,
+      is_active: true,
+    },
+    {
+      $set: {
+        target_classes: input.target_classes,
+        notification_preferences: input.notification_preferences,
+        facility_name: input.facility_name,
+      },
+      $setOnInsert: {
+        user_id: input.user_id,
+        facility_id: input.facility_id,
+        is_active: true,
+        created_at: now,
+      },
+    },
+    { upsert: true, returnDocument: 'after' },
+  );
+
+  return mapSubscriptionToDto(result!);
 }
 
 export async function getUserSubscriptions(userId: string): Promise<{ subscriptions: TOSubscriptionResponse[] }> {
@@ -119,12 +116,18 @@ export async function deleteSubscription(userId: string, facilityId: string): Pr
   );
 }
 
-export async function getAlertHistory(userId: string): Promise<{
+export async function getAlertHistory(
+  userId: string,
+  params?: { cursor?: string; limit?: number },
+): Promise<{
   alerts: TOAlertResponse[];
   total: number;
   unread_count: number;
+  nextCursor: string | null;
+  hasMore: boolean;
 }> {
   const db = await getDbOrThrow();
+  const limit = Math.max(1, Math.min(params?.limit ?? 50, 100));
 
   const subs = await db.collection<DbTOSubscriptionDoc>(U.TO_SUBSCRIPTIONS)
     .find({ user_id: userId, is_active: true })
@@ -133,20 +136,35 @@ export async function getAlertHistory(userId: string): Promise<{
   const facilityIds = subs.map((s) => s.facility_id);
 
   if (facilityIds.length === 0) {
-    return { alerts: [], total: 0, unread_count: 0 };
+    return { alerts: [], total: 0, unread_count: 0, nextCursor: null, hasMore: false };
+  }
+
+  const filter: {
+    facility_id: { $in: string[] };
+    _id?: { $lt: ObjectId };
+  } = { facility_id: { $in: facilityIds } };
+  if (params?.cursor) {
+    filter._id = { $lt: new ObjectId(params.cursor) };
   }
 
   const alerts = await db.collection<TOAlertDoc>(U.TO_ALERTS)
-    .find({ facility_id: { $in: facilityIds } })
-    .sort({ detected_at: -1 })
-    .limit(50)
+    .find(filter)
+    .sort({ _id: -1 })
+    .limit(limit + 1)
     .toArray();
 
-  const mapped = alerts.map(mapAlertToDto);
+  const hasMore = alerts.length > limit;
+  const pageAlerts = hasMore ? alerts.slice(0, limit) : alerts;
+  const mapped = pageAlerts.map(mapAlertToDto);
+  const nextCursor = hasMore
+    ? pageAlerts[pageAlerts.length - 1]?._id.toString() ?? null
+    : null;
 
   return {
     alerts: mapped,
     total: mapped.length,
     unread_count: mapped.filter((a) => !a.is_read).length,
+    nextCursor,
+    hasMore,
   };
 }

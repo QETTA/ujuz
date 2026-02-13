@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
 import { getUserId, errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
 import { U } from '@/lib/server/collections';
+import { toAlertUnreadQuerySchema, parseQuery } from '@/lib/server/validation';
 import type { TOAlertDoc } from '@/lib/server/dbTypes';
 
 export const runtime = 'nodejs';
@@ -16,23 +17,24 @@ export async function GET(req: NextRequest) {
 
   try {
     const userId = await getUserId(req);
+
+    const { searchParams } = new URL(req.url);
+    const parsed = parseQuery(toAlertUnreadQuerySchema, searchParams);
+    if (!parsed.success) {
+      logRequest(req, 400, start, traceId);
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
+    }
+
+    const { since, limit } = parsed.data;
+
     const db = await getDbOrThrow();
-
-    const url = new URL(req.url);
-    const sinceParam = url.searchParams.get('since');
-    const limitParam = url.searchParams.get('limit');
-    const limit = Math.min(Math.max(parseInt(limitParam ?? '20', 10) || 20, 1), 50);
-
     const filter: Record<string, unknown> = {
       user_id: userId,
       is_read: false,
     };
 
-    if (sinceParam) {
-      const sinceDate = new Date(sinceParam);
-      if (!isNaN(sinceDate.getTime())) {
-        filter.detected_at = { $gt: sinceDate };
-      }
+    if (since) {
+      filter.detected_at = { $gt: new Date(since) };
     }
 
     const alerts = await db

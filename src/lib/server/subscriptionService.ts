@@ -1,7 +1,7 @@
 /**
  * UJUz - Subscription Service
  * 구독 및 요금제 관리
- * 가격: Basic 5,900원, Premium 9,900원 (ujuz-web 기준)
+ * 가격: Basic 5,900원, Premium 9,900원 (ujuz-api 기준)
  */
 
 import { getDbOrThrow } from './db';
@@ -143,14 +143,18 @@ export async function createSubscription(userId: string, planTier: PlanTier, bil
   if (!plan) throw new AppError('Invalid plan', 400, 'invalid_plan');
 
   const now = new Date();
-  const periodEnd = new Date(now);
+  const periodEnd = new Date(now.getTime());
   if (billingCycle === 'yearly') {
     periodEnd.setFullYear(periodEnd.getFullYear() + 1);
   } else {
+    periodEnd.setDate(1);
     periodEnd.setMonth(periodEnd.getMonth() + 1);
   }
 
-  await db.collection<UserSubscriptionDoc>(U.USER_SUBSCRIPTIONS).updateMany(
+  const col = db.collection<UserSubscriptionDoc>(U.USER_SUBSCRIPTIONS);
+
+  // Atomic cancel → ensures only the first concurrent request sees an active sub
+  await col.findOneAndUpdate(
     { user_id: userId, status: 'active' },
     { $set: { status: 'cancelled' } },
   );
@@ -169,7 +173,16 @@ export async function createSubscription(userId: string, planTier: PlanTier, bil
     created_at: now,
   } satisfies Omit<UserSubscriptionDoc, '_id'>;
 
-  const result = await db.collection(U.USER_SUBSCRIPTIONS).insertOne(doc);
+  let result;
+  try {
+    result = await col.insertOne(doc as UserSubscriptionDoc);
+  } catch (err: unknown) {
+    // Unique partial index safety net: if another request won the race, conflict
+    if (err && typeof err === 'object' && 'code' in err && err.code === 11000) {
+      throw new AppError('구독 생성 충돌이 발생했습니다. 다시 시도해 주세요.', 409, 'subscription_conflict');
+    }
+    throw err;
+  }
 
   return {
     id: result.insertedId.toString(),

@@ -133,8 +133,13 @@ export const facilityNearbySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+const ALLOWED_OVERRIDE_PATHS = /^(name|type|status|address\.\w+|phone|capacity_\w+|extended_care|operating_hours\.\w+|employer_\w+)$/;
+
 export const facilityOverrideSchema = z.object({
-  field_path: z.string().min(1).max(100),
+  field_path: z.string().min(1).max(100).refine(
+    (v) => ALLOWED_OVERRIDE_PATHS.test(v),
+    '수정 불가능한 필드입니다',
+  ),
   new_value: z.unknown(),
   reason: z.string().min(1, '사유를 입력해 주세요').max(500),
 });
@@ -149,6 +154,64 @@ export const facilityIngestSchema = z.object({
   page_size: z.coerce.number().int().min(1).max(1000).default(100),
 });
 
+// ── Common ──────────────────────────────────────────────
+
+export const objectIdSchema = z.string().regex(/^[a-f\d]{24}$/i, '유효하지 않은 ID입니다');
+
+export const anonIdSchema = z.string().regex(/^[\w\-:.]+$/).max(200).catch('anonymous');
+
+// ── Community Query ─────────────────────────────────────
+
+export const communityPostQuerySchema = z.object({
+  region: z.string().max(50).default(''),
+  type: z.enum(['review', 'to_report', 'question']).default('review'),
+  sort: z.enum(['recent', 'hot']).default('recent'),
+  cursor: objectIdSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+export const communityPostUpdateSchema = z.object({
+  content: z.string().min(1, '내용을 입력해 주세요').max(5000, '내용은 5000자 이내로 입력해 주세요').optional(),
+  structured_fields: z.object({
+    age_class: z.string().max(20).optional(),
+    wait_months: z.coerce.number().int().min(0).max(120).optional(),
+    facility_type: z.string().max(50).optional(),
+    certainty: z.string().max(20).optional(),
+  }).optional(),
+});
+
+// ── TO Alert Query ──────────────────────────────────────
+
+export const toAlertDeleteQuerySchema = z.object({
+  facility_id: z.string().min(1, 'facility_id is required').max(100),
+});
+
+export const toAlertPatchSchema = z.object({
+  facility_id: z.string().min(1, 'facility_id is required').max(100),
+  active: z.boolean(),
+});
+
+export const toAlertUnreadQuerySchema = z.object({
+  since: z.string().datetime().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+// ── Checklist Patch ─────────────────────────────────────
+
+export const checklistPatchSchema = z.object({
+  recommendation_id: z.string().min(1, 'recommendation_id is required'),
+  item_key: z.string().min(1, 'item_key is required'),
+  done: z.boolean(),
+});
+
+// ── Admin Override List ─────────────────────────────────
+
+export const overrideListQuerySchema = z.object({
+  facility_id: objectIdSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  cursor: objectIdSchema.optional(),
+});
+
 // ── Helper ──────────────────────────────────────────────
 
 /** Parse request body with Zod schema. Returns { success: true, data } or { success: false, error }. */
@@ -159,4 +222,51 @@ export function parseBody<T>(schema: z.ZodSchema<T>, body: unknown): { success: 
   }
   const firstIssue = result.error.issues[0];
   return { success: false, error: firstIssue?.message ?? '입력 데이터가 올바르지 않습니다' };
+}
+
+// ── Child Profile ──────────────────────────────────────
+
+export const childCreateSchema = z.object({
+  nickname: z.string().min(1, '이름을 입력해 주세요').max(20),
+  birth_date: z.string().regex(/^\d{4}-\d{2}$/, '형식: YYYY-MM').max(7),
+  age_band: z.coerce.number().int().min(0).max(5),
+  priority_type: priorityTypeEnum,
+  region_key: z.string().max(20).optional(),
+});
+
+export const childUpdateSchema = childCreateSchema.partial();
+
+// ── Simulate ───────────────────────────────────────────
+
+export const simulateSchema = z.object({
+  facility_id: z.string().min(1, 'facility_id is required').max(100),
+  child_age_band: z.coerce.number().int().min(0).max(5).default(2),
+  waiting_position: z.coerce.number().int().min(0).max(9999).optional(),
+  priority_type: priorityTypeEnum,
+});
+
+// ── Facility Follow ────────────────────────────────────
+
+export const facilityFollowSchema = z.object({
+  facility_id: z.string().min(1, 'facility_id is required').max(100),
+  facility_name: z.string().min(1).max(200),
+});
+
+// ── User Settings ──────────────────────────────────────
+
+export const settingsSchema = z.object({
+  theme: z.enum(['light', 'dark', 'system']).optional(),
+  notifications: z.object({
+    push: z.boolean(),
+    email: z.boolean(),
+    sms: z.boolean(),
+  }).partial().optional(),
+  language: z.enum(['ko', 'en']).optional(),
+});
+
+/** Parse URL search params with Zod schema. Converts URLSearchParams to plain object first. */
+export function parseQuery<T>(schema: z.ZodSchema<T>, params: URLSearchParams): { success: true; data: T } | { success: false; error: string } {
+  const raw: Record<string, string> = {};
+  params.forEach((value, key) => { raw[key] = value; });
+  return parseBody(schema, raw);
 }

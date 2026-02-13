@@ -1,5 +1,6 @@
 /** UJUz collection name constants */
 export const U = {
+  USERS: 'users',
   USER_MEMORIES: 'user_memories',
   USER_EVENTS: 'user_events',
   ADMISSION_CACHE: 'admission_scores_cache',

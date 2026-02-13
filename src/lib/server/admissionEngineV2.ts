@@ -386,25 +386,27 @@ function createAdmissionProbabilityFn(
     if (months <= 0) return 0;
 
     const effectiveMonths = effectiveHorizon(months, currentMonth);
-    const expectedSeats = capacityEff * effectiveMonths;
+    const expectedSeats = Math.max(0.01, capacityEff * effectiveMonths);
 
     // When alpha is too small (heuristic/no-data), the NB distribution becomes
     // numerically unstable (NaN). Fall back to Poisson with national average rate.
     if (alphaPost < 1.0) {
-      const lambda = HEURISTIC_VACANCY_RATE * expectedSeats;
+      const lambda = Math.max(0.01, HEURISTIC_VACANCY_RATE * expectedSeats);
       const poisson = (jStat as unknown as Record<string, { cdf(x: number, l: number): number }>).poisson;
       const rawCdf = poisson.cdf(effectiveWaiting - 1, lambda);
       if (!Number.isFinite(rawCdf)) return 0;
-      return 1 - rawCdf;
+      const result = 1 - rawCdf;
+      return Number.isFinite(result) ? result : 0;
     }
 
     const r = alphaPost;
-    const p = betaPost / (betaPost + expectedSeats);
+    const p = Math.min(Math.max(betaPost / (betaPost + expectedSeats), 0.001), 0.999);
     validateNBParams(r, p);
 
     const rawCdf = jStat.negbin.cdf(effectiveWaiting - 1, r, p);
     if (!Number.isFinite(rawCdf)) return 0;
-    return 1 - rawCdf;
+    const result = 1 - rawCdf;
+    return Number.isFinite(result) ? result : 0;
   };
 }
 

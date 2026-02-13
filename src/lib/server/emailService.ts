@@ -6,6 +6,7 @@
 
 import type { Db } from 'mongodb';
 import { ObjectId } from 'mongodb';
+import { U } from './collections';
 import { env } from './env';
 import { logger } from './logger';
 import type { TOAlertDoc } from './dbTypes';
@@ -14,6 +15,10 @@ interface MailOptions {
   to: string;
   subject: string;
   html: string;
+}
+
+interface UserEmailDoc {
+  email?: string;
 }
 
 /**
@@ -62,7 +67,7 @@ export async function sendToAlertEmails(
       const filter = ObjectId.isValid(userId)
         ? { _id: new ObjectId(userId) }
         : { userId };
-      const user = await db.collection('users').findOne(
+      const user = await db.collection<UserEmailDoc>(U.USERS).findOne(
         filter,
         { projection: { email: 1 } },
       );

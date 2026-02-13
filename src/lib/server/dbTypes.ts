@@ -319,6 +319,7 @@ export interface PostDoc {
   score: number;
   status: 'published' | 'hidden';
   created_at: Date;
+  updated_at?: Date;
 }
 
 // ─── Reports (moderation) ──────────────────────────────

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
 import { errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
-import { facilityOverrideSchema, parseBody } from '@/lib/server/validation';
+import { facilityOverrideSchema, objectIdSchema, parseBody } from '@/lib/server/validation';
 import { requireAdmin } from '@/lib/server/facility/adminAuth';
 import { applyOverride } from '@/lib/server/facility/facilityService';
 import { FEATURE_FLAGS } from '@/lib/server/featureFlags';
@@ -41,10 +41,18 @@ export async function POST(
     }
 
     const { facilityId } = await params;
+    const facilityIdResult = objectIdSchema.safeParse(facilityId);
+    if (!facilityIdResult.success) {
+      logRequest(req, 400, start, traceId);
+      return NextResponse.json(
+        { error: facilityIdResult.error.issues[0]?.message ?? '유효하지 않은 ID입니다' },
+        { status: 400 },
+      );
+    }
     const { field_path, new_value, reason } = parsed.data;
 
     const db = await getDbOrThrow();
-    await applyOverride(db, facilityId, field_path, new_value, reason, 'admin');
+    await applyOverride(db, facilityIdResult.data, field_path, new_value, reason, 'admin');
 
     logRequest(req, 200, start, traceId);
     return NextResponse.json({ ok: true });

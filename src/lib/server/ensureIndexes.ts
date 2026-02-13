@@ -203,6 +203,44 @@ export async function ensureIndexes(db: Db): Promise<void> {
         { facility_id: 1, applied_at: -1 },
         { background: true },
       ),
+
+      // ── Phase 3: Optimized indexes ────────────────────────
+
+      // TO alerts — dedup query performance (facility + age + user + time)
+      db.collection(U.TO_ALERTS).createIndex(
+        { facility_id: 1, age_class: 1, user_id: 1, detected_at: -1 },
+        { background: true },
+      ),
+
+      // TO subscriptions — active subs only (partial filter index)
+      db.collection(U.TO_SUBSCRIPTIONS).createIndex(
+        { user_id: 1, facility_id: 1 },
+        { background: true, partialFilterExpression: { is_active: true } },
+      ),
+
+      // Conversations — TTL 180 days (auto-cleanup)
+      db.collection(U.CONVERSATIONS).createIndex(
+        { updated_at: 1 },
+        { expireAfterSeconds: 180 * 24 * 60 * 60, background: true },
+      ),
+
+      // Admission requests — TTL 365 days (auto-cleanup)
+      db.collection(U.ADMISSION_REQUESTS).createIndex(
+        { created_at: 1 },
+        { expireAfterSeconds: 365 * 24 * 60 * 60, background: true },
+      ),
+
+      // Posts — text search for community content
+      db.collection(U.POSTS).createIndex(
+        { content: 'text' },
+        { background: true, default_language: 'none' },
+      ),
+
+      // User subscriptions — one active per user (unique partial, race condition safety net)
+      db.collection(U.USER_SUBSCRIPTIONS).createIndex(
+        { user_id: 1 },
+        { unique: true, background: true, partialFilterExpression: { status: { $in: ['active', 'trial'] } } },
+      ),
     ]);
 
     logger.info('Database indexes ensured');

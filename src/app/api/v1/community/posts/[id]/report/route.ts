@@ -3,7 +3,7 @@ import { getDbOrThrow } from '@/lib/server/db';
 import { U } from '@/lib/server/collections';
 import { errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
 import { FEATURE_FLAGS } from '@/lib/server/featureFlags';
-import { reportSchema, parseBody } from '@/lib/server/validation';
+import { reportSchema, anonIdSchema, objectIdSchema, parseBody } from '@/lib/server/validation';
 import type { ReportDoc } from '@/lib/server/dbTypes';
 
 export const runtime = 'nodejs';
@@ -25,6 +25,14 @@ export async function POST(
 
   try {
     const { id: postId } = await params;
+    const postIdResult = objectIdSchema.safeParse(postId);
+    if (!postIdResult.success) {
+      logRequest(req, 400, start, traceId);
+      return NextResponse.json(
+        { error: postIdResult.error.issues[0]?.message ?? '유효하지 않은 ID입니다' },
+        { status: 400 },
+      );
+    }
 
     let body: unknown;
     try {
@@ -41,11 +49,13 @@ export async function POST(
     }
 
     const data = parsed.data;
-    const reporterAnonId = req.headers.get('x-anon-id') || req.headers.get('x-device-id') || 'anonymous';
+    const reporterAnonId = anonIdSchema.parse(
+      req.headers.get('x-anon-id') ?? req.headers.get('x-device-id') ?? 'anonymous',
+    );
 
     const db = await getDbOrThrow();
     const doc: Omit<ReportDoc, '_id'> = {
-      post_id: postId,
+      post_id: postIdResult.data,
       reporter_anon_id: reporterAnonId,
       reason: data.reason,
       detail: data.detail,

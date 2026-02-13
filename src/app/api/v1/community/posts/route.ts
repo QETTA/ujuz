@@ -3,7 +3,7 @@ import { getDbOrThrow } from '@/lib/server/db';
 import { U } from '@/lib/server/collections';
 import { errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
 import { FEATURE_FLAGS } from '@/lib/server/featureFlags';
-import { communityPostSchema, parseBody } from '@/lib/server/validation';
+import { communityPostSchema, communityPostQuerySchema, anonIdSchema, parseBody, parseQuery } from '@/lib/server/validation';
 import type { PostDoc } from '@/lib/server/dbTypes';
 import { ObjectId, type Sort } from 'mongodb';
 
@@ -15,11 +15,13 @@ export async function GET(req: NextRequest) {
 
   try {
     const { searchParams } = new URL(req.url);
-    const region = searchParams.get('region') || '';
-    const type = searchParams.get('type') || 'review';
-    const sort = searchParams.get('sort') || 'recent';
-    const cursor = searchParams.get('cursor') || '';
-    const limit = Math.min(Number(searchParams.get('limit')) || 20, 50);
+    const parsed = parseQuery(communityPostQuerySchema, searchParams);
+    if (!parsed.success) {
+      logRequest(req, 400, start, traceId);
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
+    }
+
+    const { region, type, sort, cursor, limit } = parsed.data;
 
     const db = await getDbOrThrow();
     const col = db.collection<PostDoc>(U.POSTS);
@@ -96,7 +98,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = parsed.data;
-    const anonId = req.headers.get('x-anon-id') || 'anonymous';
+    const anonId = anonIdSchema.parse(req.headers.get('x-anon-id') ?? 'anonymous');
 
     const db = await getDbOrThrow();
     const doc: Omit<PostDoc, '_id'> = {

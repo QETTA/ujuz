@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
 import { errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
 import { getFacilityById } from '@/lib/server/facility/facilityService';
+import { objectIdSchema } from '@/lib/server/validation';
 
 export const runtime = 'nodejs';
 
@@ -14,6 +15,12 @@ export async function GET(
 
   try {
     const { id } = await params;
+    const idResult = objectIdSchema.safeParse(id);
+    if (!idResult.success) {
+      logRequest(req, 400, start, traceId);
+      return NextResponse.json({ error: 'Invalid facility ID' }, { status: 400 });
+    }
+
     const db = await getDbOrThrow();
     const facility = await getFacilityById(db, id);
 
