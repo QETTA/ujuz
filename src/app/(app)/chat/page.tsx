@@ -81,8 +81,15 @@ export default function ChatPage() {
 
         {/* Chat area */}
         <div className="flex flex-1 flex-col">
-          {/* Messages */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+          {/* Messages — role="log" + aria-live for screen readers */}
+          <div
+            ref={scrollRef}
+            role="log"
+            aria-live="polite"
+            aria-busy={isLoading}
+            aria-label="대화 메시지"
+            className="flex-1 overflow-y-auto p-4 space-y-3"
+          >
             {messages.length === 0 ? (
               <EmptyState
                 icon={<ChatBubbleLeftEllipsisIcon className="h-8 w-8" />}
@@ -91,11 +98,17 @@ export default function ChatPage() {
               />
             ) : (
               <>
-                {messages.map((msg) => (
-                  <ChatBubble key={msg.id} message={msg} />
+                {messages.map((msg, i) => (
+                  <div
+                    key={msg.id}
+                    className="animate-message-enter"
+                    style={{ animationDelay: i === messages.length - 1 ? '0ms' : '0ms' }}
+                  >
+                    <ChatBubble message={msg} />
+                  </div>
                 ))}
                 {isLoading && (
-                  <div className="flex justify-start">
+                  <div className="flex justify-start animate-message-enter">
                     <div className="rounded-2xl rounded-bl-sm bg-surface-elevated px-4 py-3">
                       <Spinner size="sm" />
                     </div>

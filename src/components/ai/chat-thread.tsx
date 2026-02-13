@@ -29,9 +29,17 @@ export function ChatThread({ messages, loading }: ChatThreadProps) {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-md py-sm">
+    <div
+      role="log"
+      aria-live="polite"
+      aria-busy={loading}
+      aria-label="대화 메시지"
+      className="flex flex-1 flex-col gap-3 overflow-y-auto px-md py-sm"
+    >
       {messages.map((msg) => (
-        <ChatBubble key={msg.id} message={msg} />
+        <div key={msg.id} className="animate-message-enter">
+          <ChatBubble message={msg} />
+        </div>
       ))}
       {loading && <TypingIndicator />}
       <div ref={bottomRef} />
