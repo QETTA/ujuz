@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useApiFetch } from '@/lib/client/hooks/useApiFetch';
-import { useToAlertStore } from '@/lib/store';
+import { useOnboardingStore, useToAlertStore } from '@/lib/store';
 import { ROUTES } from '@/lib/platform/navigation';
 import { BellIcon, CalculatorIcon } from '@heroicons/react/24/outline';
 import type { AdmissionScoreResultV2 } from '@/lib/types';
@@ -28,8 +28,10 @@ interface FacilityDetail {
 
 export default function FacilityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const child = useOnboardingStore((s) => s.child);
+  const ageBand = child?.ageBand ?? 2;
   const { data: facility, loading } = useApiFetch<FacilityDetail>(`/api/v1/facilities/${id}`);
-  const { data: scoreResult } = useApiFetch<AdmissionScoreResultV2>(`/api/simulate?facility_id=${id}&child_age_band=2`);
+  const { data: scoreResult } = useApiFetch<AdmissionScoreResultV2>(`/api/simulate?facility_id=${id}&child_age_band=${ageBand}`);
   const subscribe = useToAlertStore((s) => s.subscribe);
 
   if (loading || !facility) {
