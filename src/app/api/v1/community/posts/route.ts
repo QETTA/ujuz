@@ -40,6 +40,7 @@ const communityPostSchema = z.object({
   content: z.string().min(1, '내용을 입력해 주세요').max(2000, '내용은 2000자 이내로 입력해 주세요'),
   category: z.enum(COMMUNITY_CATEGORIES),
   region: z.string().min(1, '지역을 입력해 주세요').max(50, '지역은 50자 이내로 입력해 주세요'),
+  anonymous: z.boolean().default(false),
 });
 
 const postQuerySchema = z.object({
@@ -255,17 +256,19 @@ export async function POST(req: NextRequest) {
     const content = applyContentLimits(sanitizePostField(parsedBody.data.content, '내용'), 2000);
     const region = applyContentLimits(sanitizePostField(parsedBody.data.region, '지역'), 50);
     const category = parsedBody.data.category;
+    const isAnonymous = parsedBody.data.anonymous;
 
     const db = await getDbOrThrow();
     const col = db.collection<PostDoc>(U.POSTS);
     const now = new Date();
+    const authorName = isAnonymous ? '익명' : (session.user?.name ?? '익명');
     const doc: Omit<PostDoc, '_id'> = {
       title,
       content,
       category,
       region,
       authorId: session.userId,
-      authorName: session.user?.name ?? '익명',
+      authorName,
       likeCount: 0,
       commentCount: 0,
       reportCount: 0,
@@ -279,7 +282,7 @@ export async function POST(req: NextRequest) {
       updated_at: now,
       structured_fields: {},
       anon_id: session.userId,
-      anon_handle: session.user?.name ?? '익명',
+      anon_handle: authorName,
       score: 0,
       likedBy: [],
     };

@@ -60,6 +60,7 @@ export default function SettingsPage() {
 
   const onSave = () => {
     localStorage.setItem(PREF_KEY, JSON.stringify(settings));
+    // TODO: useToast로 전환 (ToastProvider 필요)
     alert('설정이 저장되었습니다.');
   };
 
@@ -105,82 +106,11 @@ export default function SettingsPage() {
       <main className="space-y-6 p-4">
         <section>
           <h2 className="mb-2 text-sm font-semibold text-text-secondary">알림 설정</h2>
-          <Card className="space-y-4">
-            <label className="flex items-center justify-between">
-              <span>푸시 알림</span>
-              <input
-                type="checkbox"
-                checked={settings.push_notification}
-                onChange={(e) =>
-                  setSettings((prev) => ({
-                    ...prev,
-                    push_notification: e.target.checked,
-                  }))
-                }
-              />
-            </label>
-
-            <label className="flex items-center justify-between">
-              <span>이메일 알림</span>
-              <input
-                type="checkbox"
-                checked={settings.email_notification}
-                onChange={(e) =>
-                  setSettings((prev) => ({
-                    ...prev,
-                    email_notification: e.target.checked,
-                  }))
-                }
-              />
-            </label>
-
-            <label className="flex items-center justify-between">
-              <span>SMS 알림</span>
-              <input
-                type="checkbox"
-                checked={settings.sms_notification}
-                onChange={(e) =>
-                  setSettings((prev) => ({
-                    ...prev,
-                    sms_notification: e.target.checked,
-                  }))
-                }
-              />
-            </label>
-
-            <div className="border-t border-border/40 pt-3">
-              <p className="mb-2 text-sm text-text-secondary">방해금지 시간</p>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                <label className="flex items-center gap-2">
-                  <span className="text-sm">시작</span>
-                  <input
-                    type="time"
-                    value={settings.quiet_start}
-                    onChange={(e) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        quiet_start: e.target.value,
-                      }))
-                    }
-                    className="rounded border border-border bg-surface px-2 py-1"
-                  />
-                </label>
-                <label className="flex items-center gap-2">
-                  <span className="text-sm">종료</span>
-                  <input
-                    type="time"
-                    value={settings.quiet_end}
-                    onChange={(e) =>
-                      setSettings((prev) => ({
-                        ...prev,
-                        quiet_end: e.target.value,
-                      }))
-                    }
-                    className="rounded border border-border bg-surface px-2 py-1"
-                  />
-                </label>
-              </div>
-            </div>
+          <Card className="p-4">
+            <a href="/my/settings/notifications" className="flex items-center justify-between">
+              <span className="text-sm">알림 설정 관리</span>
+              <span className="text-text-tertiary">&rsaquo;</span>
+            </a>
           </Card>
         </section>
 
