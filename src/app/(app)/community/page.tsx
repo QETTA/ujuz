@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/layouts/PageHeader';
 import { PostCard } from '@/components/composites/PostCard';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -34,26 +35,38 @@ interface PostsResponse {
 }
 
 export default function CommunityPage() {
+  const router = useRouter();
   const [postType, setPostType] = useState<'review' | 'to_report' | 'question'>('review');
+  const [cursor, setCursor] = useState<string | undefined>();
+  const [allPosts, setAllPosts] = useState<PostData[]>([]);
 
   const { data, loading } = useApiFetch<PostsResponse>(
-    `/api/v1/community/posts?type=${postType}&limit=20`,
+    `/api/v1/community/posts?type=${postType}&limit=20${cursor ? `&cursor=${cursor}` : ''}`,
   );
 
+  const loadMore = useCallback(() => {
+    if (data?.cursor) {
+      setCursor(data.cursor);
+      if (data.posts) {
+        setAllPosts((prev) => [...prev, ...data.posts]);
+      }
+    }
+  }, [data]);
+
   const { sentinelRef } = useInfiniteScroll({
-    onLoadMore: () => {},
+    onLoadMore: loadMore,
     hasMore: data?.has_more ?? false,
     loading,
   });
 
-  const posts = data?.posts ?? [];
+  const posts = allPosts.length > 0 ? allPosts : (data?.posts ?? []);
 
   return (
     <div className="flex flex-col">
       <PageHeader
         title="커뮤니티"
         rightAction={
-          <Button variant="primary" size="sm">
+          <Button variant="primary" size="sm" onClick={() => router.push('/community/write')}>
             <PencilSquareIcon className="h-4 w-4" />
             글쓰기
           </Button>
@@ -63,7 +76,11 @@ export default function CommunityPage() {
       <div className="p-4">
         <Tabs
           defaultValue="review"
-          onValueChange={(v) => setPostType(v as typeof postType)}
+          onValueChange={(v) => {
+            setPostType(v as typeof postType);
+            setCursor(undefined);
+            setAllPosts([]);
+          }}
         >
           <TabsList>
             <TabsTrigger value="review">후기</TabsTrigger>
