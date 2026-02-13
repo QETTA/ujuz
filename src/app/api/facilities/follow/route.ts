@@ -9,7 +9,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserId, getTraceId, parseJson, logRequest, errorResponse } from '@/lib/server/apiHelpers';
 import { getDbOrThrow } from '@/lib/server/db';
 import { U } from '@/lib/server/collections';
-import { parseBody, facilityFollowSchema } from '@/lib/server/validation';
+import { z } from 'zod';
+
+const facilityFollowBodySchema = z.object({
+  facilityId: z.string().min(1),
+  action: z.enum(['follow', 'unfollow']),
+});
 
 export async function POST(req: NextRequest) {
   const start = Date.now();
@@ -18,29 +23,42 @@ export async function POST(req: NextRequest) {
   try {
     const userId = await getUserId(req);
     const body = await parseJson(req);
-    const parsed = parseBody(facilityFollowSchema, body);
+    const parsed = facilityFollowBodySchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
+      return NextResponse.json(
+        { error: 'VALIDATION_ERROR', message: parsed.error.message },
+        { status: 400 },
+      );
     }
 
     const db = await getDbOrThrow();
     const now = new Date();
 
-    await db.collection(U.USER_MEMORIES).updateOne(
-      { userId, memoryKey: `follow_${parsed.data.facility_id}`, tags: 'followed_facility' },
-      {
-        $set: {
-          value: JSON.stringify(parsed.data),
-          isActive: true,
-          updatedAt: now,
+    if (parsed.data.action === 'follow') {
+      await db.collection(U.USER_MEMORIES).updateOne(
+        { userId, memoryKey: `follow_${parsed.data.facilityId}`, tags: 'followed_facility' },
+        {
+          $set: {
+            value: JSON.stringify({ facilityId: parsed.data.facilityId }),
+            isActive: true,
+            updatedAt: now,
+          },
+          $setOnInsert: { createdAt: now },
         },
-        $setOnInsert: { createdAt: now },
-      },
-      { upsert: true },
+        { upsert: true },
+      );
+
+      logRequest(req, 200, start, traceId);
+      return NextResponse.json({ followed: true, facility_id: parsed.data.facilityId });
+    }
+
+    await db.collection(U.USER_MEMORIES).updateOne(
+      { userId, memoryKey: `follow_${parsed.data.facilityId}`, tags: 'followed_facility' },
+      { $set: { isActive: false, updatedAt: now } },
     );
 
     logRequest(req, 200, start, traceId);
-    return NextResponse.json({ followed: true, facility_id: parsed.data.facility_id });
+    return NextResponse.json({ unfollowed: true, facility_id: parsed.data.facilityId });
   } catch (error) {
     logRequest(req, 500, start, traceId);
     return errorResponse(error, traceId);
