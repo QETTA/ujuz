@@ -23,7 +23,7 @@ export function TopBar({ title, showBack = false, onBack, action, transparent = 
         'sticky top-0 z-sticky flex h-14 items-center gap-3 px-md',
         transparent
           ? 'bg-transparent'
-          : 'glass border-b border-border-subtle',
+          : 'glass glass-text border-b border-border-subtle',
       )}
     >
       {showBack && (

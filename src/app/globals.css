@@ -221,9 +221,18 @@ body {
 
 /* Utilities */
 .glass {
+  position: relative;
   background: var(--color-surface-glass);
   backdrop-filter: blur(12px) saturate(1.5);
   -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  box-shadow:
+    var(--shadow-sm),
+    inset 0 1px 0 0 oklch(1 0 0 / 0.1);
+}
+
+/* Ensure text on glass surfaces meets 4.5:1 contrast ratio */
+.glass-text {
+  text-shadow: 0 0 8px var(--color-surface);
 }
 
 @media (prefers-reduced-transparency) {
