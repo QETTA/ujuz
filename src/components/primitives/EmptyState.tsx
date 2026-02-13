@@ -11,17 +11,26 @@ export interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
   return (
-    <div className={cn('flex flex-col items-center justify-center py-12 px-6 text-center', className)}>
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center px-6 py-12 text-center animate-in fade-in-0 duration-300 motion-reduce:animate-none',
+        className,
+      )}
+    >
       {icon && (
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-surface-inset text-text-tertiary">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-surface-inset text-text-tertiary animate-bounce [animation-duration:2.2s] motion-reduce:animate-none">
           {icon}
         </div>
       )}
-      <h3 className="text-base font-semibold text-text-primary">{title}</h3>
+      <h3 className="text-lg font-semibold text-text-primary">{title}</h3>
       {description && (
-        <p className="mt-1 text-sm text-text-secondary max-w-xs">{description}</p>
+        <p className="mt-1 max-w-xs text-sm text-muted-foreground">{description}</p>
       )}
-      {action && <div className="mt-4">{action}</div>}
+      {action && (
+        <div className="mt-4 inline-flex transition-transform duration-150 hover:scale-105 motion-reduce:transform-none motion-reduce:hover:scale-100">
+          {action}
+        </div>
+      )}
     </div>
   );
 }
