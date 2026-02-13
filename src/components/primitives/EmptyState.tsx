@@ -24,7 +24,7 @@ export function EmptyState({ icon, title, description, action, className }: Empt
       )}
       <h3 className="text-lg font-semibold text-text-primary">{title}</h3>
       {description && (
-        <p className="mt-1 max-w-xs text-sm text-muted-foreground">{description}</p>
+        <p className="mt-1 max-w-xs text-sm text-text-tertiary">{description}</p>
       )}
       {action && (
         <div className="mt-4 inline-flex transition-transform duration-150 hover:scale-105 motion-reduce:transform-none motion-reduce:hover:scale-100">

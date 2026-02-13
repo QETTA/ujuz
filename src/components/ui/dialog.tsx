@@ -77,8 +77,8 @@ export function Dialog({ open, onClose, children, className }: DialogProps) {
       className={cn(
         'fixed inset-0 z-modal m-auto max-h-[85dvh] w-[calc(100%-2rem)] max-w-md',
         'rounded-xl border border-border bg-surface p-0 shadow-lg',
-        'backdrop:bg-black/40 backdrop:backdrop-blur-sm backdrop:transition-opacity backdrop:duration-200 backdrop:ease-out',
-        'data-[state=open]:backdrop:opacity-100 data-[state=closed]:backdrop:opacity-0',
+        '[&::backdrop]:bg-black/40 [&::backdrop]:backdrop-blur-sm [&::backdrop]:transition-opacity [&::backdrop]:duration-200 [&::backdrop]:ease-out',
+        'data-[state=open]:[&::backdrop]:opacity-100 data-[state=closed]:[&::backdrop]:opacity-0',
         'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom sm:data-[state=open]:zoom-in-95',
         'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
         'duration-200 ease-out',
