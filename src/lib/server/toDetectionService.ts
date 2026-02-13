@@ -13,6 +13,7 @@ import { logger } from './logger';
 import type { TOAlertDoc, TOSubscriptionDoc, WaitlistSnapshotDoc } from './dbTypes';
 import { sendToAlertEmails } from './emailService';
 import { sendToAlertPush } from './pushService';
+import { sendToAlertSms } from './smsService';
 
 export interface DetectionResult {
   scanned: number;
@@ -187,6 +188,33 @@ async function persistAndNotify(
           error: err instanceof Error ? err.message : String(err),
           userId: alert.user_id,
           facilityId: alert.facility_id,
+        });
+      }
+    }
+  }
+
+  // Send SMS for premium users who opted in
+  if (FEATURE_FLAGS.smsNotification && persistedAlerts.length > 0) {
+    for (const alert of persistedAlerts) {
+      try {
+        // Look up subscription preferences for SMS
+        const toSub = await db.collection(U.TO_SUBSCRIPTIONS).findOne({
+          user_id: alert.user_id,
+          facility_id: alert.facility_id,
+          is_active: true,
+        });
+        if (toSub?.notification_preferences?.sms) {
+          // Look up user phone from user profile
+          const user = await db.collection(U.USERS).findOne({ user_id: alert.user_id });
+          const phone = (user as Record<string, unknown> | null)?.phone as string | undefined;
+          if (phone) {
+            await sendToAlertSms(db, alert.user_id, phone, alert.facility_name, alert.age_class, alert.estimated_slots);
+          }
+        }
+      } catch (err) {
+        logger.error(`${logPrefix}: SMS send failed`, {
+          error: err instanceof Error ? err.message : String(err),
+          userId: alert.user_id,
         });
       }
     }

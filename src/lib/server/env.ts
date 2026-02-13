@@ -45,6 +45,15 @@ const envSchema = z.object({
 
   // ── Cron ───────────────────────────────────────────
   CRON_SECRET: z.string().default(''),
+
+  // ── Toss Payments ────────────────────────────────
+  TOSS_PAYMENTS_SECRET_KEY: z.string().default(''),
+
+  // ── NCP SMS ──────────────────────────────────────
+  NCP_ACCESS_KEY: z.string().default(''),
+  NCP_SECRET_KEY: z.string().default(''),
+  NCP_SMS_SERVICE_ID: z.string().default(''),
+  NCP_SMS_FROM: z.string().default(''),
 });
 
 function parseEnv() {

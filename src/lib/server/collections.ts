@@ -30,6 +30,11 @@ export const U = {
   // ── Community ──────────────────────────────────────────
   COMMENTS: 'comments',
 
+  // ── Payments & SMS ───────────────────────────────────
+  PAYMENTS: 'payments',
+  REFUND_REQUESTS: 'refund_requests',
+  SMS_DELIVERY_LOG: 'sms_delivery_log',
+
   // ── Facility Pipeline ──────────────────────────────────
   FACILITIES: 'facilities',
   FACILITY_SOURCES: 'facility_sources',

@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/detect-to",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/push-receipts",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

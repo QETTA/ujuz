@@ -12,7 +12,10 @@ export const FEATURE_FLAGS = {
   toDetection: true,
   toEmailNotification: false,
   toPushNotification: true,
+  smsNotification: false,
+  tossPayment: true,
   nativeMap: true,
+  contentFilter: true,
 } as const;
 
 export type FeatureFlag = keyof typeof FEATURE_FLAGS;

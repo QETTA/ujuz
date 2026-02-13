@@ -109,6 +109,11 @@ export interface UserSubscriptionDoc {
   botQueriesToday?: number;
   last_reset: Date;
   lastReset?: Date;
+  cancel_at_period_end?: boolean;
+  cancel_reason?: string;
+  cancel_requested_at?: Date;
+  grace_period_end?: Date;
+  cancelled_at?: Date;
   created_at: Date;
   createdAt?: Date;
 }

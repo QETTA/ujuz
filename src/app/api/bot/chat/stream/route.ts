@@ -24,6 +24,9 @@ import { extractMemoriesFromMessage } from '@/lib/server/memoryExtractor';
 import { upsertMemory } from '@/lib/server/userMemoryService';
 import type { ConversationDoc, DataBlockDoc, BotMessageDoc } from '@/lib/server/dbTypes';
 import type { BotContext, BotDataBlock, ConversationHistoryMessage } from '@/lib/server/botTypes';
+import { sanitizeInput, checkOutput, isOffTopic, offTopicResponse } from '@/lib/server/contentFilter';
+import { FEATURE_FLAGS } from '@/lib/server/featureFlags';
+import { checkLimit, incrementFeatureUsage, type CheckLimitResult } from '@/lib/server/subscriptionService';
 
 export const runtime = 'nodejs';
 
@@ -263,6 +266,35 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // ── Content Filter: input sanitization ────────────
+    if (FEATURE_FLAGS.contentFilter) {
+      const inputCheck = sanitizeInput(userText);
+      if (!inputCheck.safe) {
+        logRequest(req, 400, start, traceId);
+        return new Response(JSON.stringify({ error: '요청을 처리할 수 없습니다', code: 'input_blocked' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // ── Content Filter: off-topic detection ───────────
+    if (FEATURE_FLAGS.contentFilter && isOffTopic(userText)) {
+      const offTopic = offTopicResponse();
+      const convId = await saveAfterResponse(userId, body.conversation_id, userText, offTopic, 'OFF_TOPIC', []);
+      logRequest(req, 200, start, traceId);
+      return createNonStreamingResponse(offTopic, convId, []);
+    }
+
+    // ── Usage gating: check explain limit ─────────────
+    const limitResult: CheckLimitResult = await checkLimit(userId, 'explain');
+    if (!limitResult.allowed) {
+      const limitMsg = '오늘의 AI 상담 이용 한도에 도달했습니다. 내일 다시 이용하시거나 구독을 업그레이드해 주세요.';
+      const convId = await saveAfterResponse(userId, body.conversation_id, userText, limitMsg, 'LIMIT_EXCEEDED', []);
+      logRequest(req, 200, start, traceId);
+      return createNonStreamingResponse(limitMsg, convId, []);
+    }
+
     const intent = classifyIntent(userText);
     const conversationId = body.conversation_id;
     const history = await loadConversationHistory(conversationId);
@@ -366,6 +398,14 @@ export async function POST(req: NextRequest) {
                 created_at: new Date().toISOString(),
               };
               await appendAssistantMessage(streamConvId, assistantMsg);
+
+              // Increment usage counter
+              await incrementFeatureUsage(userId, 'explain');
+
+              // Output sanitization
+              if (FEATURE_FLAGS.contentFilter) {
+                checkOutput(finalText); // log-only; text already streamed
+              }
 
               // Memory extraction (fire-and-forget)
               if (env.MEMORY_ENABLED) {
