@@ -23,8 +23,33 @@
 - **Metadata flow**: Server sends `message-metadata` SSE chunk → client captures via `onFinish` callback → syncs to Zustand store
 - **Non-streaming fallback**: Admission V2, API key missing → `createNonStreamingResponse`
 
+## Codex 협업 워크플로우
+
+대규모 개선 작업 시 **Codex CLI + Opus 분업** 패턴을 기본으로 사용한다.
+
+### 분업 원칙
+- **Codex (70%)**: 반복적·기계적 태스크 — CSS fallback, 컴포넌트 마크업, 데이터 바인딩, 스타일 변환 등
+- **Opus (30%)**: 아키텍처·상태관리·스트리밍 등 설계 판단이 필요한 고난도 태스크
+
+### 실행 방법
+1. Opus가 전체 개선 항목을 평가하고 태스크를 분류
+2. Codex 태스크를 `CODEX-TASKS.md`에 자기완결형 프롬프트로 작성 (파일 경로, 변경 전/후, 검증 조건 포함)
+3. Codex CLI 실행: `codex exec --sandbox workspace-write "$(cat CODEX-TASKS.md)"`
+4. Opus 태스크는 직접 구현
+5. 양쪽 완료 후 `pnpm typecheck` → push
+
+### Codex 태스크 작성 규칙
+- 각 태스크에 **수정 파일 경로**, **변경 전 코드**, **변경 후 코드** 명시
+- 한 태스크 = 한 커밋 단위로 독립 실행 가능하게 구성
+- `[CODEX-N]` 접두사로 커밋 메시지 통일
+
+### 주의사항
+- Codex는 래퍼 패턴보다 직접 구현을 선호함 — 래퍼 vs 직접 구현 충돌 시 사전에 방침 결정
+- `approval_policy="full-auto"`는 미지원, `--sandbox workspace-write` 필수
+
 ## Commands
 
 - `pnpm typecheck` — TypeScript type check
 - `pnpm dev` — Start dev server (port 3001)
 - `pnpm test` — Run tests
+- `codex exec --sandbox workspace-write "$(cat CODEX-TASKS.md)"` — Codex CLI 배치 실행
