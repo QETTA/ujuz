@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { formatRelativeTime } from '@/lib/utils';
+import { DataBlockCard } from '@/components/ai/data-block-card';
 import type { UIMessage } from 'ai';
 
 interface DataBlock {
@@ -49,19 +50,15 @@ export function ChatBubble({ message, className }: ChatBubbleProps) {
         {message.data_blocks && message.data_blocks.length > 0 && (
           <div className="mt-2 space-y-2">
             {message.data_blocks.map((block, i) => (
-              <div
+              <DataBlockCard
                 key={`${block.type}-${i}`}
-                className={cn(
-                  'rounded-lg p-3 text-xs',
-                  isUser ? 'bg-brand-600/50' : 'bg-surface-inset',
-                )}
-              >
-                <p className="font-medium">{block.title}</p>
-                <p className="mt-1 opacity-80">{block.content}</p>
-                {block.source && (
-                  <p className="mt-1 text-[10px] opacity-60">출처: {block.source}</p>
-                )}
-              </div>
+                type={block.type}
+                title={block.title}
+                content={block.content}
+                confidence={block.confidence}
+                source={block.source}
+                className={isUser ? 'border-brand-400/30 bg-brand-600/20' : undefined}
+              />
             ))}
           </div>
         )}
