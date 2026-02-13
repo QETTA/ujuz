@@ -38,7 +38,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             className={cn(
               'h-10 w-full rounded-lg border bg-surface px-3 text-sm text-text-primary',
               'placeholder:text-text-tertiary',
-              'transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none',
+              'transition-colors duration-200 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none',
               'disabled:opacity-50 disabled:cursor-not-allowed',
               error ? 'border-danger' : 'border-border',
               leftIcon && 'pl-10',
