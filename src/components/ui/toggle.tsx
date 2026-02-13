@@ -16,7 +16,7 @@ const sizeStyles = {
 };
 
 export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
-  ({ pressed = false, onPressedChange, size = 'md', className, children, ...props }, ref) => {
+  ({ pressed = false, onPressedChange, size = 'md', className, children, onClick, ...props }, ref) => {
     return (
       <button
         ref={ref}
@@ -24,14 +24,16 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
         role="switch"
         aria-checked={pressed}
         data-state={pressed ? 'on' : 'off'}
-        onClick={() => onPressedChange?.(!pressed)}
+        onClick={(event) => {
+          onClick?.(event);
+          if (event.defaultPrevented) return;
+          onPressedChange?.(!pressed);
+        }}
         className={cn(
-          'inline-flex items-center justify-center rounded-lg font-medium transition-colors',
-          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
-          'disabled:pointer-events-none disabled:opacity-50',
-          pressed
-            ? 'bg-brand-500/10 text-brand-600 border border-brand-500/30'
-            : 'bg-transparent text-text-secondary border border-border hover:bg-surface-inset',
+          'inline-flex items-center justify-center rounded-lg border font-medium transition-all duration-200 active:scale-95',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
+          'bg-transparent text-text-secondary border-border hover:bg-surface-inset data-[state=on]:bg-brand-500/10 data-[state=on]:text-brand-600 data-[state=on]:border-brand-500/30',
           sizeStyles[size],
           className,
         )}
