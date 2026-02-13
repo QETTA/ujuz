@@ -1,10 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useChat as useAIChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import type { UIMessage } from 'ai';
-import { z } from 'zod';
 import { useChatStore } from '@/lib/store';
 import { getDeviceId } from '@/lib/api';
 
@@ -18,18 +17,26 @@ function getTextContent(msg: UIMessage): string {
     .join('');
 }
 
-// Schema for message-metadata sent by the server
-const chatMetadataSchema = z.object({
-  conversation_id: z.string().optional(),
-  suggestions: z.array(z.string()).optional(),
-});
+interface ChatMetadata {
+  conversation_id?: string;
+  suggestions?: string[];
+}
 
-type ChatMetadata = z.infer<typeof chatMetadataSchema>;
-type ChatUIMessage = UIMessage<ChatMetadata>;
+/** Runtime type guard — avoids unsafe `as` cast on AI SDK metadata. */
+function isChatMetadata(v: unknown): v is ChatMetadata {
+  if (!v || typeof v !== 'object') return false;
+  const obj = v as Record<string, unknown>;
+  if ('conversation_id' in obj && typeof obj.conversation_id !== 'string') return false;
+  if ('suggestions' in obj && !Array.isArray(obj.suggestions)) return false;
+  return 'conversation_id' in obj || 'suggestions' in obj;
+}
 
 export function useChat() {
-  // Track current conversationId for dynamic body
+  // Track current conversationId for dynamic transport body
   const currentConvIdRef = useRef<string | null>(null);
+
+  // Suggestions from the latest assistant response (UI-only, no persistence)
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   const chatTransport = useMemo(
     () =>
@@ -44,9 +51,22 @@ export function useChat() {
     [],
   );
 
-  const aiChat = useAIChat<ChatUIMessage>({
+  const aiChat = useAIChat({
     transport: chatTransport,
-    messageMetadataSchema: chatMetadataSchema,
+    onFinish: ({ message }) => {
+      if (!isChatMetadata(message.metadata)) return;
+      const meta = message.metadata;
+
+      // Sync conversation_id directly to Zustand (single source of truth)
+      if (meta.conversation_id) {
+        useChatStore.setState({ conversationId: meta.conversation_id });
+        useChatStore.getState().loadConversations();
+      }
+
+      if (meta.suggestions) {
+        setSuggestions(meta.suggestions);
+      }
+    },
   });
 
   // Conversation CRUD from Zustand store
@@ -55,41 +75,27 @@ export function useChat() {
   const storeLoadConversation = useChatStore((s) => s.loadConversation);
   const deleteConversation = useChatStore((s) => s.deleteConversation);
 
-  // Extract conversation_id and suggestions from the last assistant message metadata
-  const lastAssistant = [...aiChat.messages].reverse().find((m) => m.role === 'assistant');
-  const metaConversationId = (lastAssistant?.metadata as ChatMetadata | undefined)?.conversation_id ?? null;
-  const suggestions = (lastAssistant?.metadata as ChatMetadata | undefined)?.suggestions ?? [];
+  // Single source of truth: Zustand selector (reactive subscription)
+  const conversationId = useChatStore((s) => s.conversationId);
 
-  // Derive effective conversationId: metadata from stream takes priority
-  const storeConversationId = useChatStore.getState().conversationId;
-  const conversationId = metaConversationId ?? storeConversationId;
-
-  // Keep ref in sync for dynamic body
-  currentConvIdRef.current = conversationId;
-
-  // Sync conversation_id to Zustand store (for sidebar refresh)
+  // Keep ref in sync for dynamic body (useEffect for concurrent mode safety)
   useEffect(() => {
-    if (metaConversationId && metaConversationId !== useChatStore.getState().conversationId) {
-      useChatStore.setState({ conversationId: metaConversationId });
-      // Refresh conversations list so sidebar shows the new conversation
-      useChatStore.getState().loadConversations();
-    }
-  }, [metaConversationId]);
+    currentConvIdRef.current = conversationId;
+  }, [conversationId]);
 
   // Load a past conversation: fetch from Zustand then inject into AI SDK
   const loadConversation = useCallback(
     async (id: string) => {
       await storeLoadConversation(id);
       const storeMessages = useChatStore.getState().messages;
-      // Convert BotMessage[] → UIMessage[]
-      const aiMessages: ChatUIMessage[] = storeMessages.map((m) => ({
+      const aiMessages: UIMessage[] = storeMessages.map((m) => ({
         id: m.id,
         role: m.role as 'user' | 'assistant',
         parts: [{ type: 'text' as const, text: m.content }],
       }));
       aiChat.setMessages(aiMessages);
-      // Set the conversationId ref so subsequent messages go to same conversation
       currentConvIdRef.current = id;
+      setSuggestions([]);
     },
     [storeLoadConversation, aiChat],
   );
@@ -97,12 +103,14 @@ export function useChat() {
   const clear = useCallback(() => {
     aiChat.setMessages([]);
     currentConvIdRef.current = null;
+    setSuggestions([]);
     useChatStore.setState({ conversationId: null });
   }, [aiChat]);
 
   // Send a text message (compatible with ChatInput's onSend)
   const send = useCallback(
     (text: string) => {
+      setSuggestions([]); // Clear stale suggestions from previous response
       aiChat.sendMessage({ text });
     },
     [aiChat],
@@ -123,7 +131,6 @@ export function useChat() {
     loadConversations,
     conversations,
     deleteConversation,
-    // Expose for components that need text content from UIMessage
     getTextContent,
   }), [
     aiChat.messages,

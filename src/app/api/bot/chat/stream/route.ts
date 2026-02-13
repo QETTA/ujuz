@@ -29,6 +29,7 @@ export const runtime = 'nodejs';
 
 const MAX_DATA_BLOCKS = 5;
 const MAX_CONVERSATION_HISTORY = 10;
+const STREAM_FINISH_TIMEOUT_MS = 30_000;
 
 // ── Helpers ──────────────────────────────────────────────
 
@@ -93,6 +94,8 @@ async function loadConversationHistory(conversationId?: string): Promise<Convers
   }
 }
 
+// ── Persistence: atomic save (non-streaming) ─────────────
+
 async function saveConversationMessages(params: {
   userId: string;
   conversationId?: string;
@@ -124,6 +127,54 @@ async function saveConversationMessages(params: {
     updated_at: now,
   });
   return newId.toString();
+}
+
+// ── Persistence: split save (streaming — prevents data loss on tab close) ──
+
+async function saveUserMessage(params: {
+  userId: string;
+  conversationId?: string;
+  userMessage: BotMessageDoc;
+  titleSeed: string;
+}): Promise<string> {
+  const db = await getDbOrThrow();
+
+  if (params.conversationId && isValidObjectId(params.conversationId)) {
+    await db.collection<ConversationDoc>(U.CONVERSATIONS).updateOne(
+      { _id: new ObjectId(params.conversationId) },
+      {
+        $push: { messages: params.userMessage },
+        $set: { updated_at: new Date() },
+      },
+    );
+    return params.conversationId;
+  }
+
+  const newId = new ObjectId();
+  const now = new Date();
+  await db.collection<ConversationDoc>(U.CONVERSATIONS).insertOne({
+    _id: newId,
+    user_id: params.userId,
+    title: params.titleSeed.slice(0, 50),
+    messages: [params.userMessage],
+    created_at: now,
+    updated_at: now,
+  });
+  return newId.toString();
+}
+
+async function appendAssistantMessage(
+  conversationId: string,
+  assistantMessage: BotMessageDoc,
+): Promise<void> {
+  const db = await getDbOrThrow();
+  await db.collection<ConversationDoc>(U.CONVERSATIONS).updateOne(
+    { _id: new ObjectId(conversationId) },
+    {
+      $push: { messages: assistantMessage },
+      $set: { updated_at: new Date() },
+    },
+  );
 }
 
 async function extractAndSaveMemories(userId: string, message: string): Promise<void> {
@@ -226,15 +277,22 @@ export async function POST(req: NextRequest) {
     // ── Admission V2 fallback (non-streaming) ────────────
     if (!claudeParams) {
       let content: string;
-      try {
-        const admissionResult = await calculateAdmissionScoreV2({
-          facility_id: body.context!.facility_id!,
-          child_age_band: body.context!.child_age_band!,
-          waiting_position: body.context?.waiting_position,
-          priority_type: body.context?.priority_type ?? 'general',
-        });
-        content = formatBotResponseV2(admissionResult);
-      } catch {
+      const facilityId = body.context?.facility_id;
+      const childAgeBand = body.context?.child_age_band;
+
+      if (facilityId && childAgeBand) {
+        try {
+          const admissionResult = await calculateAdmissionScoreV2({
+            facility_id: facilityId,
+            child_age_band: childAgeBand,
+            waiting_position: body.context?.waiting_position,
+            priority_type: body.context?.priority_type ?? 'general',
+          });
+          content = formatBotResponseV2(admissionResult);
+        } catch {
+          content = generateFallback(intent, dataBlocks);
+        }
+      } else {
         content = generateFallback(intent, dataBlocks);
       }
 
@@ -254,6 +312,21 @@ export async function POST(req: NextRequest) {
 
     // ── Streaming path ───────────────────────────────────
     const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY });
+
+    // Save user message before streaming (prevents data loss on tab close)
+    const userMsg: BotMessageDoc = {
+      id: new ObjectId().toString(),
+      role: 'user',
+      content: userText,
+      intent,
+      created_at: new Date().toISOString(),
+    };
+    const streamConvId = await saveUserMessage({
+      userId,
+      conversationId,
+      userMessage: userMsg,
+      titleSeed: userText,
+    });
 
     const stream = createUIMessageStream({
       execute: async ({ writer }) => {
@@ -281,14 +354,16 @@ export async function POST(req: NextRequest) {
                 usage.outputTokens ?? 0,
               );
 
-              // Save conversation → get conversation_id
-              const convId = await saveAfterResponse(userId, conversationId, userText, text, intent, dataBlocks);
-
-              // Send metadata to client
-              writer.write({
-                type: 'message-metadata',
-                messageMetadata: { conversation_id: convId, suggestions },
-              });
+              // Append assistant message to existing conversation
+              const assistantMsg: BotMessageDoc = {
+                id: new ObjectId().toString(),
+                role: 'assistant',
+                content: text,
+                intent,
+                data_blocks: dataBlocks,
+                created_at: new Date().toISOString(),
+              };
+              await appendAssistantMessage(streamConvId, assistantMsg);
 
               // Memory extraction (fire-and-forget)
               if (env.MEMORY_ENABLED) {
@@ -297,13 +372,20 @@ export async function POST(req: NextRequest) {
             } catch (err) {
               logger.error('Stream onFinish failed', { error: err instanceof Error ? err.message : String(err) });
             } finally {
+              // Always send metadata (suggestions are independent of save success)
+              const metadata = { conversation_id: streamConvId, suggestions };
+              logger.info('Stream metadata', { convId: streamConvId, suggestionsCount: suggestions.length });
+              writer.write({ type: 'message-metadata', messageMetadata: metadata });
               resolveOnFinish!();
             }
           },
         });
 
         writer.merge(result.toUIMessageStream());
-        await onFinishPromise;
+
+        // Guard against onFinish hanging (e.g. MongoDB timeout)
+        const timeout = new Promise<void>((resolve) => setTimeout(resolve, STREAM_FINISH_TIMEOUT_MS));
+        await Promise.race([onFinishPromise, timeout]);
       },
     });
 
