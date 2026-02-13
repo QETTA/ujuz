@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PageHeader } from '@/components/layouts/PageHeader';
 import { ChatBubble } from '@/components/composites/ChatBubble';
 import { ChatInput } from '@/components/composites/ChatInput';
@@ -8,9 +8,11 @@ import { ConversationListItem } from '@/components/composites/ConversationListIt
 import { EmptyState } from '@/components/primitives/EmptyState';
 import { Spinner } from '@/components/primitives/Spinner';
 import { useChat } from '@/lib/client/hooks/useChat';
-import { ChatBubbleLeftEllipsisIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, ChatBubbleLeftEllipsisIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 export default function ChatPage() {
+  const [showMobileList, setShowMobileList] = useState(false);
+
   const {
     messages,
     conversations,
@@ -42,17 +44,73 @@ export default function ChatPage() {
       <PageHeader
         title="AI 상담"
         rightAction={
-          conversationId ? (
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={clear}
-              className="text-xs text-brand-600 hover:underline"
+              onClick={() => setShowMobileList(true)}
+              className="text-text-secondary hover:text-text-primary lg:hidden"
+              aria-label="대화 목록"
             >
-              새 대화
+              <Bars3Icon className="h-5 w-5" />
             </button>
-          ) : undefined
+            {conversationId && (
+              <button
+                type="button"
+                onClick={clear}
+                className="text-xs text-brand-600 hover:underline"
+              >
+                새 대화
+              </button>
+            )}
+          </div>
         }
       />
+
+      {/* Mobile conversation list overlay */}
+      {showMobileList && (
+        <div className="fixed inset-0 z-overlay lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowMobileList(false)}
+          />
+          <aside className="absolute inset-y-0 left-0 w-72 bg-surface border-r border-border overflow-y-auto shadow-lg">
+            <div className="flex items-center justify-between p-3">
+              <button
+                type="button"
+                onClick={() => {
+                  clear();
+                  setShowMobileList(false);
+                }}
+                className="flex-1 rounded-lg bg-brand-500 py-2 text-sm font-medium text-text-inverse hover:bg-brand-600 transition-colors"
+              >
+                새 대화 시작
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowMobileList(false)}
+                className="ml-2 p-1.5 text-text-tertiary hover:text-text-primary"
+                aria-label="닫기"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="space-y-0.5 px-2">
+              {conversations.map((conv) => (
+                <ConversationListItem
+                  key={conv.id}
+                  conversation={conv}
+                  isActive={conv.id === conversationId}
+                  onSelect={() => {
+                    loadConversation(conv.id);
+                    setShowMobileList(false);
+                  }}
+                  onDelete={() => deleteConversation(conv.id)}
+                />
+              ))}
+            </div>
+          </aside>
+        </div>
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar: conversation list (desktop only) */}
