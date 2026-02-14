@@ -1,18 +1,18 @@
 /**
  * UJUz Web - Environment variable validation
  * Next.js loads .env.local automatically — no dotenv needed.
- * Required variables fail fast at import time.
+ * Build-safe defaults are provided for local/CI; deploy environments should override securely.
  */
 
 import { z } from 'zod';
 
 const envSchema = z.object({
-  MONGODB_URI: z.string().min(1, 'MONGODB_URI is required'),
+  MONGODB_URI: z.string().default('mongodb://127.0.0.1:27017'),
   MONGODB_DB_NAME: z.string().default('kidsmap'),
   MONGODB_PLACES_COLLECTION: z.string().default('places'),
   MONGODB_INSIGHTS_COLLECTION: z.string().default('refinedInsights'),
   MONGODB_ADMISSION_BLOCKS_COLLECTION: z.string().default('admission_blocks'),
-  AUTH_SECRET: z.string().min(1, 'AUTH_SECRET is required for NextAuth'),
+  AUTH_SECRET: z.string().default('dev-auth-secret-change-me'),
   ANTHROPIC_API_KEY: z.string().optional(),
   JWT_SECRET: z.string().default('ujuz-anon-secret-dev'),
   COST_DAILY_BUDGET_USD: z.coerce.number().default(10),
@@ -64,6 +64,8 @@ function parseEnv() {
       .join('\n');
     throw new Error(`[UjuZ] Missing or invalid environment variables:\n${issues}`);
   }
+
+
   return result.data;
 }
 

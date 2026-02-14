@@ -1,6 +1,8 @@
 'use client';
 
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+export const dynamic = 'force-dynamic';
+
+import { Suspense, type FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { TopBar } from '@/components/nav/top-bar';
 import { Button } from '@/components/ui/button';
@@ -33,7 +35,7 @@ function trackEvent(event: string, payload: AnalyticsParams = {}) {
   }
 }
 
-export default function ConsultBookingPage() {
+function ConsultBookingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -227,5 +229,14 @@ export default function ConsultBookingPage() {
         )}
       </main>
     </div>
+  );
+}
+
+
+export default function ConsultBookingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-surface" />}>
+      <ConsultBookingPageContent />
+    </Suspense>
   );
 }

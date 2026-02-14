@@ -1,6 +1,8 @@
 'use client';
 
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+export const dynamic = 'force-dynamic';
+
+import { Suspense, type FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { TopBar } from '@/components/nav/top-bar';
 import { Button } from '@/components/ui/button';
@@ -82,7 +84,7 @@ function toErrorMessage(error: unknown): string {
   return '제출 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.';
 }
 
-export default function ConsultIntakePage() {
+function ConsultIntakePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryPackageId = searchParams.get('package_id');
@@ -317,5 +319,14 @@ export default function ConsultIntakePage() {
         </form>
       </main>
     </div>
+  );
+}
+
+
+export default function ConsultIntakePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-surface" />}>
+      <ConsultIntakePageContent />
+    </Suspense>
   );
 }

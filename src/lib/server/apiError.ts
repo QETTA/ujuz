@@ -1,12 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export interface ApiErrorBody {
-  error: {
-    code: string;
-    message: string;
-    details?: unknown;
-  };
-}
+import type { ApiErrorBody } from '../shared/appError';
 
 export function apiError(
   message: string,
