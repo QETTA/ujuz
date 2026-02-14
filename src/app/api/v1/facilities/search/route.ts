@@ -3,8 +3,14 @@ import { getDbOrThrow } from '@/lib/server/db';
 import { U } from '@/lib/server/collections';
 import { getTraceId, logRequest } from '@/lib/server/apiHelpers';
 import { logger } from '@/lib/server/logger';
+import { checkRateLimit } from '@/lib/server/rateLimit';
+import { getCacheValue, setCacheValue } from '@/lib/server/cache';
 
 export const runtime = 'nodejs';
+
+const SEARCH_CACHE_TTL_SECONDS = 30;
+const RATE_LIMIT_MAX_REQUESTS = 100;
+const RATE_LIMIT_WINDOW_MS = 60_000;
 
 type FacilitySearchResult = {
   id: string;
@@ -67,12 +73,40 @@ function parseBoolean(value: string | null, key: string): boolean | undefined {
   return value === 'true';
 }
 
+function getClientIp(req: NextRequest): string {
+  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || req.headers.get('x-real-ip')
+    || 'anonymous';
+}
+
 export async function GET(req: NextRequest) {
   const startMs = Date.now();
   const traceId = getTraceId(req);
 
   try {
+    const clientIp = getClientIp(req);
+    const { allowed } = await checkRateLimit(
+      `facilities-search:${clientIp}`,
+      RATE_LIMIT_MAX_REQUESTS,
+      RATE_LIMIT_WINDOW_MS,
+    );
+    if (!allowed) {
+      logRequest(req, 429, startMs, traceId);
+      return NextResponse.json(
+        { error: 'Too many requests', code: 'rate_limited' },
+        { status: 429 },
+      );
+    }
+
     const { searchParams } = new URL(req.url);
+
+    // Check cache for identical query string
+    const cacheKey = `facilities:search:${searchParams.toString()}`;
+    const cached = getCacheValue<unknown>(cacheKey);
+    if (cached) {
+      logRequest(req, 200, startMs, traceId);
+      return NextResponse.json(cached);
+    }
 
     const q = searchParams.get('q');
     const region = searchParams.get('region');
@@ -224,6 +258,8 @@ export async function GET(req: NextRequest) {
       limit,
       offset,
     };
+
+    setCacheValue(cacheKey, response, SEARCH_CACHE_TTL_SECONDS);
 
     logRequest(req, 200, startMs, traceId);
     return NextResponse.json(response);

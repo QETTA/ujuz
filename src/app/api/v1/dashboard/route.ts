@@ -3,6 +3,9 @@ import { getDbOrThrow } from '@/lib/server/db';
 import { U } from '@/lib/server/collections';
 import { getUserId, errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
 import { errors } from '@/lib/server/apiError';
+import { getCacheValue, setCacheValue } from '@/lib/server/cache';
+
+const DASHBOARD_CACHE_TTL_SECONDS = 30;
 
 export const runtime = 'nodejs';
 
@@ -19,6 +22,14 @@ export async function GET(req: NextRequest) {
 
   try {
     const userId = await getUserId(req);
+
+    const cacheKey = `dashboard:${userId}`;
+    const cached = getCacheValue<unknown>(cacheKey);
+    if (cached) {
+      logRequest(req, 200, start, traceId);
+      return NextResponse.json(cached);
+    }
+
     const db = await getDbOrThrow();
 
     // Run all queries in parallel
@@ -69,14 +80,17 @@ export async function GET(req: NextRequest) {
       is_read: a.is_read,
     }));
 
-    logRequest(req, 200, start, traceId);
-    return NextResponse.json({
+    const payload = {
       unread_alerts: unreadAlerts,
       active_subscriptions: activeSubscriptions,
       recent_alerts: recentAlertsMapped,
       total_facilities: totalFacilities,
       generated_at: new Date().toISOString(),
-    });
+    };
+    setCacheValue(cacheKey, payload, DASHBOARD_CACHE_TTL_SECONDS);
+
+    logRequest(req, 200, start, traceId);
+    return NextResponse.json(payload);
   } catch (error) {
     const res = errorResponse(error, traceId);
     logRequest(req, res.status, start, traceId);
