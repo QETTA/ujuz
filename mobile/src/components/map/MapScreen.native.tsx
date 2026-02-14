@@ -1,7 +1,9 @@
 import { ComponentType, useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, View } from 'react-native';
+import { StyledText as Text } from '@/components/ui/StyledText';
 import MapView, { Marker, type Region, PROVIDER_GOOGLE } from '@/lib/react-native-maps';
 import { getJson } from '@/lib/api';
+import { COLORS } from '@/lib/constants';
 
 type MapModule = {
   MapView: ComponentType<any>;
@@ -29,12 +31,12 @@ const SEOUL_CENTER: Region = {
 };
 
 const GRADE_COLORS: Record<string, string> = {
-  A: '#22C55E',
-  B: '#84CC16',
-  C: '#EAB308',
-  D: '#F97316',
-  E: '#EF4444',
-  F: '#991B1B',
+  A: COLORS.gradeA,
+  B: COLORS.gradeB,
+  C: COLORS.gradeC,
+  D: COLORS.gradeD,
+  E: COLORS.gradeE,
+  F: COLORS.gradeF,
 };
 
 export default function MapScreen() {
@@ -68,7 +70,7 @@ export default function MapScreen() {
   if (!mapModule) {
     return (
       <View className="flex-1 items-center justify-center bg-black">
-        <ActivityIndicator size="large" color="#3B82F6" />
+        <ActivityIndicator size="large" color={COLORS.brand500} />
         <Text className="mt-2 text-white font-medium">지도 모듈 로딩 중...</Text>
       </View>
     );
@@ -97,14 +99,14 @@ export default function MapScreen() {
             coordinate={{ latitude: f.lat, longitude: f.lng }}
             title={f.name}
             description={`${f.type} · ${f.grade ?? '-'}등급`}
-            pinColor={f.grade ? GRADE_COLORS[f.grade] ?? '#6B7280' : '#6B7280'}
+            pinColor={f.grade ? GRADE_COLORS[f.grade] ?? COLORS.gradeDefault : COLORS.gradeDefault}
           />
         ))}
       </NativeMapView>
 
       {loading && (
         <View className="absolute inset-0 items-center justify-center bg-black/20">
-          <ActivityIndicator size="large" color="#3B82F6" />
+          <ActivityIndicator size="large" color={COLORS.brand500} />
           <Text className="mt-2 text-white font-medium">주변 시설 검색 중...</Text>
         </View>
       )}

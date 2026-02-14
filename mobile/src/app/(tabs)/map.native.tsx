@@ -1,7 +1,9 @@
 import { ComponentType, useCallback, useEffect, useState } from 'react';
-import { Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Platform, ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyledText as Text } from '@/components/ui/StyledText';
 import MapView, { Marker, type Region, PROVIDER_GOOGLE } from '@/lib/react-native-maps';
 import { getJson } from '@/lib/api';
+import { COLORS } from '@/lib/constants';
 import { EmptyNoResults, LoadingSkeleton, NetworkError } from '@/components/states';
 
 type MapModule = {
@@ -39,12 +41,12 @@ const SEOUL_CENTER: Region = {
 };
 
 const GRADE_COLORS: Record<string, string> = {
-  A: '#22C55E',
-  B: '#84CC16',
-  C: '#EAB308',
-  D: '#F97316',
-  E: '#EF4444',
-  F: '#991B1B',
+  A: COLORS.gradeA,
+  B: COLORS.gradeB,
+  C: COLORS.gradeC,
+  D: COLORS.gradeD,
+  E: COLORS.gradeE,
+  F: COLORS.gradeF,
 };
 
 export default function MapScreen() {
@@ -130,25 +132,32 @@ export default function MapScreen() {
             coordinate={{ latitude: f.lat, longitude: f.lng }}
             title={f.name}
             description={`${f.type} · ${f.grade ?? '-'}등급`}
-            pinColor={f.grade ? GRADE_COLORS[f.grade] ?? '#6B7280' : '#6B7280'}
+            pinColor={f.grade ? GRADE_COLORS[f.grade] ?? COLORS.gradeDefault : COLORS.gradeDefault}
           />
         ))}
       </NativeMapView>
 
       <View className="absolute left-4 right-4 top-12 z-10">
-        <View className="rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-sm">
-          <View className="flex-row items-center rounded-xl border border-slate-200 bg-slate-50 px-3">
+        <View className="rounded-2xl border border-border-subtle dark:border-dark-border-subtle bg-surface dark:bg-dark-surface px-3 py-3 shadow-sm">
+          <View className="flex-row items-center rounded-xl border border-border-subtle dark:border-dark-border-subtle bg-surface-elevated dark:bg-dark-surface-elevated px-3">
             <TextInput
-              className="h-11 flex-1 text-sm text-slate-900"
+              className="h-11 flex-1 text-sm text-text-primary dark:text-dark-text-primary"
               placeholder="시설명을 검색해 보세요"
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={COLORS.textTertiary}
               value={searchQuery}
               onChangeText={setSearchQuery}
               onSubmitEditing={handleSearchSubmit}
               returnKeyType="search"
+              accessibilityLabel="시설명 검색"
             />
-            <TouchableOpacity onPress={handleSearchSubmit} activeOpacity={0.8} className="py-2 pl-3">
-              <Text className="text-sm font-semibold text-indigo-600">검색</Text>
+            <TouchableOpacity
+              onPress={handleSearchSubmit}
+              activeOpacity={0.8}
+              className="py-2 pl-3"
+              accessibilityRole="button"
+              accessibilityLabel="검색"
+            >
+              <Text className="text-sm font-semibold text-brand-500">검색</Text>
             </TouchableOpacity>
           </View>
 
@@ -161,9 +170,12 @@ export default function MapScreen() {
                     key={chip.label}
                     onPress={() => handleFilterPress(chip.value)}
                     activeOpacity={0.8}
-                    className={`rounded-full border px-4 py-2 ${isActive ? 'border-indigo-500 bg-indigo-500' : 'border-slate-300 bg-white'}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${chip.label} 필터`}
+                    accessibilityState={{ selected: isActive }}
+                    className={`rounded-full border px-4 py-2 ${isActive ? 'border-brand-500 bg-brand-500' : 'border-border dark:border-dark-border bg-surface dark:bg-dark-surface'}`}
                   >
-                    <Text className={`text-sm font-medium ${isActive ? 'text-white' : 'text-slate-700'}`}>
+                    <Text className={`text-sm font-medium ${isActive ? 'text-text-inverse' : 'text-text-primary dark:text-dark-text-primary'}`}>
                       {chip.label}
                     </Text>
                   </TouchableOpacity>
@@ -175,17 +187,17 @@ export default function MapScreen() {
       </View>
 
       {loading && (
-        <LoadingSkeleton title="주변 시설 검색 중..." className="absolute inset-0 bg-white/70" />
+        <LoadingSkeleton title="주변 시설 검색 중..." className="absolute inset-0 bg-white/70 dark:bg-dark-surface/70" />
       )}
       {!loading && error && (
         <NetworkError
-          className="absolute inset-0 bg-white"
+          className="absolute inset-0 bg-surface dark:bg-dark-surface"
           primaryCta={{ label: '다시 시도', onPress: () => fetchNearby(region, { type: filterType, q: searchQuery }) }}
         />
       )}
       {!loading && !error && facilities.length === 0 && (
         <EmptyNoResults
-          className="absolute inset-0 bg-white"
+          className="absolute inset-0 bg-surface dark:bg-dark-surface"
           title="주변에 시설이 없어요"
           description="다른 지역을 검색해 보세요."
         />

@@ -1,17 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  Linking,
-  RefreshControl,
-  ActivityIndicator,
-} from 'react-native';
+  View, ScrollView, TouchableOpacity, Alert, Linking, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getJson, deleteJson } from '@/lib/api';
+import { COLORS } from '@/lib/constants';
 
+import { StyledText as Text } from '@/components/ui/StyledText';
 type SubscriptionItem = {
   id: string;
   facility_id: string;
@@ -93,15 +87,17 @@ const getStatusCode = (error: unknown): number | undefined => {
 const SettingRow = ({ icon, label, description, value, onPress }: SettingRowProps) => (
   <TouchableOpacity
     onPress={onPress}
-    className="flex-row items-center bg-white border-b border-slate-200 px-4 py-4"
+    className="flex-row items-center bg-surface dark:bg-dark-surface border-b border-border-subtle dark:border-dark-border-subtle px-4 py-4"
+    accessibilityRole="button"
+    accessibilityLabel={label}
   >
     <Text className="mr-3 text-xl">{icon}</Text>
     <View className="flex-1">
-      <Text className="text-base font-semibold text-slate-900">{label}</Text>
-      {description ? <Text className="mt-1 text-xs text-slate-500">{description}</Text> : null}
-      {value ? <Text className="mt-1 text-sm text-slate-500">{value}</Text> : null}
+      <Text className="text-base font-semibold text-text-primary dark:text-dark-text-primary">{label}</Text>
+      {description ? <Text className="mt-1 text-xs text-text-secondary dark:text-dark-text-secondary">{description}</Text> : null}
+      {value ? <Text className="mt-1 text-sm text-text-secondary dark:text-dark-text-secondary">{value}</Text> : null}
     </View>
-    <Text className="text-xl text-slate-400">›</Text>
+    <Text className="text-xl text-text-tertiary dark:text-dark-text-tertiary">›</Text>
   </TouchableOpacity>
 );
 
@@ -226,50 +222,52 @@ export default function MyScreen() {
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-100">
+    <SafeAreaView className="flex-1 bg-surface-inset dark:bg-dark-surface-inset">
       <ScrollView
         className="flex-1"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         <View className="px-4 pb-8 pt-4">
-          <View className="mb-6 rounded-2xl bg-white px-4 py-5">
+          <View className="mb-6 rounded-2xl bg-surface dark:bg-dark-surface px-4 py-5">
             <View className="flex-row items-center">
-              <View className="mr-4 h-16 w-16 items-center justify-center rounded-full bg-slate-200">
+              <View className="mr-4 h-16 w-16 items-center justify-center rounded-full bg-surface-inset dark:bg-dark-surface-inset">
                 <Text className="text-3xl">👤</Text>
               </View>
               <View className="flex-1">
-                <Text className="text-lg font-bold text-slate-900">{userName}</Text>
-                <Text className="mt-1 text-sm text-slate-500">{userIdentity}</Text>
+                <Text className="text-lg font-bold text-text-primary dark:text-dark-text-primary">{userName}</Text>
+                <Text className="mt-1 text-sm text-text-secondary dark:text-dark-text-secondary">{userIdentity}</Text>
                 {!isAuthenticated ? (
                   <TouchableOpacity
                     onPress={handleLogin}
-                    className="mt-3 self-start rounded-full bg-indigo-600 px-4 py-2"
+                    className="mt-3 self-start rounded-full bg-brand-600 px-4 py-2"
+                    accessibilityRole="button"
+                    accessibilityLabel="로그인"
                   >
-                    <Text className="text-sm font-semibold text-white">로그인</Text>
+                    <Text className="text-sm font-semibold text-text-inverse">로그인</Text>
                   </TouchableOpacity>
                 ) : null}
               </View>
             </View>
           </View>
 
-          <Text className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+          <Text className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-text-tertiary dark:text-dark-text-tertiary">
             내 구독
           </Text>
-          <View className="overflow-hidden rounded-2xl bg-white">
+          <View className="overflow-hidden rounded-2xl bg-surface dark:bg-dark-surface">
             {loading ? (
               <View className="items-center justify-center py-10">
-                <ActivityIndicator size="small" color="#4f46e5" />
+                <ActivityIndicator size="small" color={COLORS.brand600} />
               </View>
             ) : error ? (
               <View className="px-4 py-4">
                 <Text className="text-sm text-rose-700">{error}</Text>
                 <TouchableOpacity onPress={fetchSubscriptions} className="mt-3 self-start">
-                  <Text className="text-sm font-semibold text-indigo-600">다시 시도</Text>
+                  <Text className="text-sm font-semibold text-brand-500">다시 시도</Text>
                 </TouchableOpacity>
               </View>
             ) : subscriptions.length === 0 ? (
               <View className="px-4 py-6">
-                <Text className="text-sm text-slate-500">
+                <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
                   구독 중인 시설이 없습니다. 지도에서 시설을 구독해보세요.
                 </Text>
               </View>
@@ -277,19 +275,19 @@ export default function MyScreen() {
               subscriptions.map((subscription, index) => (
                 <View
                   key={subscription.id || `${subscription.facility_id}-${index}`}
-                  className="flex-row items-center justify-between border-b border-slate-100 px-4 py-4"
+                  className="flex-row items-center justify-between border-b border-border-subtle dark:border-dark-border-subtle px-4 py-4"
                 >
                   <View className="flex-1 pr-3">
-                    <Text className="text-base font-semibold text-slate-900">
+                    <Text className="text-base font-semibold text-text-primary dark:text-dark-text-primary">
                       {subscription.facility_name}
                     </Text>
                     <View className="mt-2 flex-row flex-wrap">
                       {(subscription.target_classes ?? []).map((targetClass) => (
                         <View
                           key={targetClass}
-                          className="mb-2 mr-2 rounded-full bg-indigo-100 px-2.5 py-1"
+                          className="mb-2 mr-2 rounded-full bg-brand-100 px-2.5 py-1"
                         >
-                          <Text className="text-xs font-medium text-indigo-700">{targetClass}</Text>
+                          <Text className="text-xs font-medium text-brand-700">{targetClass}</Text>
                         </View>
                       ))}
                     </View>
@@ -300,12 +298,14 @@ export default function MyScreen() {
                   <TouchableOpacity
                     onPress={() => handleDelete(subscription.facility_id, subscription.facility_name)}
                     disabled={deletingFacilityId === subscription.facility_id}
-                    className="h-9 w-9 items-center justify-center rounded-full border border-slate-200"
+                    className="h-9 w-9 items-center justify-center rounded-full border border-border-subtle dark:border-dark-border-subtle"
+                    accessibilityRole="button"
+                    accessibilityLabel={`${subscription.facility_name} 구독 해제`}
                   >
                     {deletingFacilityId === subscription.facility_id ? (
-                      <ActivityIndicator size="small" color="#64748b" />
+                      <ActivityIndicator size="small" color={COLORS.textSecondary} />
                     ) : (
-                      <Text className="text-base text-slate-500">🗑</Text>
+                      <Text className="text-base text-text-secondary dark:text-dark-text-secondary">🗑</Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -313,10 +313,10 @@ export default function MyScreen() {
             )}
           </View>
 
-          <Text className="mb-2 mt-6 text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+          <Text className="mb-2 mt-6 text-xs font-bold uppercase tracking-[0.16em] text-text-tertiary dark:text-dark-text-tertiary">
             설정
           </Text>
-          <View className="rounded-2xl bg-white">
+          <View className="rounded-2xl bg-surface dark:bg-dark-surface">
             <SettingRow
               icon="🔔"
               label="알림설정"
@@ -355,15 +355,15 @@ export default function MyScreen() {
             />
           </View>
 
-          <Text className="mb-2 mt-6 text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+          <Text className="mb-2 mt-6 text-xs font-bold uppercase tracking-[0.16em] text-text-tertiary dark:text-dark-text-tertiary">
             위험영역
           </Text>
-          <View className="rounded-2xl bg-white p-4">
-            <TouchableOpacity onPress={handleLogout} className="py-2">
+          <View className="rounded-2xl bg-surface dark:bg-dark-surface p-4">
+            <TouchableOpacity onPress={handleLogout} className="py-2" accessibilityRole="button">
               <Text className="text-lg font-semibold text-rose-500">로그아웃</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleWithdraw} className="py-2">
-              <Text className="text-base text-slate-500">탈퇴</Text>
+            <TouchableOpacity onPress={handleWithdraw} className="py-2" accessibilityRole="button">
+              <Text className="text-base text-text-secondary dark:text-dark-text-secondary">탈퇴</Text>
             </TouchableOpacity>
           </View>
         </View>

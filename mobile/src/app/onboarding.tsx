@@ -1,7 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyledText as Text } from '@/components/ui/StyledText';
 
+import { COLORS } from '@/lib/constants';
+import { useThemeColors } from '@/lib/useThemeColors';
 import { markOnboardingComplete } from '@/lib/storage/onboarding';
 
 type OnboardingStep = {
@@ -31,6 +34,7 @@ const STEPS: OnboardingStep[] = [
 export default function OnboardingScreen() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const colors = useThemeColors();
 
   const currentStep = STEPS[currentStepIndex];
   const isLastStep = currentStepIndex === STEPS.length - 1;
@@ -54,7 +58,7 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
         <Text style={styles.progressLabel}>
           Step {currentStepIndex + 1} / {STEPS.length}
@@ -73,14 +77,16 @@ export default function OnboardingScreen() {
 
         <View style={styles.stepCard}>
           <Text style={styles.icon}>{currentStep.icon}</Text>
-          <Text style={styles.title}>{currentStep.title}</Text>
-          <Text style={styles.description}>{currentStep.description}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{currentStep.title}</Text>
+          <Text style={[styles.description, { color: colors.textSecondary }]}>{currentStep.description}</Text>
 
           <TouchableOpacity
             style={[styles.primaryButton, isSubmitting ? styles.buttonDisabled : null]}
             activeOpacity={0.85}
             disabled={isSubmitting}
             onPress={() => void handlePrimaryPress()}
+            accessibilityRole="button"
+            accessibilityLabel={isLastStep ? '시작하기' : '다음'}
           >
             <Text style={styles.primaryButtonText}>{isLastStep ? '시작하기' : '다음'}</Text>
           </TouchableOpacity>
@@ -92,6 +98,8 @@ export default function OnboardingScreen() {
         activeOpacity={0.7}
         disabled={isSubmitting}
         onPress={() => void completeAndGoTabs()}
+        accessibilityRole="button"
+        accessibilityLabel="건너뛰기"
       >
         <Text style={styles.skipText}>건너뛰기</Text>
       </TouchableOpacity>
@@ -102,7 +110,7 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.background,
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 16,
@@ -115,7 +123,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 13,
     fontWeight: '600',
-    color: '#475569',
+    color: COLORS.textSecondary,
   },
   progressTrack: {
     flexDirection: 'row',
@@ -131,10 +139,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   progressSegmentActive: {
-    backgroundColor: '#2563eb',
+    backgroundColor: COLORS.brand500,
   },
   progressSegmentInactive: {
-    backgroundColor: '#e2e8f0',
+    backgroundColor: COLORS.border,
   },
   stepCard: {
     flex: 1,
@@ -149,13 +157,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#0f172a',
+    color: COLORS.text,
     marginBottom: 14,
   },
   description: {
     fontSize: 17,
     lineHeight: 25,
-    color: '#334155',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     marginBottom: 32,
   },
@@ -164,14 +172,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: '#3B82F6',
+    backgroundColor: COLORS.brand500,
     alignItems: 'center',
   },
   buttonDisabled: {
     opacity: 0.65,
   },
   primaryButtonText: {
-    color: '#ffffff',
+    color: COLORS.textInverse,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -180,7 +188,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   skipText: {
-    color: '#111827',
+    color: COLORS.text,
     fontSize: 15,
     fontWeight: '600',
   },

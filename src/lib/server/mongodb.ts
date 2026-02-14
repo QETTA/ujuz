@@ -21,7 +21,7 @@ const MAX_IDLE_TIME_MS = 30_000;
 export async function connectMongo(
   uri?: string,
   dbName?: string,
-  maxRetries = 5,
+  maxRetries = 3,
 ): Promise<Db> {
   if (g._mongoDb) return g._mongoDb;
 
@@ -39,6 +39,9 @@ export async function connectMongo(
         maxPoolSize: MAX_POOL_SIZE,
         minPoolSize: MIN_POOL_SIZE,
         maxIdleTimeMS: MAX_IDLE_TIME_MS,
+        serverSelectionTimeoutMS: 5_000,
+        connectTimeoutMS: 5_000,
+        socketTimeoutMS: 10_000,
       }).connect();
     }
 

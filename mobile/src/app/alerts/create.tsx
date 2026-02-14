@@ -1,8 +1,10 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Switch, TouchableOpacity, View } from 'react-native';
+import { StyledText as Text } from '@/components/ui/StyledText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { postJson } from '@/lib/api';
+import { COLORS } from '@/lib/constants';
 
 type Frequency = 'immediate' | 'daily';
 
@@ -52,28 +54,30 @@ export default function AlertSubscriptionCreateScreen() {
   };
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-slate-100">
+    <SafeAreaView edges={['top']} className="flex-1 bg-surface-inset dark:bg-dark-surface-inset">
       <View className="flex-1 px-5 py-6">
-        <Text className="text-2xl font-extrabold text-slate-900">알림 구독 생성</Text>
-        <Text className="mt-2 text-sm text-slate-600">
+        <Text className="text-2xl font-extrabold text-text-primary dark:text-dark-text-primary">알림 구독 생성</Text>
+        <Text className="mt-2 text-sm text-text-secondary dark:text-dark-text-secondary">
           시설 ID: {facilityId || '미지정'}
         </Text>
 
         <View className="mt-8">
-          <Text className="mb-3 text-sm font-semibold text-slate-700">빈도</Text>
+          <Text className="mb-3 text-sm font-semibold text-text-primary dark:text-dark-text-primary">빈도</Text>
           <View className="gap-3">
             <TouchableOpacity
               disabled={isSubmitting}
               onPress={() => setFrequency('immediate')}
+              accessibilityRole="button"
+              accessibilityState={{ selected: frequency === 'immediate' }}
               className={`rounded-2xl border px-4 py-4 ${
                 frequency === 'immediate'
-                  ? 'border-indigo-500 bg-indigo-50'
-                  : 'border-slate-200 bg-white'
+                  ? 'border-brand-500 bg-brand-50'
+                  : 'border-border-subtle dark:border-dark-border-subtle bg-surface dark:bg-dark-surface'
               }`}
             >
               <Text
                 className={`text-base font-semibold ${
-                  frequency === 'immediate' ? 'text-indigo-700' : 'text-slate-800'
+                  frequency === 'immediate' ? 'text-brand-700' : 'text-text-primary dark:text-dark-text-primary'
                 }`}
               >
                 즉시
@@ -83,15 +87,17 @@ export default function AlertSubscriptionCreateScreen() {
             <TouchableOpacity
               disabled={isSubmitting}
               onPress={() => setFrequency('daily')}
+              accessibilityRole="button"
+              accessibilityState={{ selected: frequency === 'daily' }}
               className={`rounded-2xl border px-4 py-4 ${
                 frequency === 'daily'
-                  ? 'border-indigo-500 bg-indigo-50'
-                  : 'border-slate-200 bg-white'
+                  ? 'border-brand-500 bg-brand-50'
+                  : 'border-border-subtle dark:border-dark-border-subtle bg-surface dark:bg-dark-surface'
               }`}
             >
               <Text
                 className={`text-base font-semibold ${
-                  frequency === 'daily' ? 'text-indigo-700' : 'text-slate-800'
+                  frequency === 'daily' ? 'text-brand-700' : 'text-text-primary dark:text-dark-text-primary'
                 }`}
               >
                 1일 1회
@@ -100,13 +106,13 @@ export default function AlertSubscriptionCreateScreen() {
           </View>
         </View>
 
-        <View className="mt-8 rounded-2xl border border-slate-200 bg-white px-4 py-4">
-          <Text className="text-sm font-semibold text-slate-700">채널</Text>
+        <View className="mt-8 rounded-2xl border border-border-subtle dark:border-dark-border-subtle bg-surface dark:bg-dark-surface px-4 py-4">
+          <Text className="text-sm font-semibold text-text-primary dark:text-dark-text-primary">채널</Text>
           <View className="mt-3 flex-row items-center justify-between">
-            <View className="rounded-full bg-indigo-100 px-3 py-1">
-              <Text className="text-xs font-semibold text-indigo-700">Push</Text>
+            <View className="rounded-full bg-brand-100 px-3 py-1">
+              <Text className="text-xs font-semibold text-brand-700">Push</Text>
             </View>
-            <Text className="text-xs text-slate-400">기본</Text>
+            <Text className="text-xs text-text-tertiary dark:text-dark-text-tertiary">기본</Text>
           </View>
 
           <View className="mt-3 flex-row items-center justify-between">
@@ -114,7 +120,7 @@ export default function AlertSubscriptionCreateScreen() {
               <View className="rounded-full bg-amber-100 px-3 py-1">
                 <Text className="text-xs font-semibold text-amber-700">SMS</Text>
               </View>
-              <Text className="text-xs text-slate-500">유료 옵션</Text>
+              <Text className="text-xs text-text-secondary dark:text-dark-text-secondary">유료 옵션</Text>
             </View>
             <Switch
               value={smsEnabled}
@@ -123,6 +129,7 @@ export default function AlertSubscriptionCreateScreen() {
                 if (!v) setSmsConsent(false);
               }}
               disabled={isSubmitting}
+              accessibilityLabel="SMS 알림 활성화"
             />
           </View>
 
@@ -135,15 +142,18 @@ export default function AlertSubscriptionCreateScreen() {
               <TouchableOpacity
                 className="mt-2 flex-row items-center gap-2"
                 onPress={() => setSmsConsent((prev) => !prev)}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: smsConsent }}
+                accessibilityLabel="비용 발생 동의"
               >
                 <View
                   className={`h-5 w-5 items-center justify-center rounded border ${
-                    smsConsent ? 'border-indigo-500 bg-indigo-500' : 'border-slate-300 bg-white'
+                    smsConsent ? 'border-brand-500 bg-brand-500' : 'border-border dark:border-dark-border bg-surface dark:bg-dark-surface'
                   }`}
                 >
-                  {smsConsent && <Text className="text-xs text-white">✓</Text>}
+                  {smsConsent && <Text className="text-xs text-text-inverse">✓</Text>}
                 </View>
-                <Text className="flex-1 text-xs text-slate-700">
+                <Text className="flex-1 text-xs text-text-primary dark:text-dark-text-primary">
                   비용 발생에 동의합니다
                 </Text>
               </TouchableOpacity>
@@ -158,14 +168,16 @@ export default function AlertSubscriptionCreateScreen() {
         <TouchableOpacity
           disabled={!canSubmit}
           onPress={() => void submit()}
+          accessibilityRole="button"
+          accessibilityLabel="구독 저장"
           className={`mt-auto h-12 items-center justify-center rounded-xl ${
-            canSubmit ? 'bg-indigo-600' : 'bg-indigo-300'
+            canSubmit ? 'bg-brand-600' : 'bg-brand-300'
           }`}
         >
           {isSubmitting ? (
-            <ActivityIndicator size="small" color="#ffffff" />
+            <ActivityIndicator size="small" color={COLORS.textInverse} />
           ) : (
-            <Text className="text-base font-bold text-white">구독 저장</Text>
+            <Text className="text-base font-bold text-text-inverse">구독 저장</Text>
           )}
         </TouchableOpacity>
       </View>

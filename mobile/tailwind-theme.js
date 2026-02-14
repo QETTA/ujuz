@@ -1,0 +1,79 @@
+/**
+ * UjuZ Design Tokens — Mobile (CJS)
+ *
+ * SSOT for NativeWind/TW v3. Hex equivalents of web OKLCH tokens in globals.css.
+ * When updating colors here, also update:
+ *   - src/app/globals.css  (@theme + dark mode)
+ *   - mobile/src/lib/constants.ts  (COLORS / DARK_COLORS)
+ */
+
+/** Light-mode palette */
+const colors = {
+  brand: {
+    50: '#f5f3ff',
+    100: '#ede9fe',
+    200: '#c7d2fe',
+    300: '#a5b4fc',
+    400: '#818cf8',
+    500: '#6d5ce7',
+    600: '#4f46e5',
+    700: '#4338ca',
+    800: '#3730a3',
+    900: '#312e81',
+  },
+  surface: {
+    DEFAULT: '#ffffff',
+    elevated: '#fafaff',
+    inset: '#f3f2fa',
+    glass: 'rgba(250, 250, 255, 0.8)',
+  },
+  border: {
+    DEFAULT: '#e2e0ef',
+    subtle: '#edecf4',
+  },
+  text: {
+    primary: '#1a1730',
+    secondary: '#6b6580',
+    tertiary: '#807b93',
+    inverse: '#ffffff',
+  },
+  status: {
+    success: '#4caf7a',
+    warning: '#e0a830',
+    danger: '#d44035',
+    info: '#5b8fd9',
+  },
+  grade: {
+    a: '#34c759',
+    b: '#52d17c',
+    c: '#c4b932',
+    d: '#d4932e',
+    e: '#d95d3a',
+    f: '#cf3f3f',
+  },
+};
+
+/**
+ * Dark-mode overrides — hex equivalents of globals.css [data-theme='dark'] OKLCH.
+ * Merged under `dark-*` prefix in tailwind.config.js so components use `dark:bg-dark-surface` etc.
+ */
+const darkColors = {
+  surface: {
+    DEFAULT: '#1a1830',
+    elevated: '#222038',
+    inset: '#131120',
+    glass: 'rgba(34, 32, 56, 0.8)',
+  },
+  border: {
+    DEFAULT: '#383552',
+    subtle: '#2b283e',
+  },
+  text: {
+    primary: '#efedf4',
+    secondary: '#a09bae',
+    tertiary: '#807b93',
+    inverse: '#1a1730',
+  },
+};
+
+module.exports = { colors, darkColors };

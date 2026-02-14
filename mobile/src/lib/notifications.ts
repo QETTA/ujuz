@@ -23,6 +23,21 @@ export async function registerForPushNotifications(): Promise<string | null> {
     return null;
   }
 
+  // Android: create channels BEFORE requesting permission (Android 13+ best practice)
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('to-alerts', {
+      name: 'TO 알림',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#6d5ce7',
+    });
+
+    await Notifications.setNotificationChannelAsync('general', {
+      name: '일반 알림',
+      importance: Notifications.AndroidImportance.DEFAULT,
+    });
+  }
+
   // Check/request permissions
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
@@ -43,21 +58,6 @@ export async function registerForPushNotifications(): Promise<string | null> {
     projectId,
   });
   const token = tokenData.data;
-
-  // Android: set notification channel
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('to-alerts', {
-      name: 'TO 알림',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#3B82F6',
-    });
-
-    await Notifications.setNotificationChannelAsync('general', {
-      name: '일반 알림',
-      importance: Notifications.AndroidImportance.DEFAULT,
-    });
-  }
 
   // Send token to backend
   try {

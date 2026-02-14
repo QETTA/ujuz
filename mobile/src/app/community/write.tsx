@@ -1,14 +1,11 @@
 import { useCallback, useState } from 'react';
 import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+  ActivityIndicator, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
+import { COLORS } from '@/lib/constants';
+import { useThemeColors } from '@/lib/useThemeColors';
 
+import { StyledText as Text } from '@/components/ui/StyledText';
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3001';
 
 type PostType = 'review' | 'to_report' | 'question';
@@ -30,6 +27,7 @@ export default function CommunityWriteScreen() {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const colors = useThemeColors();
 
   const submit = useCallback(async () => {
     const trimmedRegion = boardRegion.trim();
@@ -82,8 +80,8 @@ export default function CommunityWriteScreen() {
   }, [boardRegion, content, type]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>게시글 작성</Text>
+    <View style={[styles.container, { backgroundColor: colors.surfaceInset }]}>
+      <Text style={[styles.title, { color: colors.text }]}>게시글 작성</Text>
 
       <Text style={styles.label}>유형</Text>
       <View style={styles.typeRow}>
@@ -95,6 +93,9 @@ export default function CommunityWriteScreen() {
               style={[styles.typeButton, isActive ? styles.typeButtonActive : null]}
               onPress={() => setType(option.value)}
               disabled={isSubmitting}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isActive }}
+              accessibilityLabel={option.label}
             >
               <Text style={[styles.typeText, isActive ? styles.typeTextActive : null]}>
                 {option.label}
@@ -111,7 +112,8 @@ export default function CommunityWriteScreen() {
         editable={!isSubmitting}
         style={styles.input}
         placeholder="예: 서울시 강남구"
-        placeholderTextColor="#9ca3af"
+        placeholderTextColor={COLORS.textTertiary}
+        accessibilityLabel="지역 입력"
       />
 
       <Text style={styles.label}>내용</Text>
@@ -121,9 +123,10 @@ export default function CommunityWriteScreen() {
         onChangeText={setContent}
         editable={!isSubmitting}
         placeholder="익명으로 자유롭게 글을 남겨 주세요"
-        placeholderTextColor="#9ca3af"
+        placeholderTextColor={COLORS.textTertiary}
         multiline
         textAlignVertical="top"
+        accessibilityLabel="게시글 내용"
       />
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -132,9 +135,11 @@ export default function CommunityWriteScreen() {
         style={[styles.submitButton, isSubmitting ? styles.submitDisabled : null]}
         onPress={submit}
         disabled={isSubmitting}
+        accessibilityRole="button"
+        accessibilityLabel="게시"
       >
         {isSubmitting ? (
-          <ActivityIndicator size="small" color="#ffffff" />
+          <ActivityIndicator size="small" color={COLORS.textInverse} />
         ) : (
           <Text style={styles.submitButtonText}>게시</Text>
         )}
@@ -146,20 +151,20 @@ export default function CommunityWriteScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fb',
+    backgroundColor: COLORS.surfaceInset,
     padding: 16,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#111827',
+    color: COLORS.text,
     marginTop: 4,
     marginBottom: 16,
   },
   label: {
     marginBottom: 8,
     fontSize: 14,
-    color: '#374151',
+    color: COLORS.text,
     fontWeight: '600',
   },
   typeRow: {
@@ -170,65 +175,65 @@ const styles = StyleSheet.create({
   typeButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: COLORS.border,
     borderRadius: 10,
     paddingVertical: 10,
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.background,
   },
   typeButtonActive: {
-    borderColor: '#2563eb',
-    backgroundColor: '#dbeafe',
+    borderColor: COLORS.brand500,
+    backgroundColor: '#eef2ff',
   },
   typeText: {
-    color: '#374151',
+    color: COLORS.text,
     fontSize: 14,
     fontWeight: '600',
   },
   typeTextActive: {
-    color: '#1d4ed8',
+    color: COLORS.brand600,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: COLORS.border,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.background,
     marginBottom: 16,
-    color: '#111827',
+    color: COLORS.text,
   },
   textarea: {
     height: 220,
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: COLORS.border,
     borderRadius: 10,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.background,
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 15,
     lineHeight: 22,
-    color: '#111827',
+    color: COLORS.text,
     marginBottom: 16,
   },
   submitButton: {
     marginTop: 8,
-    backgroundColor: '#2563eb',
+    backgroundColor: COLORS.brand600,
     borderRadius: 10,
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
   submitDisabled: {
-    backgroundColor: '#93c5fd',
+    opacity: 0.5,
   },
   submitButtonText: {
-    color: '#ffffff',
+    color: COLORS.textInverse,
     fontWeight: '700',
     fontSize: 16,
   },
   errorText: {
-    color: '#b91c1c',
+    color: COLORS.danger,
     marginBottom: 12,
   },
 });

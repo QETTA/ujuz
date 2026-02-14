@@ -1,5 +1,6 @@
 import { PropsWithChildren } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { StyledText as Text } from '@/components/ui/StyledText';
 
 type MapViewProps = PropsWithChildren<{ [key: string]: unknown }>;
 

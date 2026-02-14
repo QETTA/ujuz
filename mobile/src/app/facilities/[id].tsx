@@ -1,17 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+  ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { deleteJson, getJson, postJson } from '@/lib/api';
+import { COLORS } from '@/lib/constants';
+import { useThemeColors } from '@/lib/useThemeColors';
 import { FacilityDetailCard, type FacilityDetailCardData } from '@/components/facility/FacilityDetailCard';
 
+import { StyledText as Text } from '@/components/ui/StyledText';
 type DetailErrorState = 'network' | 'server' | 'data_missing' | null;
 
 interface FacilityDetailModel {
@@ -152,6 +148,7 @@ export default function FacilityDetailScreen() {
   const [saving, setSaving] = useState(false);
   const [errorState, setErrorState] = useState<DetailErrorState>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const colors = useThemeColors();
 
   const fetchDetail = useCallback(async () => {
     if (!facilityId) {
@@ -239,7 +236,7 @@ export default function FacilityDetailScreen() {
     if (loading) {
       return (
         <View style={styles.stateCard}>
-          <ActivityIndicator size="small" color="#4F46E5" />
+          <ActivityIndicator size="small" color={COLORS.brand600} />
           <Text style={styles.stateTitle}>시설 정보를 불러오는 중입니다.</Text>
         </View>
       );
@@ -252,7 +249,7 @@ export default function FacilityDetailScreen() {
           <Text style={styles.stateDescription}>
             인터넷 연결이 불안정해 시설 정보를 가져오지 못했습니다.
           </Text>
-          <Pressable onPress={fetchDetail} style={({ pressed }) => [styles.retryButton, pressed ? styles.buttonPressed : null]}>
+          <Pressable onPress={fetchDetail} accessibilityRole="button" accessibilityLabel="다시 시도" style={({ pressed }) => [styles.retryButton, pressed ? styles.buttonPressed : null]}>
             <Text style={styles.retryButtonText}>다시 시도</Text>
           </Pressable>
         </View>
@@ -266,7 +263,7 @@ export default function FacilityDetailScreen() {
           <Text style={styles.stateDescription}>
             잠시 후 다시 시도해 주세요.
           </Text>
-          <Pressable onPress={fetchDetail} style={({ pressed }) => [styles.retryButton, pressed ? styles.buttonPressed : null]}>
+          <Pressable onPress={fetchDetail} accessibilityRole="button" accessibilityLabel="다시 시도" style={({ pressed }) => [styles.retryButton, pressed ? styles.buttonPressed : null]}>
             <Text style={styles.retryButtonText}>다시 시도</Text>
           </Pressable>
         </View>
@@ -280,7 +277,7 @@ export default function FacilityDetailScreen() {
           <Text style={styles.stateDescription}>
             필수 데이터가 누락되어 상세 화면을 렌더링할 수 없습니다.
           </Text>
-          <Pressable onPress={fetchDetail} style={({ pressed }) => [styles.retryButton, pressed ? styles.buttonPressed : null]}>
+          <Pressable onPress={fetchDetail} accessibilityRole="button" accessibilityLabel="다시 시도" style={({ pressed }) => [styles.retryButton, pressed ? styles.buttonPressed : null]}>
             <Text style={styles.retryButtonText}>다시 시도</Text>
           </Pressable>
         </View>
@@ -300,11 +297,13 @@ export default function FacilityDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.surface }]}>
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <View style={styles.topBar}>
           <Pressable
             onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="뒤로가기"
             style={({ pressed }) => [styles.backButton, pressed ? styles.buttonPressed : null]}
           >
             <Text style={styles.backButtonText}>이전</Text>
@@ -312,8 +311,8 @@ export default function FacilityDetailScreen() {
         </View>
 
         <View style={styles.headingWrap}>
-          <Text style={styles.heading}>시설 상세</Text>
-          <Text style={styles.subHeading}>시설 정보 확인 후 TO 알림을 설정할 수 있어요.</Text>
+          <Text style={[styles.heading, { color: colors.text }]}>시설 상세</Text>
+          <Text style={[styles.subHeading, { color: colors.textSecondary }]}>시설 정보 확인 후 TO 알림을 설정할 수 있어요.</Text>
         </View>
 
         {renderStateBlock()}
@@ -325,7 +324,7 @@ export default function FacilityDetailScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: COLORS.surface,
   },
   contentContainer: {
     padding: 16,
@@ -339,14 +338,14 @@ const styles = StyleSheet.create({
   },
   backButton: {
     borderRadius: 999,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.background,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: COLORS.border,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
   backButtonText: {
-    color: '#334155',
+    color: COLORS.text,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -355,20 +354,20 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   heading: {
-    color: '#0F172A',
+    color: COLORS.text,
     fontSize: 25,
     fontWeight: '800',
   },
   subHeading: {
-    color: '#475569',
+    color: COLORS.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
   stateCard: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.background,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
@@ -376,13 +375,13 @@ const styles = StyleSheet.create({
     paddingVertical: 28,
   },
   stateTitle: {
-    color: '#0F172A',
+    color: COLORS.text,
     fontSize: 16,
     fontWeight: '700',
     textAlign: 'center',
   },
   stateDescription: {
-    color: '#64748B',
+    color: COLORS.textSecondary,
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
@@ -390,12 +389,12 @@ const styles = StyleSheet.create({
   retryButton: {
     marginTop: 4,
     borderRadius: 12,
-    backgroundColor: '#4F46E5',
+    backgroundColor: COLORS.brand600,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
   retryButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.textInverse,
     fontSize: 14,
     fontWeight: '700',
   },

@@ -112,8 +112,9 @@ interface ToAlertStore {
   loading: boolean;
   error: string | null;
   unreadCount: number;
-  pollingRef: ReturnType<typeof setInterval> | null;
+  pollingRef: ReturnType<typeof setTimeout> | null;
   lastPolledAt: string | null;
+  _pollFailures: number;
   load: () => Promise<void>;
   subscribe: (facilityId: string, facilityName: string, targetClasses: string[]) => Promise<void>;
   unsubscribe: (facilityId: string) => Promise<void>;
@@ -132,6 +133,7 @@ export const useToAlertStore = create<ToAlertStore>((set, get) => ({
   unreadCount: 0,
   pollingRef: null,
   lastPolledAt: null,
+  _pollFailures: 0,
 
   load: async () => {
     set({ loading: true, error: null });
@@ -199,6 +201,7 @@ export const useToAlertStore = create<ToAlertStore>((set, get) => ({
       set({
         unreadCount: data.unread_count,
         lastPolledAt: new Date().toISOString(),
+        _pollFailures: 0,
       });
       // Merge new alerts into history
       if (data.alerts.length > 0) {
@@ -211,23 +214,30 @@ export const useToAlertStore = create<ToAlertStore>((set, get) => ({
         });
       }
     } catch {
-      // Non-fatal: polling failure should not break UX
+      const failures = (get()._pollFailures ?? 0) + 1;
+      set({ _pollFailures: failures });
     }
   },
 
   startPolling: () => {
     const existing = get().pollingRef;
     if (existing) return;
-    // Initial poll
-    get().pollUnread();
-    const ref = setInterval(() => get().pollUnread(), 30_000);
-    set({ pollingRef: ref });
+    const BASE_INTERVAL = 30_000;
+    const MAX_INTERVAL = 300_000;
+    const poll = () => {
+      get().pollUnread();
+      const failures = get()._pollFailures ?? 0;
+      const interval = Math.min(BASE_INTERVAL * Math.pow(2, failures), MAX_INTERVAL);
+      const ref = setTimeout(poll, interval);
+      set({ pollingRef: ref });
+    };
+    poll();
   },
 
   stopPolling: () => {
     const ref = get().pollingRef;
     if (ref) {
-      clearInterval(ref);
+      clearTimeout(ref);
       set({ pollingRef: null });
     }
   },

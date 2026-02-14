@@ -1,19 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+  ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BASE_URL } from '@/lib/api';
 import { getOrCreateDeviceId } from '@/lib/auth';
+import { COLORS } from '@/lib/constants';
 import { NetworkError, PlanLimit } from '@/components/states';
 
+import { StyledText as Text } from '@/components/ui/StyledText';
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -215,15 +209,15 @@ export default function ChatScreen() {
           <View
             className={`max-w-[82%] rounded-2xl px-4 py-3 ${
               isUser
-                ? 'bg-[#6366f1] rounded-br-sm'
-                : 'bg-white border border-slate-200 rounded-bl-sm'
+                ? 'bg-brand-500 rounded-br-sm'
+                : 'bg-surface dark:bg-dark-surface border border-border-subtle dark:border-dark-border-subtle rounded-bl-sm'
             }`}
           >
-            <Text className={`text-sm leading-5 ${isUser ? 'text-white' : 'text-slate-800'}`}>
+            <Text className={`text-sm leading-5 ${isUser ? 'text-text-inverse' : 'text-text-primary dark:text-dark-text-primary'}`}>
               {bubbleText}
             </Text>
             <Text
-              className={`mt-1 text-xs ${isUser ? 'text-indigo-100' : 'text-slate-400'}`}
+              className={`mt-1 text-xs ${isUser ? 'text-brand-100' : 'text-text-tertiary dark:text-dark-text-tertiary'}`}
             >
               {formatTime(item.createdAt)}
             </Text>
@@ -235,7 +229,7 @@ export default function ChatScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-100">
+    <SafeAreaView className="flex-1 bg-surface-inset dark:bg-dark-surface-inset">
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -243,14 +237,14 @@ export default function ChatScreen() {
         <View className="flex-1">
           {networkError && messages.length === 0 ? (
             <NetworkError
-              className="bg-slate-100"
+              className="bg-surface-inset dark:bg-dark-surface-inset"
               primaryCta={{ label: '다시 시도', onPress: () => setNetworkError(false) }}
             />
           ) : (
             <View className="flex-1">
               {planLimited && (
                 <PlanLimit
-                  className="absolute inset-0 z-10 bg-slate-100"
+                  className="absolute inset-0 z-10 bg-surface-inset dark:bg-dark-surface-inset"
                   title="오늘은 여기까지 도와드릴 수 있어요"
                   primaryCta={{ label: '플랜 보기', onPress: () => setPlanLimited(false) }}
                 />
@@ -267,7 +261,7 @@ export default function ChatScreen() {
                 onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
                 ListEmptyComponent={
                   <View className="flex-1 items-center justify-center px-6">
-                    <Text className="text-center text-base text-slate-500">
+                    <Text className="text-center text-base text-text-secondary dark:text-dark-text-secondary">
                       인공지능 상담사에게 어린이집 입소를 물어보세요
                     </Text>
                   </View>
@@ -275,8 +269,8 @@ export default function ChatScreen() {
                 ListFooterComponent={
                   isStreaming ? (
                     <View className="mb-3 items-start">
-                      <View className="max-w-[82%] rounded-2xl rounded-bl-sm bg-slate-200 px-4 py-2">
-                        <Text className="text-sm text-slate-700">{'.'.repeat((dotTick % 3) + 1)}</Text>
+                      <View className="max-w-[82%] rounded-2xl rounded-bl-sm bg-surface-inset dark:bg-dark-surface-inset px-4 py-2">
+                        <Text className="text-sm text-text-primary dark:text-dark-text-primary">{'.'.repeat((dotTick % 3) + 1)}</Text>
                       </View>
                     </View>
                   ) : null
@@ -284,31 +278,34 @@ export default function ChatScreen() {
               />
             </View>
           )}
-          <View className="border-t border-slate-200 bg-slate-50 px-3 py-2">
+          <View className="border-t border-border-subtle dark:border-dark-border-subtle bg-surface-elevated dark:bg-dark-surface-elevated dark:bg-dark-surface-elevated px-3 py-2">
             <View className="mb-1 flex-row items-center">
               <TextInput
                 value={input}
                 onChangeText={setInput}
                 onSubmitEditing={sendMessage}
                 placeholder="메시지를 입력하세요"
-                className="min-h-12 flex-1 rounded-full border border-slate-300 bg-white px-4 text-slate-900"
-                placeholderTextColor="#94a3b8"
+                className="min-h-12 flex-1 rounded-full border border-border dark:border-dark-border bg-surface dark:bg-dark-surface px-4 text-text-primary dark:text-dark-text-primary"
+                placeholderTextColor={COLORS.textTertiary}
                 editable={!isStreaming && !planLimited}
                 returnKeyType="send"
                 textAlignVertical="center"
+                accessibilityLabel="메시지 입력"
               />
               <TouchableOpacity
                 onPress={sendMessage}
                 disabled={!input.trim() || isStreaming || planLimited}
                 className={`ml-2 h-12 w-12 items-center justify-center rounded-full ${
-                  !input.trim() || isStreaming || planLimited ? 'bg-slate-300' : 'bg-[#6366f1]'
+                  !input.trim() || isStreaming || planLimited ? 'bg-border' : 'bg-brand-500'
                 }`}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="메시지 보내기"
               >
                 {isStreaming ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
+                  <ActivityIndicator size="small" color={COLORS.textInverse} />
                 ) : (
-                  <Text className="text-lg font-bold text-white">↑</Text>
+                  <Text className="text-lg font-bold text-text-inverse">↑</Text>
                 )}
               </TouchableOpacity>
             </View>

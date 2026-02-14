@@ -1,4 +1,5 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
+import { StyledText as Text } from '@/components/ui/StyledText';
 
 interface CtaAction {
   label: string;
@@ -23,15 +24,17 @@ export function PlanLimit({
   return (
     <View className={`flex-1 items-center justify-center px-6 py-16 ${className ?? ''}`}>
       <Text className="mb-4 text-5xl">🔒</Text>
-      <Text className="mb-2 text-center text-lg font-bold text-slate-900">{title}</Text>
-      <Text className="mb-6 text-center text-sm leading-5 text-slate-500">{description}</Text>
+      <Text className="mb-2 text-center text-lg font-bold text-text-primary dark:text-dark-text-primary">{title}</Text>
+      <Text className="mb-6 text-center text-sm leading-5 text-text-secondary dark:text-dark-text-secondary">{description}</Text>
       {primaryCta && (
         <TouchableOpacity
           onPress={primaryCta.onPress}
-          className="mb-3 min-h-11 min-w-[200px] items-center justify-center rounded-xl bg-indigo-500 px-6 py-3"
+          className="mb-3 min-h-11 min-w-[200px] items-center justify-center rounded-xl bg-brand-500 px-6 py-3"
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={primaryCta.label}
         >
-          <Text className="text-sm font-semibold text-white">{primaryCta.label}</Text>
+          <Text className="text-sm font-semibold text-text-inverse">{primaryCta.label}</Text>
         </TouchableOpacity>
       )}
       {secondaryCta && (
@@ -39,8 +42,10 @@ export function PlanLimit({
           onPress={secondaryCta.onPress}
           className="min-h-11 items-center justify-center px-2"
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={secondaryCta.label}
         >
-          <Text className="text-sm font-medium text-indigo-500">{secondaryCta.label}</Text>
+          <Text className="text-sm font-medium text-brand-500">{secondaryCta.label}</Text>
         </TouchableOpacity>
       )}
     </View>

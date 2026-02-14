@@ -1,16 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+  ActivityIndicator, FlatList, RefreshControl, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
+import { COLORS } from '@/lib/constants';
+import { useThemeColors } from '@/lib/useThemeColors';
 
+import { StyledText as Text } from '@/components/ui/StyledText';
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3001';
 
 interface Post {
@@ -150,8 +145,10 @@ export default function CommunityScreen() {
     post.content.toLowerCase().includes(searchText.trim().toLowerCase()),
   );
 
+  const colors = useThemeColors();
+
   const renderItem = ({ item }: { item: Post }) => (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.background, borderColor: colors.border }]}>
       <View style={styles.rowBetween}>
         <View style={[styles.badge, badgeStyleByType(item.type)]}>
           <Text style={styles.badgeText}>{LABEL_BY_TYPE[item.type] ?? '게시글'}</Text>
@@ -186,21 +183,22 @@ export default function CommunityScreen() {
 
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#2563eb" />
+        <ActivityIndicator size="small" color={COLORS.brand500} />
       </View>
     );
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>커뮤니티</Text>
+    <View style={[styles.container, { backgroundColor: colors.surfaceInset }]}>
+      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+        <Text style={[styles.title, { color: colors.text }]}>커뮤니티</Text>
         <TextInput
           style={styles.searchInput}
           value={searchText}
           onChangeText={setSearchText}
           placeholder="게시글 내용으로 검색"
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={COLORS.textTertiary}
+          accessibilityLabel="게시글 검색"
         />
       </View>
 
@@ -217,7 +215,7 @@ export default function CommunityScreen() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor="#2563eb"
+            tintColor={COLORS.brand500}
           />
         }
         ListEmptyComponent={renderEmpty}
@@ -228,13 +226,15 @@ export default function CommunityScreen() {
         style={styles.fab}
         activeOpacity={0.85}
         onPress={() => router.push('/community/write')}
+        accessibilityRole="button"
+        accessibilityLabel="글쓰기"
       >
         <Text style={styles.fabText}>글쓰기</Text>
       </TouchableOpacity>
 
       {isLoading ? (
         <View style={styles.centeredOverlay}>
-          <ActivityIndicator size="large" color="#2563eb" />
+          <ActivityIndicator size="large" color={COLORS.brand500} />
         </View>
       ) : null}
     </View>
@@ -244,41 +244,41 @@ export default function CommunityScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fb',
+    backgroundColor: COLORS.surfaceInset,
   },
   header: {
     padding: 16,
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.background,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: COLORS.border,
   },
   title: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#111827',
+    color: COLORS.text,
     marginBottom: 12,
   },
   searchInput: {
     height: 42,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    backgroundColor: '#f9fafb',
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
     paddingHorizontal: 12,
     fontSize: 14,
-    color: '#111827',
+    color: COLORS.text,
   },
   listContent: {
     padding: 16,
     paddingBottom: 96,
   },
   card: {
-    backgroundColor: '#ffffff',
+    backgroundColor: COLORS.background,
     borderRadius: 12,
     padding: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: COLORS.border,
     shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowOffset: { width: 0, height: 2 },
@@ -306,32 +306,32 @@ const styles = StyleSheet.create({
     backgroundColor: '#dcfce7',
   },
   badgeDefault: {
-    backgroundColor: '#e5e7eb',
+    backgroundColor: COLORS.border,
   },
   badgeText: {
-    color: '#111827',
+    color: COLORS.text,
     fontWeight: '600',
     fontSize: 12,
   },
   scoreText: {
     fontSize: 12,
-    color: '#6b7280',
+    color: COLORS.textSecondary,
   },
   content: {
     fontSize: 15,
-    color: '#111827',
+    color: COLORS.text,
     lineHeight: 22,
     marginBottom: 8,
   },
   metaText: {
     fontSize: 12,
-    color: '#6b7280',
+    color: COLORS.textSecondary,
     marginBottom: 2,
   },
   emptyText: {
     textAlign: 'center',
     marginTop: 40,
-    color: '#9ca3af',
+    color: COLORS.textTertiary,
     fontSize: 15,
   },
   footerLoader: {
@@ -344,17 +344,17 @@ const styles = StyleSheet.create({
     width: 96,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#2563eb',
+    backgroundColor: COLORS.brand600,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
-    shadowColor: '#1d4ed8',
+    shadowColor: COLORS.brand600,
     shadowOpacity: 0.4,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
   },
   fabText: {
-    color: '#ffffff',
+    color: COLORS.textInverse,
     fontWeight: '700',
     fontSize: 16,
   },
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   errorText: {
-    color: '#b91c1c',
+    color: COLORS.danger,
     marginHorizontal: 16,
     marginTop: 8,
     fontSize: 13,

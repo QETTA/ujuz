@@ -1,15 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-} from 'react-native';
+  View, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getJson, postJson } from '@/lib/api';
 import { LoadingSkeleton, NetworkError, EmptyFirstUse, EmptyNoResults } from '@/components/states';
 
+import { StyledText as Text } from '@/components/ui/StyledText';
 type UnreadAlert = {
   _id: string;
   facility_name: string;
@@ -64,7 +60,7 @@ function confidenceVisual(level: ConfidenceLevel) {
   if (level === 'medium') {
     return { dot: 'bg-yellow-400', label: '보통' };
   }
-  return { dot: 'bg-slate-400', label: '낮음' };
+  return { dot: 'bg-text-tertiary', label: '낮음' };
 }
 
 function parseFacilityClasses(classes: string[]) {
@@ -151,12 +147,12 @@ export default function AlertsScreen() {
   );
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-slate-100">
-      <View className="border-b border-slate-200 bg-white px-4 py-4">
+    <SafeAreaView edges={['top']} className="flex-1 bg-surface-inset dark:bg-dark-surface-inset">
+      <View className="border-b border-border-subtle dark:border-dark-border-subtle bg-surface dark:bg-dark-surface px-4 py-4">
         <View className="flex-row items-center justify-between">
-          <Text className="text-2xl font-extrabold text-slate-900">TO 알림</Text>
-          <View className="flex-row items-center rounded-full bg-indigo-100 px-3 py-1">
-            <Text className="text-xs font-semibold text-indigo-700">
+          <Text className="text-2xl font-extrabold text-text-primary dark:text-dark-text-primary">TO 알림</Text>
+          <View className="flex-row items-center rounded-full bg-brand-100 px-3 py-1">
+            <Text className="text-xs font-semibold text-brand-700">
               미확인 {alerts.length}건
             </Text>
           </View>
@@ -186,7 +182,7 @@ export default function AlertsScreen() {
         ) : (
           <View className="py-4">
             <View>
-              <Text className="mb-3 text-lg font-bold text-slate-900">활성 알림</Text>
+              <Text className="mb-3 text-lg font-bold text-text-primary dark:text-dark-text-primary">활성 알림</Text>
               {subscriptions.length > 0 && alerts.length === 0 ? (
                 <EmptyNoResults
                   title="아직 감지된 TO가 없어요"
@@ -205,28 +201,30 @@ export default function AlertsScreen() {
                         activeOpacity={0.75}
                         disabled={isMarking}
                         onPress={() => markAsRead(alert._id)}
-                        className={`rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm ${isMarking ? 'opacity-70' : 'opacity-100'}`}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${alert.facility_name} ${alert.age_class} 알림 읽음 처리`}
+                        className={`rounded-2xl border border-border-subtle dark:border-dark-border-subtle bg-surface dark:bg-dark-surface px-4 py-4 shadow-sm ${isMarking ? 'opacity-70' : 'opacity-100'}`}
                       >
-                        <View className="absolute left-0 top-0 h-full w-1 rounded-l-2xl border-l-4 border-indigo-500" />
+                        <View className="absolute left-0 top-0 h-full w-1 rounded-l-2xl border-l-4 border-brand-500" />
                         <View className="mb-2 flex-row items-center justify-between gap-2">
                           <View className="flex-1">
-                            <Text className="text-base font-bold text-slate-900">
+                            <Text className="text-base font-bold text-text-primary dark:text-dark-text-primary">
                               {alert.facility_name}
                             </Text>
                           </View>
-                          <View className="rounded-full bg-indigo-100 px-3 py-1">
-                            <Text className="text-xs font-semibold text-indigo-700">{alert.age_class}</Text>
+                          <View className="rounded-full bg-brand-100 px-3 py-1">
+                            <Text className="text-xs font-semibold text-brand-700">{alert.age_class}</Text>
                           </View>
                         </View>
                         <View className="mb-2 flex-row items-center justify-between">
-                          <Text className="text-sm text-slate-600">
+                          <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">
                             예상 {alert.estimated_slots}명
                           </Text>
-                          <Text className="text-xs text-slate-500">{timeAgo(alert.detected_at)}</Text>
+                          <Text className="text-xs text-text-secondary dark:text-dark-text-secondary">{timeAgo(alert.detected_at)}</Text>
                         </View>
                         <View className="flex-row items-center justify-end gap-1">
                           <View className={`h-2 w-2 rounded-full ${dot}`} />
-                          <Text className="text-xs text-slate-500">신뢰도 {label}</Text>
+                          <Text className="text-xs text-text-secondary dark:text-dark-text-secondary">신뢰도 {label}</Text>
                         </View>
                       </TouchableOpacity>
                     );
@@ -236,50 +234,50 @@ export default function AlertsScreen() {
             </View>
 
             <View>
-              <Text className="mb-3 text-lg font-bold text-slate-900">구독 목록</Text>
+              <Text className="mb-3 text-lg font-bold text-text-primary dark:text-dark-text-primary">구독 목록</Text>
               <View className="gap-3 pb-2">
                 {subscriptions.length === 0 ? (
-                  <View className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-                    <Text className="text-sm text-slate-500">구독한 시설이 없습니다.</Text>
+                  <View className="rounded-2xl border border-border-subtle dark:border-dark-border-subtle bg-surface dark:bg-dark-surface px-4 py-4">
+                    <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">구독한 시설이 없습니다.</Text>
                   </View>
                 ) : (
                   subscriptions.map((sub) => (
                     <View
                       key={sub.id}
-                      className="rounded-2xl border border-slate-100 bg-white px-4 py-4 shadow-sm"
+                      className="rounded-2xl border border-border-subtle dark:border-dark-border-subtle bg-surface dark:bg-dark-surface px-4 py-4 shadow-sm"
                     >
                       <View className="mb-2 flex-row items-center justify-between">
-                        <Text className="text-base font-semibold text-slate-900">{sub.facility_name}</Text>
+                        <Text className="text-base font-semibold text-text-primary dark:text-dark-text-primary">{sub.facility_name}</Text>
                         <View
                           className={`rounded-full px-3 py-1 ${
-                            sub.is_active ? 'bg-green-100' : 'bg-slate-100'
+                            sub.is_active ? 'bg-green-100' : 'bg-surface-inset dark:bg-dark-surface-inset'
                           }`}
                         >
                           <Text
                             className={`text-xs font-semibold ${
-                              sub.is_active ? 'text-green-700' : 'text-slate-500'
+                              sub.is_active ? 'text-green-700' : 'text-text-secondary dark:text-dark-text-secondary'
                             }`}
                           >
                             {sub.is_active ? '구독 중' : '중지됨'}
                           </Text>
                         </View>
                       </View>
-                      <Text className="mb-1 text-xs text-slate-500">대상 연령</Text>
+                      <Text className="mb-1 text-xs text-text-secondary dark:text-dark-text-secondary">대상 연령</Text>
                       <View className="flex-row flex-wrap gap-2">
                         {sub.target_classes.length === 0 ? (
-                          <Text className="text-sm text-slate-500">지정 없음</Text>
+                          <Text className="text-sm text-text-secondary dark:text-dark-text-secondary">지정 없음</Text>
                         ) : (
                           sub.target_classes.map((target) => (
                             <View
                               key={`${sub.id}-${target}`}
-                              className="rounded-full bg-indigo-100 px-3 py-1"
+                              className="rounded-full bg-brand-100 px-3 py-1"
                             >
-                              <Text className="text-xs font-medium text-indigo-700">{target}</Text>
+                              <Text className="text-xs font-medium text-brand-700">{target}</Text>
                             </View>
                           ))
                         )}
                       </View>
-                      <Text className="mt-2 text-xs text-slate-400">
+                      <Text className="mt-2 text-xs text-text-tertiary dark:text-dark-text-tertiary">
                         시설 아이디: {sub.facility_id}
                         {parseFacilityClasses(sub.target_classes).length > 0
                           ? ` / 대상: ${parseFacilityClasses(sub.target_classes)}`

@@ -1,5 +1,5 @@
 /**
- * Tests for /api/simulate — engine interface + usage gating
+ * Tests for /api/v1/simulate — engine interface + usage gating
  */
 import { describe, it, expect } from 'vitest';
 import { parseBody, simulateSchema } from '@/lib/server/validation';

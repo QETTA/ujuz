@@ -31,7 +31,7 @@ export default function FacilityDetailPage({ params }: { params: Promise<{ id: s
   const child = useOnboardingStore((s) => s.child);
   const ageBand = child?.ageBand ?? 2;
   const { data: facility, loading } = useApiFetch<FacilityDetail>(`/api/v1/facilities/${id}`);
-  const { data: scoreResult } = useApiFetch<AdmissionScoreResultV2>(`/api/simulate?facility_id=${id}&child_age_band=${ageBand}`);
+  const { data: scoreResult } = useApiFetch<AdmissionScoreResultV2>(`/api/v1/simulate?facility_id=${id}&child_age_band=${ageBand}`);
   const subscribe = useToAlertStore((s) => s.subscribe);
   const [activeTab, setActiveTab] = useState('info');
 
