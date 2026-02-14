@@ -22,7 +22,7 @@ export async function POST(
     if (!FEATURE_FLAGS.facilityAdminApi) {
       logRequest(req, 400, start, traceId);
       return NextResponse.json(
-        { error: 'Facility admin API is not enabled', code: 'feature_disabled' },
+        { error: { code: 'feature_disabled', message: 'Facility admin API is not enabled' } },
         { status: 400 },
       );
     }

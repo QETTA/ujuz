@@ -73,7 +73,7 @@ function isPostOwner(post: PostDoc, userId: string): boolean {
 function isCommunityEnabled() {
   if (!FEATURE_FLAGS.communityWrite) {
     return NextResponse.json(
-      { error: '커뮤니티 글쓰기는 아직 준비 중입니다', code: 'feature_disabled' },
+      { error: { code: 'feature_disabled', message: '커뮤니티 글쓰기는 아직 준비 중입니다' } },
       { status: 400 },
     );
   }

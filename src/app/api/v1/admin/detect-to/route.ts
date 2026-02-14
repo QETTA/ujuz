@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     if (!FEATURE_FLAGS.toDetection) {
       logRequest(req, 400, start, traceId);
       return NextResponse.json(
-        { error: 'TO detection is not enabled', code: 'feature_disabled' },
+        { error: { code: 'feature_disabled', message: 'TO detection is not enabled' } },
         { status: 400 },
       );
     }

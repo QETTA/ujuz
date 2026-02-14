@@ -39,21 +39,21 @@ export async function POST(req: NextRequest) {
     const action = normalizePushRegisterAction(userAction);
     if (!action) {
       return NextResponse.json(
-        { error: 'Invalid action', code: 'invalid_action' },
+        { error: { code: 'invalid_action', message: 'Invalid action' } },
         { status: 400 },
       );
     }
 
     if (!token) {
       return NextResponse.json(
-        { error: 'Missing push token', code: 'missing_token' },
+        { error: { code: 'missing_token', message: 'Missing push token' } },
         { status: 400 },
       );
     }
 
     if (!EXPO_PUSH_TOKEN_RE.test(token)) {
       return NextResponse.json(
-        { error: 'Invalid push token format', code: 'invalid_token' },
+        { error: { code: 'invalid_token', message: 'Invalid push token format' } },
         { status: 400 },
       );
     }
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     const deviceId = req.headers.get('x-device-id');
     if (!deviceId) {
       return NextResponse.json(
-        { error: 'Missing device ID', code: 'missing_device_id' },
+        { error: { code: 'missing_device_id', message: 'Missing device ID' } },
         { status: 400 },
       );
     }
@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
       });
 
       return NextResponse.json(
-        { error: err.message, code: err.code ?? 'bad_request' },
+        { error: { code: err.code ?? 'bad_request', message: err.message } },
         { status },
       );
     }
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { error: 'Internal server error', code: 'internal_error' },
+      { error: { code: 'internal_error', message: 'Internal server error' } },
       { status: 500 },
     );
   }

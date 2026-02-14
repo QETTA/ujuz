@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     if (!FEATURE_FLAGS.facilityCrawl) {
       logRequest(req, 400, start, traceId);
       return NextResponse.json(
-        { error: 'Facility crawl is not enabled', code: 'feature_disabled' },
+        { error: { code: 'feature_disabled', message: 'Facility crawl is not enabled' } },
         { status: 400 },
       );
     }

@@ -39,8 +39,11 @@ type FacilityDoc = {
 const VALID_TYPES = new Set(['national_public', 'private', 'home', 'workplace', 'cooperative']);
 const VALID_SORTS = new Set(['name', 'capacity', 'distance']);
 
-function jsonError(status: number, error: string, message: string, details?: unknown) {
-  return NextResponse.json({ error, message, details }, { status });
+function jsonError(status: number, code: string, message: string, details?: unknown) {
+  return NextResponse.json(
+    { error: { code, message, ...(details ? { details } : {}) } },
+    { status },
+  );
 }
 
 function parseNumeric(value: string | null, key: string): number | undefined {
@@ -92,10 +95,7 @@ export async function GET(req: NextRequest) {
     );
     if (!allowed) {
       logRequest(req, 429, startMs, traceId);
-      return NextResponse.json(
-        { error: 'Too many requests', code: 'rate_limited' },
-        { status: 429 },
-      );
+      return jsonError(429, 'RATE_LIMITED', '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.');
     }
 
     const { searchParams } = new URL(req.url);

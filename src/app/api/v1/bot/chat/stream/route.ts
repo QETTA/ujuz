@@ -1,6 +1,6 @@
 /**
  * Streaming chat endpoint using Vercel AI SDK v6.
- * POST /api/bot/chat/stream
+ * POST /api/v1/bot/chat/stream
  *
  * Receives UIMessage[] from the AI SDK client and streams back
  * via toUIMessageStreamResponse().
@@ -217,7 +217,7 @@ export async function POST(req: NextRequest) {
     const { allowed } = await checkRateLimit(`chat:${userId}`, 20, 60_000);
     if (!allowed) {
       logRequest(req, 429, start, traceId);
-      return new Response(JSON.stringify({ error: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.', code: 'rate_limited' }), {
+      return new Response(JSON.stringify({ error: { code: 'rate_limited', message: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' } }), {
         status: 429,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -226,7 +226,7 @@ export async function POST(req: NextRequest) {
     const rawBody = await req.json().catch(() => null);
     if (!rawBody || typeof rawBody !== 'object') {
       logRequest(req, 400, start, traceId);
-      return new Response(JSON.stringify({ error: '잘못된 요청 형식입니다', code: 'invalid_json' }), {
+      return new Response(JSON.stringify({ error: { code: 'invalid_json', message: '잘못된 요청 형식입니다' } }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -240,7 +240,7 @@ export async function POST(req: NextRequest) {
 
     if (!Array.isArray(body.messages) || body.messages.length === 0) {
       logRequest(req, 400, start, traceId);
-      return new Response(JSON.stringify({ error: '메시지가 필요합니다', code: 'missing_messages' }), {
+      return new Response(JSON.stringify({ error: { code: 'missing_messages', message: '메시지가 필요합니다' } }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -249,7 +249,7 @@ export async function POST(req: NextRequest) {
     // Find the last user message — AI SDK v6 sends UIMessage with parts
     const lastUserMsg = [...body.messages].reverse().find((m) => m.role === 'user');
     if (!lastUserMsg) {
-      return new Response(JSON.stringify({ error: '사용자 메시지가 필요합니다', code: 'missing_user_message' }), {
+      return new Response(JSON.stringify({ error: { code: 'missing_user_message', message: '사용자 메시지가 필요합니다' } }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -260,7 +260,7 @@ export async function POST(req: NextRequest) {
       ? extractTextFromParts(lastUserMsg.parts)
       : '';
     if (!userText || userText.length > 2000) {
-      return new Response(JSON.stringify({ error: '메시지를 입력해 주세요 (2000자 이내)', code: 'invalid_message' }), {
+      return new Response(JSON.stringify({ error: { code: 'invalid_message', message: '메시지를 입력해 주세요 (2000자 이내)' } }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -271,7 +271,7 @@ export async function POST(req: NextRequest) {
       const inputCheck = sanitizeInput(userText);
       if (!inputCheck.safe) {
         logRequest(req, 400, start, traceId);
-        return new Response(JSON.stringify({ error: '요청을 처리할 수 없습니다', code: 'input_blocked' }), {
+        return new Response(JSON.stringify({ error: { code: 'input_blocked', message: '요청을 처리할 수 없습니다' } }), {
           status: 400,
           headers: { 'Content-Type': 'application/json' },
         });

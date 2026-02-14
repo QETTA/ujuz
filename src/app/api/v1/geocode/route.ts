@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
   if (isRateLimited(req)) {
     logRequest(req, 429, start, traceId);
     return NextResponse.json(
-      { error: 'Too many requests', code: 'geocode_rate_limited' },
+      { error: { code: 'geocode_rate_limited', message: 'Too many requests' } },
       { status: 429 },
     );
   }
@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
       logger.error('Kakao API error', { status: response.status, mode: mode as KakaoMode });
       logRequest(req, 502, start, traceId);
       return NextResponse.json(
-        { error: 'Geocoding service error', code: 'geocode_upstream_error' },
+        { error: { code: 'geocode_upstream_error', message: 'Geocoding service error' } },
         { status: 502 },
       );
     }

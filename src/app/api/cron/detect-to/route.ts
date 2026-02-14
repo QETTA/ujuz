@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   const isAdmin = adminApiKey && adminKey === adminApiKey;
 
   if (!isCron && !isAdmin) {
-    return NextResponse.json({ error: 'Unauthorized', code: 'auth_required' }, { status: 401 });
+    return NextResponse.json({ error: { code: 'auth_required', message: 'Unauthorized' } }, { status: 401 });
   }
 
   try {
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { error: 'Detection failed', code: 'internal_error' },
+      { error: { code: 'internal_error', message: 'Detection failed' } },
       { status: 500 },
     );
   }

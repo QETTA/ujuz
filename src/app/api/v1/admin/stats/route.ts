@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   if (!configuredAdminKey) {
     logger.error('ADMIN_API_KEY is not configured');
     return NextResponse.json(
-      { error: 'Admin API is not configured', code: 'admin_not_configured' },
+      { error: { code: 'admin_not_configured', message: 'Admin API is not configured' } },
       { status: 503 },
     );
   }
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
   if (!adminKey || adminKey !== configuredAdminKey) {
     logger.warn('Invalid admin key attempt for /api/v1/admin/stats');
     return NextResponse.json(
-      { error: 'Invalid admin key', code: 'admin_unauthorized' },
+      { error: { code: 'admin_unauthorized', message: 'Invalid admin key' } },
       { status: 401 },
     );
   }
@@ -100,7 +100,7 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { error: 'Failed to load admin stats', code: 'admin_stats_error' },
+      { error: { code: 'admin_stats_error', message: 'Failed to load admin stats' } },
       { status: 500 },
     );
   }
