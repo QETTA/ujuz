@@ -248,6 +248,52 @@ body {
   padding-bottom: max(env(safe-area-inset-bottom), 1rem);
 }
 
+/* Tailwind v4 custom utility fallbacks:
+   z-index and semantic duration tokens are regular CSS vars here, so map classes explicitly. */
+.z-base {
+  z-index: var(--z-base);
+}
+
+.z-dropdown {
+  z-index: var(--z-dropdown);
+}
+
+.z-sticky {
+  z-index: var(--z-sticky);
+}
+
+.z-overlay {
+  z-index: var(--z-overlay);
+}
+
+.z-modal {
+  z-index: var(--z-modal);
+}
+
+.z-toast {
+  z-index: var(--z-toast);
+}
+
+.z-nav {
+  z-index: var(--z-nav);
+}
+
+.duration-fast {
+  transition-duration: var(--duration-fast);
+}
+
+.duration-normal {
+  transition-duration: var(--duration-normal);
+}
+
+.duration-slow {
+  transition-duration: var(--duration-slow);
+}
+
+.pb-safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+}
+
 /* ── Chat Motion System ── */
 
 @keyframes message-enter {
