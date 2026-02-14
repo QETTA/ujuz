@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 ## Status
-Phase 8 P1 ✅ 완료. P2 대기(T-306/403/404). T-000~T-402 완료.
+Phase 8 전체 ✅ 완료. T-000~T-404 전 티켓 완료. D-시리즈(디자인) 대기.
 
 ## Workflow
 - 품질 게이트: `pnpm typecheck` (0 에러 필수)
