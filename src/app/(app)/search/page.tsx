@@ -259,7 +259,7 @@ export default function SearchPage() {
   const renderResultsCount = totalCount ?? facilities.length;
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-surface-inset">
       <TopBar title="시설 검색" />
 
       <main className="mx-auto w-full max-w-6xl px-4 py-6">

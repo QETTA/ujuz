@@ -98,7 +98,7 @@ export default function NotificationSettingsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex min-h-screen flex-col gap-5 bg-surface-inset">
       <PageHeader title="알림 설정" backHref="/my/settings" />
 
       <div className="space-y-4 px-4">

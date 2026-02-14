@@ -185,6 +185,11 @@ export default function PricingPage() {
 
       {loading ? (
         renderSkeletonCards()
+      ) : plans.length === 0 && !error ? (
+        <div className="rounded-2xl border border-dashed border-border bg-surface-elevated py-16 text-center">
+          <p className="text-lg font-semibold text-text-primary">요금제 준비 중</p>
+          <p className="mt-2 text-sm text-text-secondary">곧 다양한 요금제가 제공될 예정입니다.</p>
+        </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-3">
           {plans.map((plan) => {

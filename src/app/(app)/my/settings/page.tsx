@@ -102,7 +102,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-surface-inset">
       <TopBar title="설정" showBack />
 
       <main className="space-y-6 p-4">

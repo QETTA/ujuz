@@ -4,7 +4,7 @@ import type { HTMLAttributes } from 'react';
 export type CardVariant = 'default' | 'glass' | 'elevated';
 
 const variantStyles: Record<CardVariant, string> = {
-  default: 'bg-surface border border-border',
+  default: 'bg-surface-elevated border border-border shadow-sm',
   glass: 'glass border border-border-subtle',
   elevated: 'bg-surface-elevated shadow-md',
 };

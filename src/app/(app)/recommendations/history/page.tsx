@@ -56,7 +56,10 @@ export default function RecommendationHistoryPage() {
       const res = await fetch(`/api/v1/recommendations/history?limit=${limit}&offset=${offset}`);
       if (!res.ok) {
         const payload = await res.json().catch(() => null);
-        throw new Error(payload?.error ?? '추천 기록을 불러오지 못했습니다');
+        const msg = typeof payload?.error === 'string'
+          ? payload.error
+          : payload?.error?.message ?? '추천 기록을 불러오지 못했습니다';
+        throw new Error(msg);
       }
 
       const data = (await res.json()) as RecommendationHistoryResponse;
