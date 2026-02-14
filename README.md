@@ -51,6 +51,20 @@ Standalone Fastify + MongoDB backend for the UjuZ product (daycare admission pre
    pnpm start
    ```
 
+## Refactoring Quick Start
+
+```bash
+pnpm refactor:start
+```
+
+Codex CLI로 전체 리팩토링 실행:
+
+```bash
+pnpm codex:refactor:all
+```
+
+For a full branch workflow, see `docs/REFACTORING-START.md`.
+
 ## Project Structure
 
 ```
