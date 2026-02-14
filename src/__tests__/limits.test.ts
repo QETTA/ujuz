@@ -25,6 +25,10 @@ afterEach(async () => {
 describe('usage counter atomic increment', () => {
   test('prevents limit overflow under concurrent admission calc checks', async () => {
     const db = await connectMongo();
+    await db.collection(COLLECTIONS.usageCounters).createIndex(
+      { subject_id: 1, period: 1, feature: 1 },
+      { unique: true },
+    );
     const subjectId = 'anon-1';
     const tier: Tier = 'free';
 

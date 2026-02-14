@@ -75,12 +75,6 @@ export async function checkAndIncrement(
     {
       $inc: { count: 1 },
       $set: { updated_at: now },
-      $setOnInsert: {
-        subject_id: params.subjectId,
-        period: periodInfo.period,
-        feature: params.feature,
-        count: 0,
-      },
     },
     {
       upsert: true,

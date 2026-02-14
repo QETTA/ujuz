@@ -63,12 +63,12 @@ interface CachedResultFixtureOverrides extends Partial<AdmissionScoreResultV2> {
 
 type BonusType = keyof typeof PRIORITY_BONUS;
 
-const loggerMock = {
+const loggerMock = vi.hoisted(() => ({
   debug: vi.fn(),
   info: vi.fn(),
   warn: vi.fn(),
   error: vi.fn(),
-};
+}));
 
 let mockDbState: MockDbState;
 let mockDbClient: { collection: ReturnType<typeof vi.fn> };

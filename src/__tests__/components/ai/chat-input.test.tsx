@@ -7,7 +7,7 @@ import { ChatInput } from '@/components/ai/chat-input';
 describe('ChatInput', () => {
   it('renders input and send button', () => {
     render(<ChatInput onSend={vi.fn()} />);
-    expect(screen.getByLabelText('메시지 입력')).toBeInTheDocument();
+    expect(screen.getByLabelText('메시지를 입력하세요...')).toBeInTheDocument();
     expect(screen.getByLabelText('전송')).toBeInTheDocument();
   });
 
@@ -15,7 +15,7 @@ describe('ChatInput', () => {
     const onSend = vi.fn();
     render(<ChatInput onSend={onSend} />);
 
-    const input = screen.getByLabelText('메시지 입력');
+    const input = screen.getByLabelText('메시지를 입력하세요...');
     fireEvent.change(input, { target: { value: '  테스트 메시지  ' } });
     fireEvent.submit(input.closest('form')!);
 
@@ -25,7 +25,7 @@ describe('ChatInput', () => {
   it('clears input after send', () => {
     render(<ChatInput onSend={vi.fn()} />);
 
-    const input = screen.getByLabelText('메시지 입력') as HTMLInputElement;
+    const input = screen.getByLabelText('메시지를 입력하세요...') as HTMLInputElement;
     fireEvent.change(input, { target: { value: '안녕' } });
     fireEvent.submit(input.closest('form')!);
 
@@ -36,7 +36,7 @@ describe('ChatInput', () => {
     const onSend = vi.fn();
     render(<ChatInput onSend={onSend} />);
 
-    const input = screen.getByLabelText('메시지 입력');
+    const input = screen.getByLabelText('메시지를 입력하세요...');
     fireEvent.change(input, { target: { value: '   ' } });
     fireEvent.submit(input.closest('form')!);
 
@@ -61,6 +61,6 @@ describe('ChatInput', () => {
 
   it('disables input when disabled prop is set', () => {
     render(<ChatInput onSend={vi.fn()} disabled />);
-    expect(screen.getByLabelText('메시지 입력')).toBeDisabled();
+    expect(screen.getByLabelText('메시지를 입력하세요...')).toBeDisabled();
   });
 });

@@ -1,4 +1,5 @@
 import type { Db, Document, WithId } from 'mongodb';
+import { U } from './collections';
 import { logger } from './logger';
 
 const TOSS_BASE_URL = 'https://api.tosspayments.com/v1';
@@ -60,7 +61,7 @@ export async function createPaymentRecord(
       created_at: new Date(),
     };
 
-    const result = await db.collection('payments').insertOne(record as Document);
+    const result = await db.collection(U.PAYMENTS).insertOne(record as Document);
     return result.insertedId.toString();
   } catch (error) {
     logger.error('Failed to create payment record', { error: error instanceof Error ? error.message : String(error), context: 'createPaymentRecord' });
@@ -75,7 +76,7 @@ export async function confirmPayment(
   amount: number,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const collection = db.collection('payments');
+    const collection = db.collection(U.PAYMENTS);
     const payment = await collection.findOne({ order_id: orderId });
 
     if (!payment) {
@@ -142,7 +143,7 @@ export async function cancelPayment(
   cancelReason: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const collection = db.collection('payments');
+    const collection = db.collection(U.PAYMENTS);
     const payment = await collection.findOne({ payment_key: paymentKey });
 
     if (!payment) {

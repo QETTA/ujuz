@@ -30,7 +30,7 @@ async function logEmailDelivery(
   errorMessage?: string,
 ): Promise<void> {
   try {
-    await db.collection('email_delivery_log').insertOne({
+    await db.collection(U.EMAIL_DELIVERY_LOG).insertOne({
       user_id: userId,
       email,
       alert_count: alertCount,
@@ -142,7 +142,7 @@ export async function getEmailDeliveryStats(
   db: Db,
   since: Date,
 ): Promise<{ total: number; sent: number; failed: number; bounced: number }> {
-  const rows = await db.collection('email_delivery_log')
+  const rows = await db.collection(U.EMAIL_DELIVERY_LOG)
     .aggregate<{ _id: 'sent' | 'failed' | 'bounced'; count: number }>([
       { $match: { sent_at: { $gte: since } } },
       { $group: { _id: '$status', count: { $sum: 1 } } },
