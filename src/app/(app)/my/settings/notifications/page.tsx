@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { Spinner } from '@/components/primitives/Spinner';
 
-const STORAGE_KEY = 'ujuz_notif_settings';
-
 interface NotifSettings {
   enabled: boolean;
   to_alerts: boolean;
@@ -53,14 +51,21 @@ export default function NotificationSettingsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<NotifSettings>;
-        setSettings((prev) => ({ ...prev, ...parsed }));
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/v1/user/notification-settings');
+        if (res.ok) {
+          const data = (await res.json()) as Partial<NotifSettings>;
+          if (!cancelled) setSettings((prev) => ({ ...prev, ...data }));
+        }
+      } catch {
+        // 서버 실패 시 기본값 유지
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } catch { /* ignore */ }
-    setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const update = useCallback(<K extends keyof NotifSettings>(key: K, value: NotifSettings[K]) => {
@@ -70,8 +75,12 @@ export default function NotificationSettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // MVP: localStorage 저장. Phase 6/7에서 서버 연동.
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      const res = await fetch('/api/v1/user/notification-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      if (!res.ok) throw new Error('save failed');
       toast('알림 설정이 저장되었어요.', 'success');
     } catch {
       toast('저장에 실패했습니다. 다시 시도해 주세요.', 'error');

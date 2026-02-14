@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
+import { U } from '@/lib/server/collections';
 import { logger } from '@/lib/server/logger';
 
 const ADMIN_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
     const from = new Date(now.getTime() - ADMIN_WINDOW_MS);
 
     const subscriptionsPipeline: SubscriptionBuckets[] = await db
-      .collection('user_subscriptions')
+      .collection(U.USER_SUBSCRIPTIONS)
       .aggregate<SubscriptionBuckets>([
         {
           $match: {
@@ -55,15 +56,15 @@ export async function GET(req: NextRequest) {
       .toArray();
 
     const [users, alerts24h, paymentsTotal] = await Promise.all([
-      db.collection('users').countDocuments({}),
-      db.collection('to_alerts').countDocuments({
+      db.collection(U.USERS).countDocuments({}),
+      db.collection(U.TO_ALERTS).countDocuments({
         $or: [
           { created_at: { $gte: from } },
           { detected_at: { $gte: from } },
           { detectedAt: { $gte: from } },
         ],
       }),
-      db.collection('payments').countDocuments({}),
+      db.collection(U.PAYMENTS).countDocuments({}),
     ]);
 
     const subscriptionCount = {

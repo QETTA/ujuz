@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserId, errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
 import { errors } from '@/lib/server/apiError';
 import { getDbOrThrow } from '@/lib/server/db';
+import { U } from '@/lib/server/collections';
 import { logger } from '@/lib/server/logger';
 import type { UserSubscriptionDoc } from '@/lib/server/dbTypes';
 
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({})) as { reason?: string; immediate?: boolean };
 
     const db = await getDbOrThrow();
-    const col = db.collection<UserSubscriptionDoc>('user_subscriptions');
+    const col = db.collection<UserSubscriptionDoc>(U.USER_SUBSCRIPTIONS);
 
     const sub = await col.findOne({
       user_id: userId,
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
       );
 
       // Log refund request (actual refund handled via Toss webhook or admin)
-      await db.collection('refund_requests').insertOne({
+      await db.collection(U.REFUND_REQUESTS).insertOne({
         user_id: userId,
         subscription_id: sub._id.toString(),
         plan_tier: sub.plan_tier,

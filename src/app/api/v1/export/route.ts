@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AppError } from '@/lib/server/errors';
 import { getUserId, errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
 import { getDbOrThrow } from '@/lib/server/db';
+import { U } from '@/lib/server/collections';
 
 export const runtime = 'nodejs';
 
@@ -121,18 +122,18 @@ export async function GET(req: NextRequest) {
     const userIdFallbackFilter = { userId: userId };
 
     const [conversations, recommendations, toSubscriptions, toAlerts, subscription, memories] = await Promise.all([
-      db.collection('conversations').find(userIdFilter).sort({ created_at: -1 }).limit(100).toArray(),
-      db.collection('recommendations').find(userIdFilter).toArray(),
-      db.collection('to_subscriptions').find(userIdFilter).toArray(),
-      db.collection('to_alerts').find(userIdFilter).sort({ detected_at: -1 }).limit(200).toArray(),
-      db.collection('user_subscriptions').findOne(
+      db.collection(U.CONVERSATIONS).find(userIdFilter).sort({ created_at: -1 }).limit(100).toArray(),
+      db.collection(U.RECOMMENDATIONS).find(userIdFilter).toArray(),
+      db.collection(U.TO_SUBSCRIPTIONS).find(userIdFilter).toArray(),
+      db.collection(U.TO_ALERTS).find(userIdFilter).sort({ detected_at: -1 }).limit(200).toArray(),
+      db.collection(U.USER_SUBSCRIPTIONS).findOne(
         {
           ...userIdFilter,
           status: { $in: ['active', 'trial'] },
         },
         { sort: { current_period_end: -1 } },
       ),
-      db.collection('user_memories').find({ $or: [userIdFilter, userIdFallbackFilter] }).toArray(),
+      db.collection(U.USER_MEMORIES).find({ $or: [userIdFilter, userIdFallbackFilter] }).toArray(),
     ]);
 
     const payload = {

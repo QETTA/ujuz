@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserId, errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
 import { getDbOrThrow } from '@/lib/server/db';
+import { U } from '@/lib/server/collections';
 import { AppError } from '@/lib/server/errors';
 
 export const runtime = 'nodejs';
@@ -61,9 +62,9 @@ export async function GET(req: NextRequest) {
     const filter = { user_id: userId };
 
     const [total, docs] = await Promise.all([
-      db.collection('recommendations').countDocuments(filter),
+      db.collection(U.RECOMMENDATIONS).countDocuments(filter),
       db
-        .collection<RecommendationDocument>('recommendations')
+        .collection<RecommendationDocument>(U.RECOMMENDATIONS)
         .find(filter)
         .sort({ created_at: -1 })
         .skip(offset)

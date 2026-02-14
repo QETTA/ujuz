@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
+import { U } from '@/lib/server/collections';
 import { getUserId, errorResponse, getTraceId, logRequest } from '@/lib/server/apiHelpers';
 import { errors } from '@/lib/server/apiError';
 
@@ -28,19 +29,19 @@ export async function GET(req: NextRequest) {
       totalFacilities,
     ] = await Promise.all([
       // Unread alert count
-      db.collection('to_alerts').countDocuments({
+      db.collection(U.TO_ALERTS).countDocuments({
         user_id: userId,
         is_read: false,
       }),
 
       // Active subscription count
-      db.collection('to_subscriptions').countDocuments({
+      db.collection(U.TO_SUBSCRIPTIONS).countDocuments({
         user_id: userId,
         is_active: true,
       }),
 
       // Recent 5 alerts
-      db.collection('to_alerts')
+      db.collection(U.TO_ALERTS)
         .find({ user_id: userId })
         .sort({ detected_at: -1 })
         .limit(5)
@@ -55,7 +56,7 @@ export async function GET(req: NextRequest) {
         .toArray(),
 
       // Total tracked facilities (approximate)
-      db.collection('facilities').estimatedDocumentCount(),
+      db.collection(U.FACILITIES).estimatedDocumentCount(),
     ]);
 
     const recentAlertsMapped = recentAlerts.map((a) => ({

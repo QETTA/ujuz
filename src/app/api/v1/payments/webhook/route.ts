@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
+import { U } from '@/lib/server/collections';
 import { logger } from '@/lib/server/logger';
 import { cancelSubscription } from '@/lib/server/subscriptionService';
 
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
     logger.info('Toss webhook received', { eventType, orderId: data?.orderId });
 
     const db = await getDbOrThrow();
-    const paymentRecord = await db.collection('payments').findOne({ order_id: data?.orderId });
+    const paymentRecord = await db.collection(U.PAYMENTS).findOne({ order_id: data?.orderId });
     
     if (!paymentRecord) {
       logger.warn('Webhook: payment record not found', { orderId: data?.orderId });
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
     switch (data?.status) {
       case 'CANCELED':
       case 'PARTIAL_CANCELED':
-        await db.collection('payments').updateOne(
+        await db.collection(U.PAYMENTS).updateOne(
           { order_id: data.orderId },
           { $set: { status: 'cancelled', cancelled_at: new Date() } },
         );
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
       
       case 'ABORTED':
       case 'EXPIRED':
-        await db.collection('payments').updateOne(
+        await db.collection(U.PAYMENTS).updateOne(
           { order_id: data.orderId },
           { $set: { status: 'failed' } },
         );

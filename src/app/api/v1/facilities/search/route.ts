@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDbOrThrow } from '@/lib/server/db';
+import { U } from '@/lib/server/collections';
 import { getTraceId, logRequest } from '@/lib/server/apiHelpers';
 import { logger } from '@/lib/server/logger';
 
@@ -189,7 +190,7 @@ export async function GET(req: NextRequest) {
     }
 
     const db = await getDbOrThrow();
-    const col = db.collection('facilities');
+    const col = db.collection(U.FACILITIES);
 
     const total = await col.countDocuments(filter);
 
