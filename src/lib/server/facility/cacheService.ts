@@ -276,7 +276,7 @@ export async function getFacilityCacheStats(db: Db): Promise<FacilityCacheStats>
     requests: stats.requests,
     hits: stats.hits,
     misses: stats.misses,
-    hitRate: ((stats.hits / totalRequests) * 100).toFixed(2),
+    hitRate: Number(((stats.hits / totalRequests) * 100).toFixed(2)),
     staleServed: stats.staleServed,
     l1Hits: stats.l1Hits,
     l1Misses: stats.l1Misses,

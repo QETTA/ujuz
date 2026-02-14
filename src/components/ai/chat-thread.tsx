@@ -19,7 +19,7 @@ export function ChatThread({ messages, loading }: ChatThreadProps) {
 
   if (messages.length === 0 && !loading) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center px-md text-center">
+      <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
         <p className="text-lg font-semibold text-text-primary">AI 상담</p>
         <p className="mt-1 text-sm text-text-secondary">
           입소 전략, 시설 정보, 대기 현황 등을 질문해 보세요
@@ -34,7 +34,7 @@ export function ChatThread({ messages, loading }: ChatThreadProps) {
       aria-live="polite"
       aria-busy={loading}
       aria-label="대화 메시지"
-      className="flex flex-1 flex-col gap-3 overflow-y-auto px-md py-sm"
+      className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-2"
     >
       {messages.map((msg) => (
         <div key={msg.id} className="animate-message-enter">

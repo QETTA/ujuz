@@ -54,7 +54,7 @@ export default function AIPage() {
     <div className="flex h-dvh flex-col">
       <TopBar title="AI 허브" />
 
-      <div className="px-md pt-sm">
+      <div className="px-4 pt-2">
         <TabBar tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
       </div>
 
@@ -65,10 +65,10 @@ export default function AIPage() {
             <ChatError
               message={error}
               onRetry={handleRetry}
-              className="mx-md mb-2"
+              className="mx-4 mb-2"
             />
           )}
-          <AIDisclaimer variant="banner" className="mx-md mb-1" />
+          <AIDisclaimer variant="banner" className="mx-4 mb-1" />
           <ChatInput
             onSend={sendMessage}
             suggestions={suggestions}
@@ -76,7 +76,7 @@ export default function AIPage() {
           />
         </>
       ) : (
-        <div className="flex flex-1 flex-col items-center justify-center px-md text-center">
+        <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
           <p className="text-lg font-semibold text-text-primary">입학점수 시뮬레이터</p>
           <p className="mt-1 text-sm text-text-secondary">
             시설을 선택하고 입소 확률을 확인하세요

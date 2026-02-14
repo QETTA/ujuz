@@ -38,7 +38,7 @@ export function AlertSheet({ open, onClose, alerts, onMarkRead }: AlertSheetProp
               <div
                 key={alert.id}
                 className={cn(
-                  'rounded-lg p-sm',
+                  'rounded-lg p-2',
                   severityStyles[severity],
                   !alert.is_read && 'ring-1 ring-brand-300',
                 )}

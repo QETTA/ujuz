@@ -23,7 +23,7 @@ export default function OnboardingStep1() {
   };
 
   return (
-    <div className="flex flex-col px-md py-md">
+    <div className="flex flex-col px-4 py-4">
       <TopBar showBack title="아이 정보" />
       <StepIndicator current={1} total={4} className="mb-6" />
       <h2 className="mb-1 text-xl font-bold text-text-primary">아이 정보를 입력해 주세요</h2>

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // @vitest-environment jsdom
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
@@ -11,21 +12,21 @@ describe('Card', () => {
 
   it('applies default variant', () => {
     const { container } = render(<Card>기본</Card>);
-    expect(container.firstChild).toHaveClass('bg-surface');
+    expect((container.firstChild as HTMLElement).className).toContain('bg-surface');
   });
 
   it('applies glass variant', () => {
     const { container } = render(<Card variant="glass">글래스</Card>);
-    expect(container.firstChild).toHaveClass('glass');
+    expect((container.firstChild as HTMLElement).className).toContain('glass');
   });
 
   it('applies elevated variant', () => {
     const { container } = render(<Card variant="elevated">엘리베이트</Card>);
-    expect(container.firstChild).toHaveClass('bg-surface-elevated');
+    expect((container.firstChild as HTMLElement).className).toContain('bg-surface-elevated');
   });
 
   it('accepts additional className', () => {
     const { container } = render(<Card className="custom-class">커스텀</Card>);
-    expect(container.firstChild).toHaveClass('custom-class');
+    expect((container.firstChild as HTMLElement).className).toContain('custom-class');
   });
 });

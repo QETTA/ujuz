@@ -18,7 +18,7 @@ export function WeeklyActions({ actions, className }: WeeklyActionsProps) {
       {actions.map((action) => (
         <div
           key={action.key}
-          className={cn('rounded-lg border-l-4 bg-surface-elevated p-sm', priorityStyle[action.priority])}
+          className={cn('rounded-lg border-l-4 bg-surface-elevated p-2', priorityStyle[action.priority])}
         >
           <p className="text-sm font-medium text-text-primary">{action.title}</p>
           <p className="mt-0.5 text-xs text-brand-600">{action.cta}</p>

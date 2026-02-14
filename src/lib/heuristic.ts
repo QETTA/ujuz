@@ -30,8 +30,8 @@ function computeUncertainty(request: AdmissionCalcRequest): { band: UncertaintyB
 function buildEvidenceCards(request: AdmissionCalcRequest, p6: number): EvidenceCard[] {
   const seasonalPositive = request.desired_start_month === '2026-03' || request.desired_start_month === '2026-09';
   const hasWaitRank = request.wait_rank != null;
-  const shortWait = hasWaitRank && request.wait_rank <= 20;
-  const moderateWait = hasWaitRank && request.wait_rank <= 30;
+  const shortWait = hasWaitRank && request.wait_rank! <= 20;
+  const moderateWait = hasWaitRank && request.wait_rank! <= 30;
 
   const cards: EvidenceCard[] = [];
 

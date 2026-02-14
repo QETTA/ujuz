@@ -21,7 +21,7 @@ export function FacilityCard({ name, type, address, grade, probability, topFacto
     <button
       onClick={onClick}
       className={cn(
-        'w-full rounded-xl border border-border bg-surface p-sm text-left transition-shadow hover:shadow-md',
+        'w-full rounded-xl border border-border bg-surface p-2 text-left transition-shadow hover:shadow-md',
         className,
       )}
     >

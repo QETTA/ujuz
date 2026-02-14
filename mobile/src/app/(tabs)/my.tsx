@@ -209,6 +209,14 @@ export default function MyScreen() {
     Linking.openURL('https://ujuz.kr/terms');
   }, []);
 
+  const handleContactSupport = useCallback(() => {
+    Linking.openURL('mailto:support@ujuz.kr');
+  }, []);
+
+  const handleOpenPermissions = useCallback(() => {
+    Linking.openSettings();
+  }, []);
+
   const handleLogout = useCallback(() => {
     Alert.alert('로그아웃', '로그아웃 기능은 준비 중입니다.');
   }, []);
@@ -311,9 +319,9 @@ export default function MyScreen() {
           <View className="rounded-2xl bg-white">
             <SettingRow
               icon="🔔"
-              label="알림 설정"
+              label="알림설정"
               description="푸시, 이메일 알림 토글은 추후 연동됩니다."
-              onPress={() => Alert.alert('알림 설정', '알림 토글은 준비 중입니다.')}
+              onPress={() => Alert.alert('알림설정', '알림 토글은 준비 중입니다.')}
             />
             <SettingRow
               icon="🛡️"
@@ -326,6 +334,18 @@ export default function MyScreen() {
               label="이용약관"
               description="서비스 이용 규칙 확인"
               onPress={handleOpenTerms}
+            />
+            <SettingRow
+              icon="✉️"
+              label="문의"
+              description="support@ujuz.kr로 메일 보내기"
+              onPress={handleContactSupport}
+            />
+            <SettingRow
+              icon="🔐"
+              label="권한관리"
+              description="앱 권한 설정 화면 열기"
+              onPress={handleOpenPermissions}
             />
             <SettingRow
               icon="ℹ️"

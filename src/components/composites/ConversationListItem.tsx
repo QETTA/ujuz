@@ -57,7 +57,7 @@ export function ConversationListItem({
           />
         )}
         <span className="shrink-0 text-xs text-text-tertiary">
-          {formatRelativeTime(conversation.updated_at)}
+          {formatRelativeTime(conversation.updated_at ?? conversation.last_message_at)}
         </span>
       </button>
       {onDelete && (

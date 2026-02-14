@@ -11,7 +11,7 @@ export function AIDisclaimer({ variant = 'inline', className }: AIDisclaimerProp
     return (
       <div
         className={cn(
-          'flex items-center gap-2 rounded-xl bg-info/10 px-sm py-2 text-xs text-info',
+          'flex items-center gap-2 rounded-xl bg-info/10 px-2 py-2 text-xs text-info',
           className,
         )}
         role="note"

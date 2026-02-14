@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import TopBar from '@/components/nav/top-bar'
-import Card from '@/components/ui/card'
-import Button from '@/components/ui/button'
+import { TopBar } from '@/components/nav/top-bar'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 interface ChildProfile {
   id: string

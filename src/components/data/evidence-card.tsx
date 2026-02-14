@@ -25,7 +25,7 @@ export function EvidenceCard({ type, summary, strength, detail, source, classNam
   const [open, setOpen] = useState(false);
 
   return (
-    <div className={cn('rounded-xl border border-border p-sm', className)}>
+    <div className={cn('rounded-xl border border-border p-2', className)}>
       <button
         onClick={() => setOpen(!open)}
         className="flex w-full items-center gap-2 text-left"
@@ -40,7 +40,7 @@ export function EvidenceCard({ type, summary, strength, detail, source, classNam
         />
       </button>
       {open && (
-        <div className="mt-sm border-t border-border-subtle pt-sm text-xs text-text-secondary">
+        <div className="mt-2 border-t border-border-subtle pt-2 text-xs text-text-secondary">
           {detail && <p>{detail}</p>}
           {source && <p className="mt-1 text-text-tertiary">출처: {source}</p>}
           <p className="mt-1 text-text-tertiary">유형: {type}</p>

@@ -30,7 +30,7 @@ export default function MyPage() {
     <div className="flex flex-col">
       <TopBar title="MY" />
 
-      <div className="space-y-4 px-md py-md">
+      <div className="space-y-4 px-4 py-4">
         {/* Profile Card */}
         <Card variant="elevated" className="flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-100">
@@ -46,7 +46,7 @@ export default function MyPage() {
         <div className="space-y-1">
           {menuItems.map(({ href, label, Icon }) => (
             <Link key={href} href={href}>
-              <div className="flex items-center gap-3 rounded-xl px-sm py-3 transition-colors hover:bg-surface-inset">
+              <div className="flex items-center gap-3 rounded-xl px-2 py-3 transition-colors hover:bg-surface-inset">
                 <Icon className="h-5 w-5 text-text-secondary" />
                 <span className="flex-1 text-sm font-medium text-text-primary">{label}</span>
                 <span className="text-text-tertiary">&rsaquo;</span>
@@ -59,7 +59,7 @@ export default function MyPage() {
         <button
           type="button"
           onClick={() => signOut({ callbackUrl: '/login' })}
-          className="flex w-full items-center gap-3 rounded-xl px-sm py-3 text-danger transition-colors hover:bg-danger/5"
+          className="flex w-full items-center gap-3 rounded-xl px-2 py-3 text-danger transition-colors hover:bg-danger/5"
         >
           <ArrowRightOnRectangleIcon className="h-5 w-5" />
           <span className="text-sm font-medium">로그아웃</span>

@@ -2,11 +2,39 @@
  * UJUz Web - Engine output → Frontend type mappers
  */
 
-import type { AdmissionScoreResultV2 as FrontendResult, EvidenceCardModel, Grade } from '../types';
-import type { AdmissionScoreResultV2 as EngineResult } from './admissionEngineV2';
+import type { Grade } from '../types';
+import type { AdmissionScoreResultV2 as EngineResult, EvidenceCardV2 } from './admissionTypes';
+
+/** Frontend evidence card (flattened for client rendering) */
+export interface EvidenceCardModel {
+  type: string;
+  summary: string;
+  strength: number;
+  data: Record<string, unknown>;
+  updatedAt: string;
+}
+
+/** Frontend admission result (flattened for client rendering) */
+export interface FrontendAdmissionResult {
+  facilityId: string;
+  facilityName: string;
+  ageBand: number;
+  regionKey: string;
+  waiting: number;
+  effectiveWaiting: number;
+  probability: number;
+  score: number;
+  grade: Grade;
+  confidence: number;
+  waitMonthsMedian: number;
+  waitMonthsP80: number;
+  evidenceCards: EvidenceCardModel[];
+  updatedAt: string;
+  isHeuristicMode?: boolean;
+}
 
 /** Map engine V2 output to frontend AdmissionScoreResultV2 */
-export function mapEngineToFrontend(engine: EngineResult, ageBand = 0): FrontendResult {
+export function mapEngineToFrontend(engine: EngineResult, ageBand = 0): FrontendAdmissionResult {
   return {
     facilityId: engine.facility_id,
     facilityName: engine.facility_name,

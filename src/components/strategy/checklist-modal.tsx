@@ -19,7 +19,7 @@ export function ChecklistModal({ open, onClose, items, onToggle }: ChecklistModa
         {items.map((item) => (
           <label
             key={item.key}
-            className="flex items-start gap-3 rounded-lg p-sm hover:bg-surface-inset"
+            className="flex items-start gap-3 rounded-lg p-2 hover:bg-surface-inset"
           >
             <input
               type="checkbox"

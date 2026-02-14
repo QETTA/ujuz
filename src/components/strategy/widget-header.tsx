@@ -14,7 +14,7 @@ const gradeColor: Record<string, string> = {
 
 export function WidgetHeader({ summary, className }: WidgetHeaderProps) {
   return (
-    <div className={cn('rounded-xl bg-surface-elevated p-md', className)}>
+    <div className={cn('rounded-xl bg-surface-elevated p-4', className)}>
       <div className="flex items-center gap-3">
         <span className={cn('text-3xl font-bold', gradeColor[summary.overall_grade])}>
           {summary.overall_grade}

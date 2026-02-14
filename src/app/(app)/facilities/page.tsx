@@ -101,7 +101,7 @@ export default function FacilitiesPage() {
         }
       />
 
-      <div className="px-md py-sm">
+      <div className="px-4 py-2">
         <Input
           placeholder="시설명으로 검색..."
           value={query}
@@ -110,7 +110,7 @@ export default function FacilitiesPage() {
         />
       </div>
 
-      <div className="px-md pb-md">
+      <div className="px-4 pb-4">
         <FacilityList facilities={facilities} loading={loading && facilities.length === 0} />
         {hasMore && <div ref={sentinelRef} className="h-1" />}
       </div>

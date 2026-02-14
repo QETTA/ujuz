@@ -13,7 +13,7 @@ interface WidgetSummaryBarProps {
 }
 
 export function WidgetSummaryBar({ summary, className }: WidgetSummaryBarProps) {
-  const gradeStyle = GRADE_STYLES[summary.overall_grade];
+  const gradeStyle = GRADE_STYLES[summary.overall_grade as RouteGrade] ?? GRADE_STYLES.LOW;
 
   return (
     <div className={cn('rounded-xl bg-surface-elevated p-4', className)}>

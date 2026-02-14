@@ -21,7 +21,7 @@ export function TopBar({ title, showBack = false, onBack, action, transparent = 
     <header
       role="banner"
       className={cn(
-        'sticky top-0 z-sticky flex h-14 items-center gap-3 px-md',
+        'sticky top-0 z-sticky flex h-14 items-center gap-3 px-4',
         transparent
           ? 'bg-transparent'
           : 'glass glass-text border-b border-border-subtle',

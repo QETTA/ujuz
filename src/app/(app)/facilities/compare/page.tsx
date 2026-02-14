@@ -308,7 +308,7 @@ export default function FacilityComparePage() {
     return (
       <div className="flex min-h-screen flex-col">
         <TopBar title="시설 비교" showBack />
-        <div className="px-md py-lg">
+        <div className="px-4 py-6">
           <Card>
             <p className="text-sm font-semibold text-text-primary">비교할 시설을 2~3개 선택해 주세요</p>
           </Card>
@@ -323,7 +323,7 @@ export default function FacilityComparePage() {
     <div className="flex min-h-screen flex-col">
       <TopBar title="시설 비교" showBack />
 
-      <div className="px-md py-md space-y-3">
+      <div className="px-4 py-4 space-y-3">
         {loading && compareSkeleton(ids.length)}
 
         {!loading && errorMessage && (

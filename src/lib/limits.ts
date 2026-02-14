@@ -88,7 +88,10 @@ export async function checkAndIncrement(
     },
   );
 
-  if (!result.value) {
+  const doc = result as Record<string, unknown> | null;
+  const docCount = (doc as { count?: number })?.count ?? 0;
+
+  if (!doc) {
     throw new AppError(
       'LIMIT_EXCEEDED',
       'Usage limit exceeded',
@@ -106,7 +109,7 @@ export async function checkAndIncrement(
   return {
     allowed: true,
     feature: params.feature,
-    remaining: Math.max(limit - result.value.count, 0),
+    remaining: Math.max(limit - docCount, 0),
     reset_at: periodInfo.resetAt,
   };
 }
@@ -124,4 +127,4 @@ export async function decrementUsage(db: Db, subjectId: string, feature: UsageFe
   );
 }
 
-export { LimitCheckResult };
+export type { LimitCheckResult };

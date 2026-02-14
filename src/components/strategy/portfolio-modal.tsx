@@ -17,7 +17,7 @@ export function PortfolioModal({ open, onClose, facilities }: PortfolioModalProp
     <BottomSheet open={open} onClose={onClose} title="포트폴리오 비교">
       <div className="space-y-3">
         {sorted.map((f) => (
-          <div key={f.id} className="rounded-xl border border-border p-sm">
+          <div key={f.id} className="rounded-xl border border-border p-2">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-text-primary">{f.name}</p>
               <span className="text-xs text-text-tertiary">{f.type}</span>

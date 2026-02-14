@@ -12,7 +12,7 @@ export default function PrivacyPage() {
         <h1 className="text-lg font-semibold text-text-primary">개인정보처리방침</h1>
       </header>
 
-      <article className="prose prose-sm max-w-3xl mx-auto px-md py-lg text-text-primary">
+      <article className="prose prose-sm max-w-3xl mx-auto px-4 py-6 text-text-primary">
         <p className="text-xs text-text-tertiary mb-6">시행일: 2025년 7월 1일 | 최종 수정: 2025년 7월 1일</p>
 
         <p>

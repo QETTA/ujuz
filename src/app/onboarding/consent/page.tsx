@@ -26,7 +26,7 @@ export default function OnboardingStep2() {
   };
 
   return (
-    <div className="flex flex-col px-md py-md">
+    <div className="flex flex-col px-4 py-4">
       <TopBar showBack title="동의" />
       <StepIndicator current={2} total={4} className="mb-6" />
       <h2 className="mb-1 text-xl font-bold text-text-primary">데이터 활용 동의</h2>

@@ -250,7 +250,7 @@ export default function PricingPage() {
                   className="mt-6 w-full"
                   onClick={() => handleSelect(plan.id)}
                   disabled={isCurrentPlan || isFreePlan}
-                  variant={isCurrentPlan || isFreePlan ? 'secondary' : 'default'}
+                  variant={isCurrentPlan || isFreePlan ? 'secondary' : 'primary'}
                 >
                   {isCurrentPlan
                     ? '현재 플랜'

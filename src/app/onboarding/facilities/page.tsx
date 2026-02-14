@@ -17,7 +17,7 @@ export default function OnboardingStep3() {
   };
 
   return (
-    <div className="flex flex-col px-md py-md">
+    <div className="flex flex-col px-4 py-4">
       <TopBar showBack title="관심 시설" />
       <StepIndicator current={3} total={4} className="mb-6" />
       <h2 className="mb-1 text-xl font-bold text-text-primary">관심 시설을 등록하세요</h2>

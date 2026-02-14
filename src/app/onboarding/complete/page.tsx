@@ -56,7 +56,7 @@ export default function OnboardingComplete() {
   };
 
   return (
-    <div className="flex flex-col items-center px-md py-md">
+    <div className="flex flex-col items-center px-4 py-4">
       <StepIndicator current={4} total={4} className="mb-8 w-full" />
 
       {analyzing ? (

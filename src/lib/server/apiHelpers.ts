@@ -67,7 +67,7 @@ export function errorResponse(error: unknown, traceId?: string): NextResponse {
       ...(traceId && { traceId }),
     });
     return NextResponse.json(
-      { error: { code, message: error.message, ...(error.details && { details: error.details }) } },
+      { error: { code, message: error.message, ...(error.details ? { details: error.details } : {}) } },
       { status: error.statusCode },
     );
   }

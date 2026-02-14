@@ -406,6 +406,16 @@ export interface ChecklistDoc {
   updated_at: Date;
 }
 
+// ─── Saved Facilities ─────────────────────────────────
+
+export interface SavedFacilityDoc {
+  _id?: ObjectId;
+  user_id: string;
+  facility_id: string;
+  saved_at: Date;
+  updated_at: Date;
+}
+
 // ─── Facility Pipeline ──────────────────────────────────
 
 export interface FacilityAddress {

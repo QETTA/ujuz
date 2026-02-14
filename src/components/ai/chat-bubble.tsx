@@ -16,9 +16,10 @@ export function ChatBubble({ message }: ChatBubbleProps) {
     id: message.id,
     role: message.role as 'user' | 'assistant',
     parts: [{ type: 'text' as const, text: message.content }],
-    data_blocks: message.data_blocks,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data_blocks: message.data_blocks as any,
     created_at: message.created_at,
   };
 
-  return <PrimaryChatBubble message={adapted} />;
+  return <PrimaryChatBubble message={adapted as any} />;
 }

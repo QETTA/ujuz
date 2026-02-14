@@ -103,7 +103,7 @@ export function BottomSheet({ open, onClose, title, children, className }: Botto
           <div className="h-1 w-10 rounded-full bg-border" />
         </div>
         {title && (
-          <div className="flex items-center justify-between border-b border-border px-md pb-sm">
+          <div className="flex items-center justify-between border-b border-border px-4 pb-2">
             <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
             <button
               type="button"
@@ -115,7 +115,7 @@ export function BottomSheet({ open, onClose, title, children, className }: Botto
             </button>
           </div>
         )}
-        <div className="overflow-y-auto px-md py-sm safe-bottom">
+        <div className="overflow-y-auto px-4 py-2 safe-bottom">
           {children}
         </div>
       </div>

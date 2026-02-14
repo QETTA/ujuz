@@ -17,7 +17,7 @@ export function Card({ variant = 'default', className, children, ...props }: Car
   return (
     <div
       className={cn(
-        'rounded-xl p-md',
+        'rounded-xl p-4',
         variantStyles[variant],
         className,
       )}
@@ -30,7 +30,7 @@ export function Card({ variant = 'default', className, children, ...props }: Car
 
 export function CardHeader({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('mb-sm', className)} {...props}>
+    <div className={cn('mb-2', className)} {...props}>
       {children}
     </div>
   );

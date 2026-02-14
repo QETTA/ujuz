@@ -89,11 +89,11 @@ export default function StatusPage() {
   const statusBadge = useMemo(() => (health.status === 'ok' ? '정상' : '저하됨'), [health.status]);
 
   return (
-    <div className="min-h-dvh bg-surface px-md pb-md">
+    <div className="min-h-dvh bg-surface px-4 pb-4">
       <TopBar title="시스템 상태" />
 
-      <div className="mx-auto mt-sm max-w-xl space-y-4">
-        <Card className="space-y-4 p-lg">
+      <div className="mx-auto mt-2 max-w-xl space-y-4">
+        <Card className="space-y-4 p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm text-text-secondary">시스템 상태</p>

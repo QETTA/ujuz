@@ -1,13 +1,14 @@
 # CLAUDE.md
 
 ## Status
-Phase 5~8 진행 중. T-000~T-206 완료.
+Phase 8 P1 ✅ 완료. P2 대기(T-306/403/404). T-000~T-402 완료.
 
 ## Workflow
-- 자동 검증: `pnpm typecheck` (품질 게이트)
+- 품질 게이트: `pnpm typecheck` (0 에러 필수)
 - dev 포트: **3001**
 - 한국어 커뮤니케이션
-- "풀가동" = Codex CLI 5~10개 병렬, Plan Mode 생략
+- "풀가동" = Codex CLI 병렬, Plan Mode 생략
+- **토큰 최소화**: 탐색 최소, 응답 간결, 불필요한 파일 읽기 금지, 중복 작업 금지
 
 ## Stack
 - Next.js 15 App Router, React 19, TS strict
@@ -16,42 +17,70 @@ Phase 5~8 진행 중. T-000~T-206 완료.
 
 ## Architecture
 - **Chat**: `POST /api/bot/chat/stream` → `createUIMessageStream` + `streamText`
-- **Filter**: sanitizeInput → isOffTopic → checkLimit → stream → incrementFeatureUsage + checkOutput
-- **Client**: `src/lib/client/hooks/useChat.ts` (useAIChat 래퍼)
 - **Logger**: `logger.error(msg, extra?)` — NOT pino-style
+- **Auth**: `@/lib/server/auth` (NextAuth v5), `getUserId(req)` from `@/lib/server/apiHelpers`
+- **DB**: `getDbOrThrow()` from `@/lib/server/db`, 컬렉션 상수 `U` from `@/lib/server/collections`
+- **Errors**: `AppError(message, statusCode, code?, details?)` from `@/lib/server/errors`
 - **API 정본**: `docs/CANONICAL-SPEC.md` (23개 엔드포인트, 비래핑 응답)
-- **태스크**: `docs/CODEX-TASKS.md` (Phase 5~8, 22개 티켓)
-- **OpenAPI**: `docs/openapi.yaml` (Swagger/Redoc용)
+- **태스크**: `docs/CODEX-TASKS.md`
 
-## Codex CLI 병렬 패턴
-- 8:2 분담 (Codex 80% 구현, Opus 20% 설계/통합)
-- **실행**: `codex exec --full-auto -C /mnt/c/Users/sihu2/ujuz-api "프롬프트"`
-- **프롬프트 필수 문구**: "Do NOT modify tsconfig.json, vitest.config.ts, package.json, .env.example, .gitignore, mobile/src/app/_layout.tsx. Do NOT create index.ts, dist/, src/api/, tsconfig.build.json. Do NOT create docs/ research files."
-- **후처리 체크리스트**:
-  1. `git checkout -- tsconfig.json vitest.config.ts .env.example .gitignore` (변경됐을 경우)
-  2. `rm -rf dist/ index.ts src/api/ tsconfig.build.json` (생성됐을 경우)
-  3. `git diff mobile/src/app/_layout.tsx` → 변경 시 되돌리기
-  4. `git status` → untracked 정크 docs 삭제
-  5. 로거 포맷 확인 (Codex는 항상 pino-style로 작성)
-- **MCP 최소화**: `~/.codex/config.toml`에 filesystem만 유지 (mongodb/serena/figma/playwright 제거)
+## ⛔ 절대 규칙
+1. **Codex 실행 = Bash `codex exec` ONLY** — MCP 도구(mcp__codex-spark__*) 절대 금지
+2. **병렬 실행**: `Bash(run_in_background: true)` + `codex exec --full-auto -C /mnt/c/Users/sihu2/ujuz-api "프롬프트"`
+3. **보호 파일**: tsconfig.json, vitest.config.ts, package.json, .env.example, .gitignore, mobile/src/app/_layout.tsx — 수정 금지
+4. **금지 생성물**: index.ts, dist/, src/api/, tsconfig.build.json, docs/ 연구 파일
+
+## Codex 실행 템플릿
+```bash
+# instructions.md가 자동 로드되므로 "Do NOT modify..." 생략 가능
+codex exec --full-auto -C /mnt/c/Users/sihu2/ujuz-api \
+  "TASK {티켓번호}: {설명}. FILES: {파일목록}. SPEC: {상세}"
+```
+- `~/.codex/instructions.md`: 보호파일/금지생성물/로거/Auth/DB 규칙 자동 주입
+- `~/.codex/config.toml`: `instructions_file` 설정으로 프로젝트별 자동 적용
+
+## 후처리 (자동화)
+```bash
+bash scripts/codex-postfix.sh   # 보호파일 복원 + 정크 삭제 + typecheck
+```
+수동 체크: 로거 포맷 확인 (Codex는 pino-style로 작성 → `logger.error(msg, extra?)` 교정)
+
+## 파이프라인
+```
+태스크 분석 → Codex exec 병렬 디스패치 → 완료 대기 → codex-postfix.sh → typecheck → 리뷰 → 커밋
+```
+
+## 역할 분담
+- **Claude Code**: 설계, 태스크 분배, 리뷰, typecheck, 커밋, 리팩터링
+- **Codex CLI**: 구현 (80%), Bash background 실행
 
 ## Commands
 ```bash
-pnpm dev          # Next.js dev 서버 (3001)
-pnpm typecheck    # TS 체크 (필수)
+pnpm dev          # 3001
+pnpm typecheck    # 필수 게이트
 pnpm test         # Vitest
 pnpm build        # 빌드
 ```
 
+## Phase 8 디스패치 (엔터만 누르면 실행)
+```
+# T-401 + T-402 (Admin, 병렬)
+codex exec --full-auto -C /mnt/c/Users/sihu2/ujuz-api "TASK T-401: Admin 대시보드. FILES: src/app/(app)/admin/page.tsx (기존 수정), src/app/api/v1/admin/metrics/route.ts (신규). SPEC: 카드 6개(오늘 결제/매출, 결제 실패율, 리포트 SLA 48h초과, 푸시 실패율, 지도 호출 추정, SMS비용). 기간 필터(7d/30d). GET /api/v1/admin/metrics?range=7d → { cards: [...] }. SLA 초과 클릭→상세 리스트. DB: orders/payments/push_logs 컬렉션. Analytics: admin_dashboard_view."
+
+codex exec --full-auto -C /mnt/c/Users/sihu2/ujuz-api "TASK T-402: Admin 푸시 모니터링. FILES: src/app/(app)/admin/push/page.tsx (신규), src/app/api/v1/admin/push-metrics/route.ts (신규). SPEC: 24h/7d 집계 sent/delivered/failed. 실패 Top3 테이블. 토큰 정리 수 표시. GET /api/v1/admin/push-metrics?range=24h → { summary, failures_top3, tokens_cleaned }. DB: push_logs 컬렉션. Analytics: admin_push_view."
+```
+- 2개 병렬 실행
+- 완료 후: `bash scripts/codex-postfix.sh`
+
 ## Key Paths
 ```
-src/app/api/bot/chat/stream/  # 스트리밍 채팅
 src/app/api/v1/               # REST API
-src/app/api/cron/             # Vercel Cron
-src/lib/server/               # 서버 유틸
+src/lib/server/               # 서버 (db, auth, errors, collections, apiHelpers)
 src/lib/client/hooks/         # 클라이언트 훅
-src/components/               # UI (74+ shadcn/ui)
+src/components/               # UI (shadcn/ui)
+mobile/src/app/               # Expo 라우트
+mobile/src/lib/api.ts         # 모바일 API (getJson/postJson/deleteJson/patchJson)
 mobile/src/components/states/ # 공통 상태 UI 6종
-mobile/src/lib/permissions.ts # 권한 유틸
-docs/                         # 정본 문서 (CANONICAL-SPEC, CODEX-TASKS, openapi.yaml)
+docs/                         # 정본 문서
+scripts/codex-postfix.sh      # 후처리 자동화
 ```
