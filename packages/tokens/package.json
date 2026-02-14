@@ -1,0 +1,9 @@
+{
+  "name": "@ujuz/tokens",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ./scripts/build.mjs",
+    "clean": "rm -rf dist"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "$description": "UjuZ 입소.i shared design tokens (DTCG-compatible naming)",
+  "ipsoi": {
+    "color": {
+      "brand50": { "$type": "color", "$value": "#f5f3ff" },
+      "brand100": { "$type": "color", "$value": "#ede9fe" },
+      "brand200": { "$type": "color", "$value": "#c7d2fe" },
+      "brand300": { "$type": "color", "$value": "#a5b4fc" },
+      "brand400": { "$type": "color", "$value": "#818cf8" },
+      "brand500": { "$type": "color", "$value": "#6d5ce7" },
+      "brand600": { "$type": "color", "$value": "#4f46e5" },
+      "brand700": { "$type": "color", "$value": "#4338ca" },
+      "brand800": { "$type": "color", "$value": "#3730a3" },
+      "brand900": { "$type": "color", "$value": "#312e81" },
+
+      "surface": { "$type": "color", "$value": "#ffffff" },
+      "surfaceElevated": { "$type": "color", "$value": "#fafaff" },
+      "surfaceInset": { "$type": "color", "$value": "#f3f2fa" },
+      "surfaceGlass": { "$type": "color", "$value": "rgba(250, 250, 255, 0.8)" },
+
+      "border": { "$type": "color", "$value": "#e2e0ef" },
+      "borderSubtle": { "$type": "color", "$value": "#edecf4" },
+
+      "textPrimary": { "$type": "color", "$value": "#1a1730" },
+      "textSecondary": { "$type": "color", "$value": "#6b6580" },
+      "textTertiary": { "$type": "color", "$value": "#807b93" },
+      "textInverse": { "$type": "color", "$value": "#ffffff" },
+
+      "success": { "$type": "color", "$value": "#4caf7a" },
+      "warning": { "$type": "color", "$value": "#e0a830" },
+      "danger": { "$type": "color", "$value": "#d44035" },
+      "info": { "$type": "color", "$value": "#5b8fd9" },
+
+      "gradeA": { "$type": "color", "$value": "#34c759" },
+      "gradeB": { "$type": "color", "$value": "#52d17c" },
+      "gradeC": { "$type": "color", "$value": "#c4b932" },
+      "gradeD": { "$type": "color", "$value": "#d4932e" },
+      "gradeE": { "$type": "color", "$value": "#d95d3a" },
+      "gradeF": { "$type": "color", "$value": "#cf3f3f" },
+
+      "darkSurface": { "$type": "color", "$value": "#1a1830" },
+      "darkSurfaceElevated": { "$type": "color", "$value": "#222038" },
+      "darkSurfaceInset": { "$type": "color", "$value": "#131120" },
+      "darkSurfaceGlass": { "$type": "color", "$value": "rgba(34, 32, 56, 0.8)" },
+      "darkBorder": { "$type": "color", "$value": "#383552" },
+      "darkBorderSubtle": { "$type": "color", "$value": "#2b283e" },
+      "darkTextPrimary": { "$type": "color", "$value": "#efedf4" },
+      "darkTextSecondary": { "$type": "color", "$value": "#a09bae" },
+      "darkTextTertiary": { "$type": "color", "$value": "#807b93" },
+      "darkTextInverse": { "$type": "color", "$value": "#1a1730" }
+    },
+    "radius": {
+      "full": { "$type": "dimension", "$value": "9999px" }
+    },
+    "motion": {
+      "durationFast": { "$type": "duration", "$value": "150ms" },
+      "durationNormal": { "$type": "duration", "$value": "250ms" }
+    }
+  }
+}
