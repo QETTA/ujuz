@@ -1,7 +1,9 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -65,7 +67,7 @@ function trackReportEvent(event: ReportAnalyticsEvent, payload: Record<string, u
   }));
 }
 
-export default function ConsultationReportPage() {
+function ConsultationReportPageContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId') ?? searchParams.get('order_id') ?? '';
 
@@ -206,5 +208,14 @@ export default function ConsultationReportPage() {
         </>
       )}
     </main>
+  );
+}
+
+
+export default function ConsultationReportPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-surface" />}>
+      <ConsultationReportPageContent />
+    </Suspense>
   );
 }

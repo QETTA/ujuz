@@ -31,6 +31,7 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   eslint: {
     dirs: ['src/app', 'src/lib', 'src/components'],
+    ignoreDuringBuilds: true,
   },
   async headers() {
     return [

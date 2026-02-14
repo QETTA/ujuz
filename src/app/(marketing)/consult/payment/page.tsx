@@ -1,6 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+export const dynamic = 'force-dynamic';
+
+import { Suspense, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { TopBar } from '@/components/nav/top-bar';
 import { Card } from '@/components/ui/card';
@@ -81,7 +83,7 @@ function getErrorMessage(error: unknown): string {
   return '결제를 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.';
 }
 
-export default function ConsultPaymentPage() {
+function ConsultPaymentPageContent() {
   const searchParams = useSearchParams();
   const [orderId, setOrderId] = useState(() => searchParams.get('orderId') ?? searchParams.get('order_id') ?? '');
   const [amountInput, setAmountInput] = useState(() =>
@@ -192,5 +194,14 @@ export default function ConsultPaymentPage() {
         </Card>
       </main>
     </div>
+  );
+}
+
+
+export default function ConsultPaymentPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-surface" />}>
+      <ConsultPaymentPageContent />
+    </Suspense>
   );
 }
