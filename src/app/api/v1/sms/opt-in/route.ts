@@ -60,6 +60,30 @@ async function safeAppendEvent(params: {
   }
 }
 
+export async function GET(req: NextRequest) {
+  const start = Date.now();
+  const traceId = getTraceId(req);
+
+  try {
+    const userId = await getUserId(req);
+    const db = await getDbOrThrow();
+    const doc = await db.collection<SmsSettingDoc>(U.SMS_SETTINGS).findOne({ user_id: userId });
+
+    logRequest(req, 200, start, traceId);
+    return NextResponse.json({
+      enabled: doc?.enabled ?? false,
+      phone_last4: doc?.phone ? doc.phone.slice(-4) : null,
+      daily_cap: doc?.daily_cap ?? DEFAULT_SMS_DAILY_CAP,
+      monthly_cap: doc?.monthly_cap ?? DEFAULT_SMS_MONTHLY_CAP,
+      consented_at: doc?.consented_at ? new Date(doc.consented_at).toISOString() : null,
+    });
+  } catch (error) {
+    const res = errorResponse(error, traceId);
+    logRequest(req, res.status, start, traceId);
+    return res;
+  }
+}
+
 export async function POST(req: NextRequest) {
   const start = Date.now();
   const traceId = getTraceId(req);

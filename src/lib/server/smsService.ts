@@ -1,5 +1,6 @@
 import { createHmac } from 'crypto';
 import type { Db } from 'mongodb';
+import { U } from './collections';
 import { logger } from './logger';
 
 export interface SmsDeliveryLog {
@@ -31,8 +32,8 @@ export async function sendSms(
   message: string,
   userId?: string,
 ): Promise<boolean> {
-  const accessKey = process.env.NCP_ACCESS_KEY;
-  const secretKey = process.env.NCP_SECRET_KEY;
+  const accessKey = process.env.NCP_SMS_ACCESS_KEY;
+  const secretKey = process.env.NCP_SMS_SECRET_KEY;
   const serviceId = process.env.NCP_SMS_SERVICE_ID;
   const fromNumber = process.env.NCP_SMS_FROM;
 
@@ -129,7 +130,7 @@ export async function getSmsDeliveryStats(
   db: Db,
   since: Date,
 ): Promise<{ total: number; sent: number; failed: number }> {
-  const rows = await db.collection('sms_delivery_log')
+  const rows = await db.collection(U.SMS_DELIVERY_LOG)
     .aggregate<{ _id: string; count: number }>([
       { $match: { sent_at: { $gte: since } } },
       { $group: { _id: '$status', count: { $sum: 1 } } },
@@ -147,7 +148,7 @@ export async function getSmsDeliveryStats(
 // Internal: log SMS delivery
 async function logSmsDelivery(db: Db, log: SmsDeliveryLog): Promise<void> {
   try {
-    await db.collection('sms_delivery_log').insertOne(log);
+    await db.collection(U.SMS_DELIVERY_LOG).insertOne(log);
   } catch (err) {
     logger.error('Failed to log SMS delivery', {
       error: err instanceof Error ? err.message : String(err),

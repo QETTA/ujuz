@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { postJson } from '@/lib/api';
 
@@ -24,15 +24,15 @@ export default function AlertSubscriptionCreateScreen() {
   const facilityId = useMemo(() => getSingleParam(params.facility_id), [params.facility_id]);
 
   const [frequency, setFrequency] = useState<Frequency>('immediate');
+  const [smsEnabled, setSmsEnabled] = useState(false);
+  const [smsConsent, setSmsConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const canSubmit = !isSubmitting && facilityId && (!smsEnabled || smsConsent);
+
   const submit = async () => {
-    if (isSubmitting) return;
-    if (!facilityId) {
-      setErrorMessage('facility_id가 필요합니다.');
-      return;
-    }
+    if (!canSubmit) return;
 
     setIsSubmitting(true);
     setErrorMessage(null);
@@ -41,7 +41,7 @@ export default function AlertSubscriptionCreateScreen() {
       await postJson<CreateSubscriptionResponse>('/api/v1/alert-subscriptions', {
         facility_id: facilityId,
         schedule: { mode: frequency },
-        channels: { push: true, sms: false },
+        channels: { push: true, sms: smsEnabled },
       });
       router.replace('/(tabs)/alerts');
     } catch {
@@ -102,9 +102,53 @@ export default function AlertSubscriptionCreateScreen() {
 
         <View className="mt-8 rounded-2xl border border-slate-200 bg-white px-4 py-4">
           <Text className="text-sm font-semibold text-slate-700">채널</Text>
-          <View className="mt-3 self-start rounded-full bg-indigo-100 px-3 py-1">
-            <Text className="text-xs font-semibold text-indigo-700">Push</Text>
+          <View className="mt-3 flex-row items-center justify-between">
+            <View className="rounded-full bg-indigo-100 px-3 py-1">
+              <Text className="text-xs font-semibold text-indigo-700">Push</Text>
+            </View>
+            <Text className="text-xs text-slate-400">기본</Text>
           </View>
+
+          <View className="mt-3 flex-row items-center justify-between">
+            <View className="flex-row items-center gap-2">
+              <View className="rounded-full bg-amber-100 px-3 py-1">
+                <Text className="text-xs font-semibold text-amber-700">SMS</Text>
+              </View>
+              <Text className="text-xs text-slate-500">유료 옵션</Text>
+            </View>
+            <Switch
+              value={smsEnabled}
+              onValueChange={(v) => {
+                setSmsEnabled(v);
+                if (!v) setSmsConsent(false);
+              }}
+              disabled={isSubmitting}
+            />
+          </View>
+
+          {smsEnabled && (
+            <View className="mt-3 rounded-xl bg-amber-50 p-3">
+              <Text className="text-xs leading-5 text-amber-800">
+                SMS 알림은 건당 약 20원의 비용이 발생하며, 일 5건 / 월 50건 상한이 적용됩니다.
+                설정에서 언제든 해제할 수 있습니다.
+              </Text>
+              <TouchableOpacity
+                className="mt-2 flex-row items-center gap-2"
+                onPress={() => setSmsConsent((prev) => !prev)}
+              >
+                <View
+                  className={`h-5 w-5 items-center justify-center rounded border ${
+                    smsConsent ? 'border-indigo-500 bg-indigo-500' : 'border-slate-300 bg-white'
+                  }`}
+                >
+                  {smsConsent && <Text className="text-xs text-white">✓</Text>}
+                </View>
+                <Text className="flex-1 text-xs text-slate-700">
+                  비용 발생에 동의합니다
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {errorMessage ? (
@@ -112,10 +156,10 @@ export default function AlertSubscriptionCreateScreen() {
         ) : null}
 
         <TouchableOpacity
-          disabled={isSubmitting}
+          disabled={!canSubmit}
           onPress={() => void submit()}
           className={`mt-auto h-12 items-center justify-center rounded-xl ${
-            isSubmitting ? 'bg-indigo-300' : 'bg-indigo-600'
+            canSubmit ? 'bg-indigo-600' : 'bg-indigo-300'
           }`}
         >
           {isSubmitting ? (
