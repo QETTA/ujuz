@@ -378,7 +378,7 @@ export default function FacilityComparePage() {
                             key={`${row.key}-${facility.id}`}
                             className={`border-b border-border px-3 py-3 ${
                               isBest
-                                ? 'bg-emerald-500/10 text-emerald-700 font-semibold'
+                                ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold'
                                 : 'text-text-primary'
                             }`}
                           >

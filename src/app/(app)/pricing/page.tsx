@@ -46,7 +46,7 @@ const formatPrice = (value: number) =>
   }).format(value);
 
 const pricingCycleButtonClass = (active: boolean) =>
-  active ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:bg-slate-100';
+  active ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700';
 
 export default function PricingPage() {
   const router = useRouter();
@@ -125,17 +125,17 @@ export default function PricingPage() {
       {Array.from({ length: 3 }).map((_, idx) => (
         <Card
           key={`plan-skeleton-${idx}`}
-          className="rounded-2xl border-slate-200 bg-slate-50 p-6"
+          className="rounded-2xl border-border bg-surface p-6"
         >
-          <div className="mb-5 h-6 w-20 animate-pulse rounded-full bg-slate-200" />
-          <div className="mb-3 h-9 w-1/2 animate-pulse rounded bg-slate-200" />
-          <div className="mb-8 h-4 w-full animate-pulse rounded bg-slate-200" />
+          <div className="mb-5 h-6 w-20 animate-pulse rounded-full bg-surface-inset" />
+          <div className="mb-3 h-9 w-1/2 animate-pulse rounded bg-surface-inset" />
+          <div className="mb-8 h-4 w-full animate-pulse rounded bg-surface-inset" />
           <div className="space-y-3">
-            <div className="h-4 w-11/12 animate-pulse rounded bg-slate-200" />
-            <div className="h-4 w-10/12 animate-pulse rounded bg-slate-200" />
-            <div className="h-4 w-full animate-pulse rounded bg-slate-200" />
-            <div className="h-4 w-9/12 animate-pulse rounded bg-slate-200" />
-            <div className="h-10 w-full animate-pulse rounded-lg bg-slate-200" />
+            <div className="h-4 w-11/12 animate-pulse rounded bg-surface-inset" />
+            <div className="h-4 w-10/12 animate-pulse rounded bg-surface-inset" />
+            <div className="h-4 w-full animate-pulse rounded bg-surface-inset" />
+            <div className="h-4 w-9/12 animate-pulse rounded bg-surface-inset" />
+            <div className="h-10 w-full animate-pulse rounded-lg bg-surface-inset" />
           </div>
         </Card>
       ))}
@@ -147,8 +147,8 @@ export default function PricingPage() {
       <TopBar />
 
       {fromApp && (
-        <Card className="rounded-2xl border-slate-300 bg-slate-50 px-6 py-5">
-          <p className="mb-3 text-sm font-medium text-slate-700">
+        <Card className="rounded-2xl border-border bg-surface px-6 py-5">
+          <p className="mb-3 text-sm font-medium text-text-secondary">
             앱에서 결제 후 자동으로 구독이 활성화됩니다.
           </p>
           <Button onClick={handleBackToApp} type="button">
@@ -158,8 +158,8 @@ export default function PricingPage() {
       )}
 
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <h1 className="text-2xl font-bold text-slate-900">요금제 선택</h1>
-        <div className="inline-flex rounded-xl border border-slate-200 p-1">
+        <h1 className="text-2xl font-bold text-text-primary">요금제 선택</h1>
+        <div className="inline-flex rounded-xl border border-border p-1">
           <button
             type="button"
             onClick={() => setBillingCycle('monthly')}
@@ -181,7 +181,7 @@ export default function PricingPage() {
         </div>
       </div>
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="text-sm text-danger">{error}</p> : null}
 
       {loading ? (
         renderSkeletonCards()
@@ -199,45 +199,45 @@ export default function PricingPage() {
             return (
               <Card
                 key={plan.id}
-                className={`relative rounded-2xl border-slate-200 p-6 ${
-                  plan.highlight ? 'border-slate-900 shadow-lg' : ''
+                className={`relative rounded-2xl border-border p-6 ${
+                  plan.highlight ? 'border-brand-500 shadow-lg' : ''
                 }`}
               >
                 {isCurrentPlan ? (
-                  <Badge className="absolute right-4 top-4 bg-slate-900 text-white">
+                  <Badge className="absolute right-4 top-4 bg-brand-500 text-text-inverse">
                     현재 플랜
                   </Badge>
                 ) : null}
 
                 {plan.highlight ? (
-                  <p className="mb-2 text-xs font-bold uppercase tracking-widest text-indigo-600">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-widest text-brand-600">
                     추천
                   </p>
                 ) : null}
 
-                <h2 className="text-xl font-bold text-slate-900">{plan.name}</h2>
-                <p className="mt-2 text-sm text-slate-500">{plan.tagline}</p>
+                <h2 className="text-xl font-bold text-text-primary">{plan.name}</h2>
+                <p className="mt-2 text-sm text-text-secondary">{plan.tagline}</p>
 
-                <p className="mt-6 text-4xl font-black text-slate-900">
+                <p className="mt-6 text-4xl font-black text-text-primary">
                   {formatPrice(price)}
-                  <span className="text-base font-semibold text-slate-500">
+                  <span className="text-base font-semibold text-text-secondary">
                     {billingCycle === 'monthly' ? ' /월' : ' /년'}
                   </span>
                 </p>
                 {monthlyFromYearly ? (
-                  <p className="mt-1 text-xs text-slate-500">월 약 {formatPrice(monthlyFromYearly)}</p>
+                  <p className="mt-1 text-xs text-text-secondary">월 약 {formatPrice(monthlyFromYearly)}</p>
                 ) : null}
 
                 <ul className="mt-6 space-y-3">
                   {plan.features.map((feature) => (
                     <li key={feature.label} className="flex items-start gap-2 text-sm">
                       {feature.included ? (
-                        <CheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+                        <CheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-success" />
                       ) : (
-                        <XMarkIcon className="mt-0.5 h-5 w-5 shrink-0 text-slate-300" />
+                        <XMarkIcon className="mt-0.5 h-5 w-5 shrink-0 text-text-tertiary" />
                       )}
                       <span
-                        className={feature.included ? 'text-slate-700' : 'text-slate-400'}
+                        className={feature.included ? 'text-text-primary' : 'text-text-tertiary'}
                       >
                         {feature.label}
                       </span>

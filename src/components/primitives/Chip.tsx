@@ -67,7 +67,7 @@ export function Chip({ variant = 'default', removable, onRemove, children, class
           type="button"
           onClick={handleRemove}
           disabled={isRemoving}
-          className="ml-0.5 rounded-full p-0.5 transition-colors duration-200 hover:bg-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 focus-visible:ring-offset-surface disabled:cursor-not-allowed"
+          className="ml-0.5 rounded-full p-0.5 transition-colors duration-200 hover:bg-black/10 dark:hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 focus-visible:ring-offset-surface disabled:cursor-not-allowed"
           aria-label="삭제"
         >
           <XMarkIcon className="h-3 w-3" />

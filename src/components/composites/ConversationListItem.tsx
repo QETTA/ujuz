@@ -52,7 +52,7 @@ export function ConversationListItem({
         </div>
         {hasUnread && (
           <span
-            className="h-2 w-2 shrink-0 rounded-full bg-blue-500 animate-pulse"
+            className="h-2 w-2 shrink-0 rounded-full bg-blue-500 dark:bg-blue-400 animate-pulse"
             aria-label="읽지 않은 메시지"
           />
         )}

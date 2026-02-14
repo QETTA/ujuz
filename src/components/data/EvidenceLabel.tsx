@@ -24,9 +24,9 @@ export default function EvidenceLabel({
     `${Math.floor(diffHours / 168)}주 전`;
 
   const freshnessColor =
-    diffHours < 24 ? 'text-green-600' :
-    diffHours < 168 ? 'text-yellow-600' :
-    'text-red-600';
+    diffHours < 24 ? 'text-green-600 dark:text-green-400' :
+    diffHours < 168 ? 'text-yellow-600 dark:text-yellow-400' :
+    'text-red-600 dark:text-red-400';
 
   return (
     <div className={`flex flex-wrap items-center gap-2 text-xs text-muted-foreground ${className}`}>
@@ -43,7 +43,7 @@ export default function EvidenceLabel({
         갱신: {freshness}
       </span>
       {uncertaintyRange && (
-        <span className="inline-flex items-center gap-1 text-blue-600">
+        <span className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400">
           <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
           </svg>

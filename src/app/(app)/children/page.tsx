@@ -170,11 +170,11 @@ export default function ChildrenPage() {
   const renderSkeleton = () => (
     <div className="space-y-3">
       {Array.from({ length: 3 }).map((_, index) => (
-        <Card key={`skeleton-${index}`} className="rounded-2xl border border-zinc-200 bg-white p-4">
+        <Card key={`skeleton-${index}`} className="rounded-2xl border border-border bg-surface p-4">
           <div className="space-y-3">
-            <div className="h-4 w-2/3 animate-pulse rounded bg-zinc-200" />
-            <div className="h-3 w-1/2 animate-pulse rounded bg-zinc-200" />
-            <div className="h-3 w-1/3 animate-pulse rounded bg-zinc-200" />
+            <div className="h-4 w-2/3 animate-pulse rounded bg-surface-inset" />
+            <div className="h-3 w-1/2 animate-pulse rounded bg-surface-inset" />
+            <div className="h-3 w-1/3 animate-pulse rounded bg-surface-inset" />
           </div>
         </Card>
       ))}
@@ -182,7 +182,7 @@ export default function ChildrenPage() {
   )
 
   return (
-    <main className="min-h-screen bg-zinc-50 px-4 py-5">
+    <main className="min-h-screen bg-surface px-4 py-5">
       <TopBar />
 
       <div className="mx-auto flex w-full max-w-lg flex-col gap-4">
@@ -191,7 +191,7 @@ export default function ChildrenPage() {
         </div>
 
         {error && (
-          <Card className="rounded-2xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+          <Card className="rounded-2xl border border-danger/40 bg-danger/5 p-4 text-sm text-danger">
             {error}
           </Card>
         )}
@@ -199,18 +199,18 @@ export default function ChildrenPage() {
         {isLoading ? (
           renderSkeleton()
         ) : children.length === 0 ? (
-          <Card className="rounded-2xl border border-dashed border-zinc-300 bg-white p-6 text-center text-zinc-600">
+          <Card className="rounded-2xl border border-dashed border-border bg-surface p-6 text-center text-text-secondary">
             등록된 아이가 없습니다. 아이를 추가해 주세요.
           </Card>
         ) : (
           <div className="space-y-3">
             {children.map((child) => (
-              <Card key={child.id} className="rounded-2xl border border-zinc-200 bg-white p-4">
+              <Card key={child.id} className="rounded-2xl border border-border bg-surface p-4">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <p className="text-lg font-semibold">{child.name}</p>
-                    <p className="text-sm text-zinc-600">반: {labelForAgeClass(child.age_class)}</p>
-                    <p className="text-sm text-zinc-600">생년월일: {normalizeBirthDate(child.birth_date)}</p>
+                    <p className="text-sm text-text-secondary">반: {labelForAgeClass(child.age_class)}</p>
+                    <p className="text-sm text-text-secondary">생년월일: {normalizeBirthDate(child.birth_date)}</p>
                   </div>
 
                   <div className="flex gap-2">
@@ -240,7 +240,7 @@ export default function ChildrenPage() {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <Card className="w-full max-w-md rounded-2xl bg-white p-5">
+          <Card className="w-full max-w-md rounded-2xl bg-surface p-5">
             <h2 className="mb-4 text-lg font-semibold">
               {editingChild ? '아이 정보 수정' : '아이 추가'}
             </h2>
@@ -253,7 +253,7 @@ export default function ChildrenPage() {
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                  className="h-11 w-full rounded-lg border border-zinc-300 px-3 focus:outline-none"
+                  className="h-11 w-full rounded-lg border border-border px-3 focus:outline-none focus:border-brand-500"
                 />
               </div>
 
@@ -264,7 +264,7 @@ export default function ChildrenPage() {
                   type="date"
                   value={form.birth_date}
                   onChange={(e) => setForm((prev) => ({ ...prev, birth_date: e.target.value }))}
-                  className="h-11 w-full rounded-lg border border-zinc-300 px-3 focus:outline-none"
+                  className="h-11 w-full rounded-lg border border-border px-3 focus:outline-none focus:border-brand-500"
                 />
               </div>
 
@@ -274,7 +274,7 @@ export default function ChildrenPage() {
                   required
                   value={form.gender}
                   onChange={(e) => setForm((prev) => ({ ...prev, gender: e.target.value }))}
-                  className="h-11 w-full rounded-lg border border-zinc-300 px-3 focus:outline-none"
+                  className="h-11 w-full rounded-lg border border-border px-3 focus:outline-none focus:border-brand-500"
                 >
                   <option value="남">남</option>
                   <option value="여">여</option>
@@ -287,7 +287,7 @@ export default function ChildrenPage() {
                   required
                   value={form.age_class}
                   onChange={(e) => setForm((prev) => ({ ...prev, age_class: e.target.value }))}
-                  className="h-11 w-full rounded-lg border border-zinc-300 px-3 focus:outline-none"
+                  className="h-11 w-full rounded-lg border border-border px-3 focus:outline-none focus:border-brand-500"
                 >
                   {ageClassOptions.map((option) => (
                     <option key={option.value} value={option.value}>

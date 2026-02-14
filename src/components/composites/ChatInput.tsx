@@ -59,7 +59,7 @@ export function ChatInput({
                 disabled={disabled}
                 aria-disabled={disabled ? 'true' : undefined}
                 className={cn(
-                  'shrink-0 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs text-brand-600 hover:bg-brand-50 hover:border-brand-300 focus:outline-2 focus:outline-offset-2 focus:outline-brand-500 active:scale-95 transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-50',
+                  'shrink-0 rounded-full border border-brand-200 dark:border-brand-700 bg-brand-50 dark:bg-brand-900 px-3 py-1 text-xs text-brand-600 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-800 hover:border-brand-300 dark:hover:border-brand-600 focus:outline-2 focus:outline-offset-2 focus:outline-brand-500 active:scale-95 transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-50',
                   disabled && 'opacity-50'
                 )}
               >

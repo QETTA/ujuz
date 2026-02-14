@@ -9,7 +9,7 @@ export default function DisclaimerBanner({
 }: DisclaimerBannerProps) {
   if (variant === 'prominent') {
     return (
-      <div className={`rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 ${className}`}>
+      <div className={`rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 p-3 text-sm text-amber-800 dark:text-amber-200 ${className}`}>
         <p className="font-medium">안내</p>
         <p className="mt-1 text-xs">
           본 서비스의 입소 가능성 예측, 점수, 전략 정보는 공공데이터 기반 통계적 추정치이며,

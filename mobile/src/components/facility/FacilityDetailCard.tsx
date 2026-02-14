@@ -1,4 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { StyledText as Text } from '@/components/ui/StyledText';
+import { COLORS } from '../../lib/constants';
+import { useThemeColors } from '../../lib/useThemeColors';
 
 export interface FacilityDetailCardData {
   name: string;
@@ -18,11 +21,11 @@ interface FacilityDetailCardProps {
   onPressCreateAlert: () => void;
 }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+function DetailRow({ label, value, colors }: { label: string; value: string; colors: typeof COLORS }) {
   return (
     <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={styles.rowValue}>{value}</Text>
+      <Text style={[styles.rowLabel, { color: colors.textSecondary }]}>{label}</Text>
+      <Text style={[styles.rowValue, { color: colors.text }]}>{value}</Text>
     </View>
   );
 }
@@ -35,18 +38,23 @@ export function FacilityDetailCard({
   onToggleSave,
   onPressCreateAlert,
 }: FacilityDetailCardProps) {
+  const colors = useThemeColors();
+
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.background, borderColor: colors.border }]} accessibilityRole="summary">
       <View style={styles.header}>
         <View style={styles.titleWrap}>
-          <Text style={styles.title}>{facility.name}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{facility.name}</Text>
           {facility.updatedAtLabel ? (
-            <Text style={styles.updatedAt}>{facility.updatedAtLabel}</Text>
+            <Text style={[styles.updatedAt, { color: colors.textSecondary }]}>{facility.updatedAtLabel}</Text>
           ) : null}
         </View>
         <Pressable
           onPress={onToggleSave}
           disabled={saving}
+          accessibilityRole="button"
+          accessibilityLabel={saving ? '처리 중' : saved ? '저장 취소' : '시설 저장'}
+          accessibilityState={{ disabled: saving, selected: saved }}
           style={({ pressed }) => [
             styles.saveButton,
             saved ? styles.saveButtonActive : styles.saveButtonIdle,
@@ -61,30 +69,36 @@ export function FacilityDetailCard({
       </View>
 
       <View style={styles.rowsWrap}>
-        <DetailRow label="주소" value={facility.address ?? '주소 정보 없음'} />
-        <DetailRow label="거리" value={facility.distanceLabel} />
-        <DetailRow label="연락처" value={facility.phone ?? '연락처 정보 없음'} />
-        {facility.typeLabel ? <DetailRow label="유형" value={facility.typeLabel} /> : null}
+        <DetailRow label="주소" value={facility.address ?? '주소 정보 없음'} colors={colors} />
+        <DetailRow label="거리" value={facility.distanceLabel} colors={colors} />
+        <DetailRow label="연락처" value={facility.phone ?? '연락처 정보 없음'} colors={colors} />
+        {facility.typeLabel ? <DetailRow label="유형" value={facility.typeLabel} colors={colors} /> : null}
       </View>
 
       <Pressable
         onPress={onPressCreateAlert}
+        accessibilityRole="button"
+        accessibilityLabel="TO 알림 받기"
         style={({ pressed }) => [styles.ctaButton, pressed ? styles.buttonPressed : null]}
       >
         <Text style={styles.ctaButtonText}>TO 알림 받기</Text>
       </Pressable>
 
-      {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
+      {saveError ? (
+        <Text style={styles.errorText} accessibilityRole="alert">
+          {saveError}
+        </Text>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.background,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: COLORS.border,
     padding: 16,
     gap: 16,
   },
@@ -99,12 +113,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   title: {
-    color: '#0F172A',
+    color: COLORS.text,
     fontSize: 21,
     fontWeight: '800',
   },
   updatedAt: {
-    color: '#64748B',
+    color: COLORS.textSecondary,
     fontSize: 12,
     fontWeight: '500',
   },
@@ -118,13 +132,13 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     width: 56,
-    color: '#64748B',
+    color: COLORS.textSecondary,
     fontSize: 14,
     fontWeight: '600',
   },
   rowValue: {
     flex: 1,
-    color: '#0F172A',
+    color: COLORS.text,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '500',
@@ -139,23 +153,23 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   saveButtonIdle: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#CBD5E1',
+    backgroundColor: COLORS.background,
+    borderColor: COLORS.border,
   },
   saveButtonActive: {
-    backgroundColor: '#EEF2FF',
-    borderColor: '#6366F1',
+    backgroundColor: COLORS.brand50,
+    borderColor: COLORS.brand500,
   },
   saveButtonText: {
-    color: '#334155',
+    color: COLORS.text,
     fontSize: 13,
     fontWeight: '700',
   },
   saveButtonTextActive: {
-    color: '#4338CA',
+    color: COLORS.brand600,
   },
   ctaButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: COLORS.brand600,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
@@ -163,12 +177,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   ctaButtonText: {
-    color: '#FFFFFF',
+    color: COLORS.textInverse,
     fontSize: 15,
     fontWeight: '700',
   },
   errorText: {
-    color: '#B91C1C',
+    color: COLORS.danger,
     fontSize: 13,
     fontWeight: '500',
   },
