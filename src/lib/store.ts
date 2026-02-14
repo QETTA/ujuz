@@ -472,25 +472,3 @@ export const useFacilityBrowseStore = create<FacilityBrowseStore>((set) => ({
   setSort: (sort) => set({ sort }),
   reset: () => set({ query: '', filters: {}, sort: 'distance' }),
 }));
-
-// ── Theme Store ─────────────────────────────────────────
-
-type ThemeMode = 'light' | 'dark' | 'system';
-
-interface ThemeStore {
-  mode: ThemeMode;
-  setMode: (mode: ThemeMode) => void;
-}
-
-export const useThemeStore = create<ThemeStore>()(
-  persist(
-    (set) => ({
-      mode: 'system',
-      setMode: (mode) => set({ mode }),
-    }),
-    {
-      name: 'ujuz-theme-store',
-      storage: createJSONStorage(() => getLocalStorage()),
-    },
-  ),
-);

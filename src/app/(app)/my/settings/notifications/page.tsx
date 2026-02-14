@@ -37,7 +37,7 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${checked ? 'bg-brand-500' : 'bg-border'}`}
       >
         <span
-          className={`pointer-events-none inline-block h-5 w-5 translate-y-0.5 rounded-full bg-white dark:bg-slate-200 shadow-sm transition-transform duration-200 ${checked ? 'translate-x-5.5' : 'translate-x-0.5'}`}
+          className={`pointer-events-none inline-block h-5 w-5 translate-y-0.5 rounded-full bg-surface-elevated shadow-sm transition-transform duration-200 ${checked ? 'translate-x-5.5' : 'translate-x-0.5'}`}
         />
       </button>
     </label>

@@ -213,7 +213,7 @@ export default function ConsultIntakePage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface-primary">
+    <div className="flex min-h-screen flex-col bg-surface">
       <TopBar showBack title="상담 사전 설문" />
 
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">

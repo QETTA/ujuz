@@ -72,7 +72,7 @@ export default function TermsPage() {
 
         <div className="rounded-lg border-2 border-warning bg-warning/5 p-4">
           <h3 className="text-sm font-bold mb-2">중요 안내: AI 상담 면책 사항</h3>
-          <p className="text-sm font-medium text-warning-dark">
+          <p className="text-sm font-medium text-warning">
             본 서비스의 입소 가능성 예측, 점수, 전략 정보는 통계적 추정치이며 실제 입소
             결과를 보장하지 않습니다.
           </p>

@@ -46,7 +46,7 @@ const formatPrice = (value: number) =>
   }).format(value);
 
 const pricingCycleButtonClass = (active: boolean) =>
-  active ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700';
+  active ? 'bg-brand-500 text-text-inverse' : 'bg-surface-elevated text-text-secondary hover:bg-surface-inset';
 
 export default function PricingPage() {
   const router = useRouter();

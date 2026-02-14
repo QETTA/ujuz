@@ -76,7 +76,7 @@ export function FollowButton({ facilityId, facilityName, initialFollowed = false
       disabled={loading}
       className={cn(
         'flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 active:scale-90 disabled:cursor-not-allowed disabled:opacity-70',
-        followed ? 'text-danger hover:text-red-500 dark:hover:text-red-400' : 'text-text-tertiary hover:text-danger',
+        followed ? 'text-danger hover:text-danger/80' : 'text-text-tertiary hover:text-danger',
         className,
       )}
       aria-label={followed ? '즐겨찾기 해제' : '즐겨찾기 추가'}

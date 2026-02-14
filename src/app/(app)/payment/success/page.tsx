@@ -65,7 +65,7 @@ export default function PaymentSuccessPage() {
     : '/consult/booking';
 
   return (
-    <div className="flex flex-col min-h-screen bg-surface-primary">
+    <div className="flex flex-col min-h-screen bg-surface">
       <TopBar showBack title="결제 결과" />
       <div className="flex-1 flex items-center justify-center px-4">
         <Card className="w-full max-w-md text-center p-6">

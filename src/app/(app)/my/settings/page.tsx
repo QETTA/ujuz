@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { TopBar } from '@/components/nav/top-bar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/toast';
 
 const PREF_KEY = 'ujuz_preferences';
 
@@ -26,6 +28,7 @@ const defaultSettings: SettingsState = {
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [settings, setSettings] = useState<SettingsState>(defaultSettings);
 
   useEffect(() => {
@@ -60,15 +63,14 @@ export default function SettingsPage() {
 
   const onSave = () => {
     localStorage.setItem(PREF_KEY, JSON.stringify(settings));
-    // TODO: useToast로 전환 (ToastProvider 필요)
-    alert('설정이 저장되었습니다.');
+    toast('설정이 저장되었습니다.', 'success');
   };
 
   const onExport = async () => {
     try {
       const res = await fetch('/api/v1/export?format=json');
       if (!res.ok) {
-        alert('데이터 내보내기에 실패했습니다.');
+        toast('데이터 내보내기에 실패했습니다.', 'error');
         return;
       }
 
@@ -82,9 +84,9 @@ export default function SettingsPage() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      alert('데이터 내보내기 시작됨');
+      toast('데이터 내보내기가 시작되었습니다.', 'success');
     } catch {
-      alert('데이터 내보내기 중 오류가 발생했습니다.');
+      toast('데이터 내보내기 중 오류가 발생했습니다.', 'error');
     }
   };
 
@@ -95,7 +97,7 @@ export default function SettingsPage() {
     }
 
     localStorage.removeItem(PREF_KEY);
-    alert('계정이 삭제되었습니다.');
+    toast('계정이 삭제되었습니다.', 'success');
     router.push('/');
   };
 
@@ -107,10 +109,10 @@ export default function SettingsPage() {
         <section>
           <h2 className="mb-2 text-sm font-semibold text-text-secondary">알림 설정</h2>
           <Card className="p-4">
-            <a href="/my/settings/notifications" className="flex items-center justify-between">
+            <Link href="/my/settings/notifications" className="flex items-center justify-between">
               <span className="text-sm">알림 설정 관리</span>
               <span className="text-text-tertiary">&rsaquo;</span>
-            </a>
+            </Link>
           </Card>
         </section>
 
@@ -137,15 +139,12 @@ export default function SettingsPage() {
           <Card className="space-y-3">
             <p>버전: 1.0.0</p>
             <div className="space-y-1">
-              <a href="/privacy" className="block text-brand-500 underline">
+              <Link href="/privacy" className="block text-brand-500 underline">
                 개인정보처리방침
-              </a>
-              <a href="/terms" className="block text-brand-500 underline">
+              </Link>
+              <Link href="/terms" className="block text-brand-500 underline">
                 이용약관
-              </a>
-              <a href="/licenses" className="block text-brand-500 underline">
-                오픈소스 라이선스
-              </a>
+              </Link>
             </div>
           </Card>
         </section>

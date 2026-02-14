@@ -148,7 +148,7 @@ export default function ConsultPaymentPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface-primary">
+    <div className="flex min-h-screen flex-col bg-surface">
       <TopBar showBack title="상담 결제" />
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-4 px-4 py-6">
         <Card className="space-y-4 p-5">

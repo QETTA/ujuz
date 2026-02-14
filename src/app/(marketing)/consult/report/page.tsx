@@ -197,7 +197,7 @@ export default function ConsultationReportPage() {
 
           <div className="mt-4">
             <Link
-              href="/alerts/create"
+              href="/alerts"
               onClick={() => trackReportEvent('report_cta_alert_setup', { order_id: orderId, status })}
             >
               <Button variant="secondary" className="w-full">TO 알림 구독 만들기</Button>

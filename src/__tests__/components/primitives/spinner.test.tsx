@@ -26,7 +26,7 @@ describe('Spinner', () => {
     render(<Spinner color="white" srLabel="로딩 상태" label="잠시만 기다려 주세요" />);
     const status = screen.getByRole('status', { name: '로딩 상태' });
 
-    expect(within(status).getByText('잠시만 기다려 주세요')).toHaveClass('text-white');
+    expect(within(status).getByText('잠시만 기다려 주세요')).toHaveClass('text-text-inverse');
     expect(within(status).getByText('로딩 상태')).toHaveClass('sr-only');
   });
 });

@@ -206,9 +206,9 @@ function compareSkeleton(columnCount: number) {
         <table className="min-w-[640px] w-full border-separate border-spacing-0 text-left text-sm">
           <thead>
             <tr>
-              <th className="w-28 border-b border-border bg-surface-subtle px-3 py-3 text-sm font-medium text-text-muted">항목</th>
+              <th className="w-28 border-b border-border bg-surface-inset px-3 py-3 text-sm font-medium text-text-tertiary">항목</th>
               {Array.from({ length: cols }, (_, col) => (
-                <th key={`head-${col}`} className="min-w-52 border-b border-border bg-surface-subtle px-3 py-3 text-sm font-medium text-text-muted">
+                <th key={`head-${col}`} className="min-w-52 border-b border-border bg-surface-inset px-3 py-3 text-sm font-medium text-text-tertiary">
                   <div className="h-5 w-24 rounded bg-surface px-3 py-1" />
                 </th>
               ))}
@@ -346,18 +346,18 @@ export default function FacilityComparePage() {
           <Card className="pb-2 pt-1">
             <div className="mb-2 flex items-center justify-between px-1">
               <Badge>선택 시설: {facilities.length}개</Badge>
-              <span className="text-xs text-text-muted">최대 3개 비교</span>
+              <span className="text-xs text-text-tertiary">최대 3개 비교</span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="min-w-[700px] w-full table-fixed border-separate border-spacing-0 text-left text-sm">
                 <thead>
                   <tr>
-                    <th className="sticky left-0 z-10 w-28 border-b border-border bg-surface px-3 py-3 text-xs font-medium uppercase tracking-wide text-text-muted">항목</th>
+                    <th className="sticky left-0 z-10 w-28 border-b border-border bg-surface px-3 py-3 text-xs font-medium uppercase tracking-wide text-text-tertiary">항목</th>
                     {facilities.map((facility) => (
                       <th
                         key={facility.id}
-                        className="min-w-52 border-b border-border bg-surface px-3 py-3 text-xs font-medium uppercase tracking-wide text-text-muted"
+                        className="min-w-52 border-b border-border bg-surface px-3 py-3 text-xs font-medium uppercase tracking-wide text-text-tertiary"
                       >
                         <div className="flex flex-col gap-1">
                           <Badge variant="status">시설</Badge>
@@ -378,7 +378,7 @@ export default function FacilityComparePage() {
                             key={`${row.key}-${facility.id}`}
                             className={`border-b border-border px-3 py-3 ${
                               isBest
-                                ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold'
+                                ? 'bg-success/10 text-success font-semibold'
                                 : 'text-text-primary'
                             }`}
                           >

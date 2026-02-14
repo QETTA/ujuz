@@ -100,8 +100,8 @@ export default function StatusPage() {
               <Badge
                 className={
                   health.status === 'ok'
-                    ? 'mt-1 bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300'
-                    : 'mt-1 bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300'
+                    ? 'mt-1 bg-success/15 text-success'
+                    : 'mt-1 bg-warning/15 text-warning'
                 }
               >
                 {statusBadge}
@@ -129,8 +129,8 @@ export default function StatusPage() {
               <Badge
                 className={
                   health.checks.database === 'ok'
-                    ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300'
+                    ? 'bg-success/15 text-success'
+                    : 'bg-warning/15 text-warning'
                 }
               >
                 {databaseBadge}

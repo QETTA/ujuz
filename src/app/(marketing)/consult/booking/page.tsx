@@ -141,7 +141,7 @@ export default function ConsultBookingPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface-primary">
+    <div className="flex min-h-screen flex-col bg-surface">
       <TopBar showBack title="상담 예약" />
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 px-4 py-5">

@@ -20,7 +20,7 @@ const sizeMap: Record<SpinnerSize, string> = {
 const colorMap: Record<SpinnerColor, string> = {
   default: 'text-brand-500',
   muted: 'text-text-tertiary',
-  white: 'text-white',
+  white: 'text-text-inverse',
 };
 
 export function Spinner({
@@ -58,7 +58,7 @@ export function Spinner({
         />
       </svg>
       {label ? (
-        <span className={cn('text-sm', color === 'white' ? 'text-white' : 'text-text-tertiary')}>
+        <span className={cn('text-sm', color === 'white' ? 'text-text-inverse' : 'text-text-tertiary')}>
           {label}
         </span>
       ) : null}

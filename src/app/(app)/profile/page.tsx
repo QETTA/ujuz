@@ -86,7 +86,7 @@ export default function ProfilePage() {
             sublabel={profile?.children_count ? `${profile.children_count}명` : '미등록'}
             href="/children"
           />
-          <MenuItem icon={Cog6ToothIcon} label="설정" href="/settings" />
+          <MenuItem icon={Cog6ToothIcon} label="설정" href="/my/settings" />
 
           {/* Theme toggle */}
           <button

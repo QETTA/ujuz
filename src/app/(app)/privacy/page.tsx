@@ -213,7 +213,7 @@ export default function PrivacyPage() {
               </tr>
             </tbody>
           </table>
-          <p className="mt-3 text-sm font-medium text-warning-dark">
+          <p className="mt-3 text-sm font-medium text-warning">
             생성형 AI(Claude)를 통한 상담 시 대화 내용이 미국 소재 Anthropic 서버로
             전송됩니다. 이용자는 AI 상담 이용 전 이에 대한 동의를 제공하며, 동의를 철회할
             경우 AI 상담 기능 이용이 제한됩니다.

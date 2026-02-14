@@ -304,7 +304,7 @@ export default function SearchPage() {
                 <input
                   value={regionInput}
                   onChange={(event) => setRegionInput(event.target.value)}
-                  className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm outline-none ring-2 ring-offset-2 transition focus:ring-brand-500"
+                  className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm outline-none transition focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
                   placeholder="예: 강남구"
                 />
               </label>
@@ -323,7 +323,7 @@ export default function SearchPage() {
                       onClick={() => setExtendedCare(item.value as ExtendedCareFilter)}
                       className={`rounded-md px-3 py-1.5 text-sm ${
                         extendedCare === item.value
-                          ? "bg-brand-500 text-white"
+                          ? "bg-brand-500 text-text-inverse"
                           : "text-text-secondary"
                       }`}
                     >
